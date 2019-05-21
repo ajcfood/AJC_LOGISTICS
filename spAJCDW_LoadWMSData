@@ -1,0 +1,277 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadWMSData]    Script Date: 5/21/2019 11:22:33 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER procedure [dbo].[spAJCDW_LoadWMSData]
+as
+BEGIN TRY
+begin
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+SELECT * 
+INTO #tmp1
+FROM OPENQUERY(IES, '
+    SELECT "WHS:ShipperReference"
+	,BuyerCode
+	,VendorCode
+	,PO_InvoiceItem_UID
+	,PartNumber
+	,PartDescription
+	,QuantityAssigned
+	,QuantityOnHand
+	,Weight
+	,WeightUnit
+	,"WHS:UID"
+	,"PPL:UID"
+	,QuantityReceived
+	from PO_INVIT_DAT
+	--WHERE "WHS:UID" > ''210050052331'' -- this is 1/1/18 start
+	WHERE "WHS:UID" > ''210050070131'' -- this is 1/1/19 start
+	');
+
+SELECT * 
+INTO #tmp2
+FROM OPENQUERY(IES, '
+    SELECT SHIPMENT_ID
+	,WHSE_RECEIPT_NO
+	,WAREHOUSE
+	,EXPORTER
+	,EXPORTER_REF_NO
+	,CONSIGNEE
+	,SUPPLIER
+	,SUPPLIER_REF_NO
+	,CONTROLLER
+	,DATEFILEOPEN
+	,RECEIVEDDATE
+	,LASTCHGDATE
+	,TOT_LBS
+	,TOTAL_PIECES
+	,QuantityAssigned
+	,QuantityOnHand
+	,REMARKS
+	from WAREHOUS_DAT
+	--where WHSE_RECEIPT_NO > ''054154'' -- this is 1/1/18 start
+	where WHSE_RECEIPT_NO > ''071970'' -- this is 1/1/19 start
+	');
+
+SELECT * 
+INTO #tmp3
+FROM OPENQUERY(IES, '
+    SELECT UID
+	,Status
+	,Pallet_Lbs
+	,Payload_Lbs
+	,Payload_Quantity
+	,Warehouse
+	,Load_Date
+	,Load_Time
+	,Container_UID
+	,File_No
+	,InDate
+	,OutDate
+	,"WHS:UID"
+	,MarksNumbers
+	,BuyerID
+	,Payload_Gross_Lbs
+	,Section_
+	,Row_
+	,Rack_
+	,Bin_
+	from PO_PALLT_DAT
+	--WHERE "WHS:UID" > ''210050052331'' -- this is 1/1/18 start
+	WHERE "WHS:UID" > ''210050070131'' -- this is 1/1/19 start
+	');
+
+	---OverPack List by Warheouse Receipt---
+SELECT t3.UID, t2.WHSE_RECEIPT_NO, "WHS:UID", Section_,Row_,Rack_,Bin_
+INTO #tmp4
+from #tmp3 t3
+JOIN #tmp2 t2 on t3."WHS:UID" = t2.Shipment_ID
+--WHERE WHSE_RECEIPT_NO = '069162'
+GROUP BY t3.UID, t2.WHSE_RECEIPT_NO, "WHS:UID", Section_,Row_,Rack_,Bin_
+
+
+SELECT PO_InvoiceItem_UID
+	,t1."WHS:ShipperReference" AS PONumber
+	,PartNumber
+	,PartDescription
+	,t2.WHSE_RECEIPT_NO
+	,t3.Status
+	,t2.RECEIVEDDATE
+	,t2.DATEFILEOPEN AS WHSRCPTDATE
+	,t2.LASTCHGDATE AS WRLASTCHGDATE
+	,BuyerCode AS CUSTOMER
+	,VendorCode AS SUPPLIER
+	,t2.WAREHOUSE
+	,CONTROLLER
+	,t1.QuantityReceived
+	,t1.QuantityOnHand
+	,t1.QuantityAssigned
+	,t1.Weight AS ItemWeight
+	,t1.WeightUnit
+	,t1.Weight * t1.QuantityReceived as TotalItemWeight
+	,MarksNumbers AS TempZone
+	,REMARKS as RCVR
+	,File_No
+	,t1."WHS:UID"
+	,"PPL:UID"
+INTO #tmp5
+FROM #tmp1 t1
+JOIN #tmp2 t2 on t1."WHS:UID" = t2.Shipment_ID
+JOIN #tmp3 t3 on t1."WHS:UID" = t3."WHS:UID"
+--WHERE WHSE_RECEIPT_NO = '069162'
+GROUP BY  t1."WHS:ShipperReference"
+	,PO_InvoiceItem_UID
+	,PartNumber
+	,PartDescription
+	,t2.WHSE_RECEIPT_NO
+	,t3.Status
+	,t2.RECEIVEDDATE
+	,t2.DATEFILEOPEN
+	,t2.LASTCHGDATE
+	,BuyerCode
+	,VendorCode
+	,t2.WAREHOUSE
+	,CONTROLLER
+	,t1.QuantityReceived
+	,t1.QuantityOnHand
+	,t1.QuantityAssigned
+	,t1.Weight
+	,t1.WeightUnit
+	,t1.Weight * t1.QuantityReceived
+	,MarksNumbers
+	,REMARKS
+	,File_No
+	,t1."WHS:UID"
+	,"PPL:UID"
+ORDER BY PO_InvoiceItem_UID
+
+-- Use Temp 6 for Inventory --
+SELECT CAST (t5.PO_InvoiceItem_UID as varchar(250))as PO_InvoiceItem_UID
+	,CAST (t5.PONumber as varchar(250))as PONumber
+	,CAST (t5.PartNumber as varchar(250))as PartNumber
+	,CAST (t5.PartDescription as varchar(250))as PartDescription
+	,CAST (t5.WHSE_RECEIPT_NO as varchar(50))as WHSE_RECEIPT_NO
+	,CAST (t5.Status as varchar(50))as Status
+	,CAST (t5.RECEIVEDDATE as date)as RECEIVEDDATE
+	,CAST (t5.WHSRCPTDATE as date)as WHSRCPTDATE
+	,CAST (t5.WRLASTCHGDATE as date)as WRLASTCHGDATE
+	,CAST (t5.CUSTOMER as varchar(250))as CUSTOMER
+	,CAST (t5.SUPPLIER as varchar(250))as SUPPLIER
+	,CAST (t5.WAREHOUSE as varchar(20))as WAREHOUSE
+	,CAST (t5.CONTROLLER as varchar(250))as CONTROLLER
+	,CAST (t5.QuantityReceived as decimal(18,2))as QuantityReceived
+	,CAST (t5.QuantityOnHand as decimal(18,2))as QuantityOnHand
+	,CAST (t5.QuantityAssigned as decimal(18,2))as QuantityAssigned
+	,CAST (t5.ItemWeight as decimal(18,2))as ItemWeight
+	,CAST (t5.WeightUnit as varchar(50))as WeightUnit
+	,CAST (t5.TotalItemWeight as decimal(18,2))as TotalItemWeight
+	,CAST (t5.TempZone as varchar(100))as TempZone
+	,CAST (t5.RCVR as varchar(100))as RCVR
+	,CAST (t5.File_No as bigint)as FileNo
+	,CAST (t5.[WHS:UID] as bigint)as WHSUID
+	,CAST (t5.[PPL:UID] as bigint)as OverPackID
+	,CAST (t4.Section_ as varchar(50))as Section
+	,CAST (t4.Row_ as varchar(50))as Row
+	,CAST (t4.Rack_ as varchar(50))as Rack
+	,CAST (t4.Bin_ as varchar(50))as Bin
+INTO #tmp6
+From #tmp5 t5
+JOIN #tmp4 t4 on t4.UID = t5."PPL:UID"
+
+SELECT * 
+INTO #tmp7
+FROM OPENQUERY(IES, '
+	Select FILE_NO, TEMP_MIN, TEMP_MAX, TEMP_UNIT from CONTAINE_DAT
+	--WHERE FILE_NO >= ''210020272909'' -- this is 1/1/18 start
+	WHERE FILE_NO >= ''210020294307''  -- this is 1/1/19 start
+	')
+
+-- USE Temp 8 to populate shipping manifests--
+SELECT t6.*
+	,CAST (RefNo as varchar(50))as RefNo
+	,CAST (ShpPortofLoad as varchar(MAX))as ShpPortofLoad
+	,CAST (ShpPortofDchg as varchar(MAX))as ShpPortofDchg
+	,CAST (ShpCarrier as varchar(MAX))as ShpCarrier
+	,CAST (ShpVessel_Equipmnt as varchar(MAX))as ShpVessel_Equipmnt
+	,CAST (ShpBkgNum as varchar(MAX))as ShpBkgNum
+	,CAST (ShpShipDate as varchar(MAX))as ShpShipDate
+	,CAST (c.ContNum as varchar(50))as ContNum
+	,CAST (c.ContType as varchar(50))as ContType
+	,CAST (c.ContSeal1 as varchar(50))as ContSeal
+	,CAST (t7.TEMP_MIN as varchar(50))as TEMPMIN
+	,CAST (t7.TEMP_MAX as varchar(50))as TEMPMAX
+	,CAST (t7.TEMP_UNIT as varchar(50))as TEMPUNIT
+INTO #tmp8
+FROM #tmp6 t6
+JOIN tblshipment s ON t6.FileNo = s.ShipmentID
+JOIN tblContainer c on s.ShipmentID = c.FileNo
+JOIN #tmp7 t7 on c.FileNo = t7.FILE_NO
+
+--INSERT tblWMSINV--
+DELETE tblWMSInv
+WHERE RECEIVEDDATE > '01-01-2019'
+
+INSERT INTO tblWMSInv
+SELECT * from #tmp6
+
+--INSERT tblWMSLoads--
+DELETE tblWMSLoads
+WHERE ShpShipDate > '2019-01-01'
+
+INSERT INTO tblWMSLoads
+SELECT * from #tmp8
+
+/*
+Drop Table #tmp1
+Drop Table #tmp2
+Drop Table #tmp3
+Drop Table #tmp4
+Drop Table #tmp5
+Drop Table #tmp6
+DRop Table #tmp7
+DRop Table #tmp8
+*/
+
+/*
+SELECT * FROM #tmp1
+SELECT * FROM #tmp2
+SELECT * FROM #tmp3
+SELECT * FROM #tmp4
+SELECT * FROM #tmp5
+SELECT * FROM #tmp6
+SELECT * FROM #tmp7
+SELECT * FROM #tmp8
+WHERE WHSE_RECEIPT_NO = '071974'
+*/
+
+end
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[spAJCDW_LoadWMSData]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
