@@ -1,0 +1,255 @@
+USE [MGXMLProcessing]
+GO
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadDWCustRecs]    Script Date: 5/21/2019 2:39:50 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+
+ALTER PROCEDURE [dbo].[sp-MGXML-LoadDWCustRecs]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+-- Carrier --
+-------------
+--select distinct dbo.udf_GetNumeric(ref.[Shipping Order]) as ShipmentID, ref.[Shipping Order], ref.[Load ID], ref.[PO Number]
+--	, ent.[EnterpriseAccntNum]
+--	, '10' as DivID, '11' as LOB
+--	, carr.CarrierID, carr.CarrierType
+--	, ref.[Release Number], ref.[Freight Category], ref.[Tractor Number], ref.[Trailer Number]
+--	, carr.EquipDesc
+--	, pri.PriceSheetTotal as Cost, pri.PriceSheetTotal - pri.PriceSheetAccTotal as FreightCost
+--	, dt.[DateCategory], dt.[Pickup], dt.[Drop]
+--	, GetDate() as LoadedDateTime
+--	, pri.[FileName]
+--	, pri.[FileCreatedDate]
+--into #tmp1
+--from (
+--  select * from (
+--    select [RefType],[RefValue]
+--    from [MGXMLProcessing].[dbo].[tblCarrierXML_Ref]
+--  ) t
+--  pivot (
+--    max([RefValue]) for [RefType] in ([Shipment ID], [PO Number], [Release Number], [Shipping Order], [Load ID], [SCAC], [Customer Acct Number], [Freight Category], [Tractor Number], [Trailer Number] )
+--  ) p
+--) ref
+--inner join
+--(
+--SELECT DISTINCT
+--      [EnterpriseName]
+--      ,[EnterpriseParentName]
+--      ,[EnterpriseType]
+--      ,[EnterpriseAccntNum]
+--  FROM [MGXMLProcessing].[dbo].[tblCarrierXML_Enterprise]
+--) ent
+--on ref.[Customer Acct Number] = ent.EnterpriseAccntNum
+
+--inner join [MGXMLProcessing].[dbo].[tblCarrierXML_PriceSheet] pri
+--on ref.[Load ID] = pri.LoadID
+
+--inner join
+--(
+--  select * from (
+--    select [LoadID], [DateCategory], [DateType], [DateTime]
+--    from [MGXMLProcessing].[dbo].[tblCarrierXML_Dates]
+--  ) t
+--  pivot (
+--    max([DateTime]) for [DateType] in ([Pickup], [Drop] )
+--  ) p
+--) dt
+--on pri.LoadID = dt.LoadID
+
+--left outer join [MGXMLProcessing].[dbo].[tblCarrierXML_CarrierDetails] carr
+--on ref.[Load ID] = carr.LoadID and pri.PriceSheetID = carr.PriceSheetID;
+
+
+-- Filter Out Vendor PriceSheet
+--select distinct ShipmentID, [Shipping Order], [Load ID]
+--	, [PO Number], EnterpriseAccntNum, DivID, LOB, CarrierID, CarrierType, [Release Number]
+--	, [Freight Category], [Tractor Number], [Trailer Number], EquipDesc
+--	, DateCategory, Pickup, [Drop], LoadedDateTime, FileName, FileCreatedDate
+--into #tmp1a
+--from #tmp1
+--where CarrierType = 'Responsible';
+
+-- Aggregate Costs (Including Vendor)
+--select distinct ShipmentID
+--	, SUM(Cost) as Cost, SUM (FreightCost) as FreightCost
+--into #tmp1b
+--from #tmp1
+--group by ShipmentID;
+
+
+-- Customer --
+--------------
+select distinct dbo.udf_GetNumeric(ref.[Shipping Order]) as ShipmentID, ref.[Shipping Order], ref.[Load ID], ref.[PO Number], ref.[Customer PO Number]
+	, ent.[EnterpriseAccntNum]
+	, '10' as DivID, '11' as LOB
+	, case when loc.LocationType = 'Pickup' Then loc.LocationName
+		end as OriginName
+	, case when loc.LocationType = 'Pickup' Then loc.LocationCity
+		end as OriginCity
+	, case when loc.LocationType = 'Pickup' Then loc.LocationState
+		end as OriginState
+	, case when loc.LocationType = 'Drop' Then loc.LocationName
+		end as DestinationName
+	, case when loc.LocationType = 'Drop' Then loc.LocationCity
+		end as DestinationCity
+	, case when loc.LocationType = 'Drop' Then loc.LocationState
+		end as DestinationState
+	, ref.[Release Number]
+	, dt.[DateCategory], dt.[Pickup], dt.[Drop]
+	, pri.PriceSheetTotal as Revenue
+	, GetDate() as LoadedDateTime
+	, pri.[FileName]
+	, pri.[FileCreatedDate]
+into #tmp2
+from (
+  select * from (
+    select [RefType],[RefValue]
+    from [MGXMLProcessing].[dbo].[tblCustomerXML_Ref]
+  ) t
+  pivot (
+    max([RefValue]) for [RefType] in ([Shipment ID], [PO Number], [Release Number], [Shipping Order], [Load ID], [SCAC], [Customer Acct Number], [Customer PO Number] )
+  ) p
+) ref
+
+inner join
+(
+SELECT DISTINCT [EnterpriseID]
+      ,[EnterpriseName]
+      ,[EnterpriseParentName]
+      ,[EnterpriseType]
+      ,[EnterpriseAccntNum]
+  FROM [MGXMLProcessing].[dbo].[tblCustomerXML_Enterprise]
+) ent
+on ref.[Customer Acct Number] = ent.EnterpriseAccntNum
+
+inner join [MGXMLProcessing].[dbo].[tblCustomerXML_PriceSheet] pri
+on ref.[Shipping Order] = pri.SOID
+
+inner join
+(
+  select * from (
+    select [SOID], [DateCategory], [DateType], [DateTime]
+    from [MGXMLProcessing].[dbo].[tblCustomerXML_Dates]
+  ) t
+  pivot (
+    max([DateTime]) for [DateType] in ([Pickup], [Drop] )
+  ) p
+) dt
+on pri.SOID = dt.SOID
+
+inner join [MGXMLProcessing].[dbo].[tblCustomerXML_Locations] loc
+on ref.[Shipping Order] = loc.SOID;
+
+
+-- Combine Cust Recs
+select distinct ShipmentID, [Shipping Order], [Load ID], [PO Number], [Customer PO Number], EnterpriseAccntNum, DivID, LOB, OriginName, OriginCity, OriginState
+	, DestinationName, DestinationCity, DestinationState, [Release Number], DateCategory, Pickup, [Drop]
+		, Revenue, LoadedDateTime, [FileName], FileCreatedDate
+into #tmp2a
+from #tmp2
+where OriginName is not null;
+
+select distinct [Shipping Order], DestinationName, DestinationCity, DestinationState
+into #tmp2b
+from #tmp2
+where DestinationName is not null;
+
+
+-- Combine Results --
+---------------------
+insert into [MGXMLProcessing].[dbo].[tblXML_DWLoadRecs]
+select t2.ShipmentID, t2.[Shipping Order], t2.[Load ID]
+	, t2.[Customer PO Number]
+	, t2.EnterpriseAccntNum, t2.DivID, t2.LOB
+	, '' as CarrierID
+	, t2.OriginName, t2.DestinationName
+	, '' as ShpSalesP
+	, '' as ShpController
+	, '' as [Release Number]
+	, '' as ShpMaster
+	, '' as [Freight Category], '' as [Tractor Number], '' as [Trailer Number]
+	, t2.OriginCity, t2.OriginState
+	, t2.DestinationCity, t2.DestinationState
+	, '' as ShpPortofDchg, '' as ShpPortofLoad
+	, '' as EquipDesc
+	, '' as ShpPntOrigin, '' as ShpAES_ITN, '' as ShpAES_Status, '' as ShpTEU
+	, convert(Numeric,t2.Revenue) as Revenue
+	, 0 as Cost
+	, 0 as FreightCost
+	, 0 as GP
+	, '' as createDate
+	, '' as DelivDate, '' as ShipDate
+	, '' UpdtDate
+	, '' as LoadedDateTime
+	, '' as Status
+	, 'CU' as RecType
+	, 0 as Processed
+from 
+(
+select t2a.ShipmentID, t2a.[Shipping Order], t2a.[Load ID], t2a.[PO Number], t2a.[Customer PO Number], t2a.EnterpriseAccntNum, t2a.DivID, t2a.LOB, t2a.OriginName, t2a.OriginCity, t2a.OriginState
+	, t2b.DestinationName, t2b.DestinationCity, t2b.DestinationState, t2a.[Release Number], t2a.DateCategory, t2a.[Pickup], t2a.[Drop]
+		, t2a.Revenue, t2a.LoadedDateTime, t2a.[FileName], t2a.FileCreatedDate
+from #tmp2a t2a
+inner join #tmp2b t2b
+	on t2a.[Shipping Order] = t2b.[Shipping Order]
+)t2;
+
+--left outer join 
+--(
+--select [Shipping Order], [Load ID]
+--	, [PO Number], EnterpriseAccntNum, DivID, LOB, CarrierID, CarrierType, [Release Number]
+--	, [Freight Category], [Tractor Number], [Trailer Number], EquipDesc
+--	, DateCategory, Pickup, [Drop], LoadedDateTime, FileName, FileCreatedDate
+--	, Cost, FreightCost
+--from #tmp1a t1a
+--inner join #tmp1b t1b
+--	on t1a.ShipmentID = t1b.ShipmentID
+--)t1
+--	on t2.[Shipping Order] = t1.[Shipping Order];
+
+
+-- Cleanup --
+--drop table #tmp1;
+--drop table #tmp1a;
+--drop table #tmp1b;
+drop table #tmp2;
+drop table #tmp2a;
+drop table #tmp2b;
+
+
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp-MGXML-LoadDWCustRecs]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
