@@ -20,7 +20,7 @@ SET NOCOUNT ON;
 */
 
 --TRUNCATE TABLE [AJCDW].[dbo].[tblCustMaster];
-TRUNCATE TABLE [AJCDW].[dbo].[tblVendor];
+--TRUNCATE TABLE [AJCDW].[dbo].[tblVendor];
 TRUNCATE TABLE [AJCDW].[dbo].[tblStations];
 TRUNCATE TABLE [AJCDW].[dbo].[tblConsg];
 TRUNCATE TABLE [AJCDW].[dbo].[tblShipper];
