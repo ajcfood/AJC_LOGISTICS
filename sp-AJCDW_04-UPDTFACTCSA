@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 5/21/2019 11:42:51 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 5/21/2019 2:05:13 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -410,7 +410,7 @@ SELECT				x.[PK_NoteNo], x.[FK_OrderNo], x.[DateTimeEntered], SUBSTRING(x.[Note]
 					ts.ShpShipDate, ts.ShpDelivDate, DATEDIFF(DD, ts.ShpDelivDate, tn.DateTimeEntered), z.InvRevenue, orad.Trx_Number, ts.ShpMaster, orad.CUSTOMER_NAME
 FROM				#AddNewRecords x
 LEFT OUTER JOIN		AJCDW..tblTrackingNotes tn on tn.PK_NoteNo = x.PK_NoteNo
-INNER JOIN			AJCDW..tblShipment ts ON ts.ShipmentID = tn.FK_OrderNo
+INNER JOIN			AJCDW..tblShipment ts ON ts.ShipmentID = x.FK_OrderNo
 INNER JOIN			AJCDW..tblOracleARData orad ON orad.PURCHASE_ORDER = ts.ShpMaster
 CROSS APPLY			(
 						SELECT	ShipmentID, SUM(InvRevenue) InvRevenue
