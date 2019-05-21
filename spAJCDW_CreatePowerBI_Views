@@ -1,0 +1,188 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[spAJCDW_CreatePowerBI_Views]    Script Date: 5/21/2019 11:17:41 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER procedure [dbo].[spAJCDW_CreatePowerBI_Views]
+as
+BEGIN TRY
+begin
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+	declare @command nvarchar(max);
+	declare @viewname nvarchar(128);
+
+-- view PBI_Report_MTD_Financials
+	set @viewname = N'PBI_Report_MTD_Financials'
+	IF EXISTS(select * FROM sys.views where name = @viewname)
+	begin
+		set @command = N'drop view ' + @viewname
+		exec sp_executesql @command;
+	end
+
+	set @command = N'
+	create view ' + @viewname + '
+	as
+	select top 100 percent
+		DIV.DivisionName [Division/LOB], DIV.LOBDesc, DIV.LOBNum,
+		count(distinct INV.refNo) Volume,
+		count(distinct (case when inv.InvOutofPeriod <> 1 then inv.RefNo end)) as ''True Volume'',
+		sum(INV.invgp) InvGP, 
+		SUM(INV.InvGP) / (count(distinct INV.ShipmentID) *1.0) [Filtered AVG INV GP Per LOAD],
+		SUM(INV.InvGP) / (count(distinct (case when inv.InvOutofPeriod <> 1 then inv.RefNo ELSE inv.RefNo end)) *1.0) [TRUE Filtered AVG INV GP Per LOAD],
+		min(INV.ACCTMONTH) TheMonth, min(INV.ACCTYR) TheYear
+	from tblInvoice INV
+	join tblShipment SHP on INV.ShipmentID = SHP.ShipmentID
+	join tblDiv DIV on SHP.FK_DivID = DIV.DivisionID
+	join tblFiscalCalendar CAL on CAL.FiscalMonth = INV.ACCTMONTH and CAL.FiscalYear = INV.ACCTYR
+	where 
+		convert(date, CAL.TheDate) = convert(date, GETDATE())
+	group by DIV.DivisionName, DIV.LOBDesc, DIV.LOBNum
+	order by [Division/LOB]
+	';
+	exec sp_executesql @command;
+
+-- view PBI_Report_PriorMTD_Financials
+	set @viewname = N'PBI_Report_PriorMTD_Financials'
+	IF EXISTS(select * FROM sys.views where name = @viewname)
+	begin
+		set @command = N'drop view ' + @viewname
+		exec sp_executesql @command;
+	end
+
+	set @command = N'
+	create view ' + @viewname + '
+	as
+	select top 100 percent
+		DIV.DivisionName [Division/LOB], DIV.LOBDesc, DIV.LOBNum,
+		count(distinct INV.refNo) Volume,
+		count(distinct (case when inv.InvOutofPeriod <> 1 then inv.RefNo end)) as ''True Volume'',
+		sum(INV.invgp) InvGP, 
+		SUM(INV.InvGP) / (count(distinct INV.ShipmentID) *1.0) [Filtered AVG INV GP Per LOAD],
+		SUM(INV.InvGP) / (count(distinct (case when inv.InvOutofPeriod <> 1 then inv.RefNo ELSE inv.RefNo end)) *1.0) [TRUE Filtered AVG INV GP Per LOAD],
+		min(INV.ACCTMONTH) TheMonth, min(INV.ACCTYR) TheYear
+	from tblInvoice INV
+	join tblShipment SHP on INV.ShipmentID = SHP.ShipmentID
+	join tblDiv DIV on SHP.FK_DivID = DIV.DivisionID
+	join tblFiscalCalendar CAL on CAL.FiscalMonth = INV.ACCTMONTH and CAL.FiscalYear = INV.ACCTYR
+	where 
+		(convert(date, CAL.TheDate) = convert(date, dateadd(month, -1, GETDATE())))
+	group by DIV.DivisionName, DIV.LOBDesc, DIV.LOBNum
+	order by [Division/LOB]
+	';
+	exec sp_executesql @command;
+
+-- view PBI_Report_YTD_Financials
+	set @viewname = N'PBI_Report_YTD_Financials'
+	IF EXISTS(select * FROM sys.views where name = @viewname)
+	begin
+		set @command = N'drop view ' + @viewname
+		exec sp_executesql @command;
+	end
+
+	set @command = N'
+	create view ' + @viewname + '
+	as
+	select top 100 percent
+		DIV.DivisionName [Division/LOB], DIV.LOBDesc, DIV.LOBNum,
+		count(distinct INV.refNo) Volume,
+		count(distinct (case when inv.InvOutofPeriod <> 1 then inv.RefNo end)) as ''True Volume'',
+		sum(INV.invgp) InvGP, 
+		SUM(INV.InvGP) / (count(distinct INV.ShipmentID) *1.0) [Filtered AVG INV GP Per LOAD],
+		SUM(INV.InvGP) / (count(distinct (case when inv.InvOutofPeriod <> 1 then inv.RefNo ELSE inv.RefNo end)) *1.0) [TRUE Filtered AVG INV GP Per LOAD],
+		min(INV.ACCTYR) TheYear
+	from tblInvoice INV
+	join tblShipment SHP on INV.ShipmentID = SHP.ShipmentID
+	join tblDiv DIV on SHP.FK_DivID = DIV.DivisionID
+	join tblFiscalCalendar CAL on CAL.FiscalYear = INV.ACCTYR
+	where 
+		convert(date, CAL.TheDate) = convert(date, GETDATE())
+	group by DIV.DivisionName, DIV.LOBDesc, DIV.LOBNum
+	order by [Division/LOB]
+	';
+	exec sp_executesql @command;
+
+--view PBI_Customer_MTD_Financials
+	set @viewname = N'PBI_Customer_MTD_Financials'
+		IF EXISTS(select * FROM sys.views where name = @viewname)
+	begin
+		set @command = N'drop view ' + @viewname
+		exec sp_executesql @command;
+	end
+
+	set @command = N'
+	create view ' + @viewname + '
+	as
+	select top 100 percent
+       INV.InvCustName, DIV.LOBNum,
+       count(distinct INV.refNo) Volume,
+	   count(distinct (case when inv.InvOutofPeriod <> 1 then inv.RefNo end)) as ''True Volume'',
+  	   sum(INV.invgp) InvGP, 
+	   SUM(INV.InvGP) / (count(distinct INV.ShipmentID) *1.0) [Filtered AVG INV GP Per LOAD],
+	   min(INV.ACCTMONTH) TheMonth, min(INV.ACCTYR) TheYear
+	from tblInvoice INV
+	join tblShipment SHP on INV.ShipmentID = SHP.ShipmentID
+	join tblDiv DIV on SHP.FK_DivID = DIV.DivisionID
+	join tblFiscalCalendar CAL on CAL.FiscalMonth = INV.ACCTMONTH and CAL.FiscalYear = INV.ACCTYR
+	where 
+       convert(date, CAL.TheDate) = convert(date, GETDATE())
+	group by DIV.LOBNum, InvCustName
+	order by DIV.LOBNum, InvCustName
+	';
+	exec sp_executesql @command;
+
+--view PBI_Customer_YTD_Financials
+	set @viewname = N'PBI_Customer_YTD_Financials'
+		IF EXISTS(select * FROM sys.views where name = @viewname)
+	begin
+		set @command = N'drop view ' + @viewname
+		exec sp_executesql @command;
+	end
+
+	set @command = N'
+	create view ' + @viewname + '
+	as
+	select top 100 percent
+       INV.InvCustName, DIV.LOBNum,
+       count(distinct INV.refNo) Volume,
+	   count(distinct (case when inv.InvOutofPeriod <> 1 then inv.RefNo end)) as ''True Volume'',
+  	   sum(INV.invgp) InvGP, 
+	   SUM(INV.InvGP) / (count(distinct INV.ShipmentID) *1.0) [Filtered AVG INV GP Per LOAD],
+	   min(INV.ACCTYR) TheYear
+	from tblInvoice INV
+	join tblShipment SHP on INV.ShipmentID = SHP.ShipmentID
+	join tblDiv DIV on SHP.FK_DivID = DIV.DivisionID
+	join tblFiscalCalendar CAL on CAL.FiscalYear = INV.ACCTYR
+	where 
+       convert(date, CAL.TheDate) = convert(date, GETDATE())
+	group by DIV.LOBNum, InvCustName
+	order by DIV.LOBNum, InvCustName
+	';
+	exec sp_executesql @command;
+
+end
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[spAJCDW_CreatePowerBI_Views]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
