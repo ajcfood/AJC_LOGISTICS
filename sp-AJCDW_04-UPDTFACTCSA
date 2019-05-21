@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 5/21/2019 11:15:31 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 5/21/2019 11:42:51 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -16,11 +16,10 @@ SET NOCOUNT ON;
 
 /*
 
--- 05/17/2019 SA - Added Load Intial Email Invoice Sent Date/Time. 
+-- 05/17/2019 SA - Added Load Intial Email Invoice Sent Date/Time
 -- 05/17/2019 SA - Added Error Logging
--- 05/20/2019 SA - Combined Handling Station and Housebill from  [AirTrak].[dbo].tbl_ShipmentHeader as ShpMaster into tblShipment
+-- 05/20/2019 SA - Combined Handling Station and Housebill from  [AirTrak].[dbo].tbl_ShipmentHeader as ShpMaster into tblShipment 
 -- 05/20/2019 SA - Added columns SailDate, DeliveryDate, AgingIssue, InvRev, OracleInvNo, CSAShipNo, CustName to tblTrackingNotes and insert into tblTrackingNotes
-
 
 */
 
@@ -76,7 +75,6 @@ from [AirTrak].[dbo].tbl_References r INNER JOIN
 	(
 	SELECT FK_OrderNo, MIN(PK_ReferenceNo) PKRefNo
 	from [AirTrak].[dbo].tbl_References
-	where CustomerType = ''B''
 	GROUP BY FK_OrderNo
 	) r1 ON r1.FK_OrderNo = r.FK_OrderNo AND r.PK_ReferenceNo = r1.PKRefno
 --WHERE r.FK_OrderNo = ''20930''
@@ -382,6 +380,7 @@ from tblShipment s
 where t2.FK_OrderNo not in (select ContentsNum from tblContainerContents)
 	and s.FK_SystemID = 1;
 
+
 --Load Intial Email Invoice Sent Date/Time
 
 IF OBJECT_ID ('TEMPDB..#AddNewRecords') IS NOT NULL  DROP TABLE #AddNewRecords
@@ -391,7 +390,7 @@ FROM OPENQUERY (USDCFCSASQL01, '
 WITH CTE AS (
 				select MIN([PK_NoteNo]) [PK_NoteNo], FK_OrderNo
 				from AirTrak..tbl_TrackingNotes x
-				where note like ''Invoice Emailed to:%''
+				where (note like ''Invoice Emailed to:%'' OR note like ''Print Invoice%'')
 				and [DateTimeEntered] >= ''4/1/19'' 
 				GROUP BY FK_OrderNo
 			)
@@ -401,7 +400,6 @@ FROM AirTrak..tbl_TrackingNotes x
 inner join CTE y on y.[PK_NoteNo] = x.[PK_NoteNo]
 order by [FK_OrderNo]
 ');
-
 
 INSERT INTO [AJCDW].dbo.[tblTrackingNotes] (
 												[PK_NoteNo], [FK_OrderNo], [DateTimeEntered], [Note], [FK_UserId], [SailDate], [DeliveryDate], [AgingIssue], 
