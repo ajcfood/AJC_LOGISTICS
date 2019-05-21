@@ -1,0 +1,98 @@
+USE [MGXMLProcessing]
+GO
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadDWCarrMasterRecs]    Script Date: 5/21/2019 2:38:25 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+
+ALTER PROCEDURE [dbo].[sp-MGXML-LoadDWCarrMasterRecs]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+DECLARE @RecIDs TABLE
+(RecID int);
+
+
+INSERT INTO @RecIDs
+select cr.CarrierID
+from 
+(
+select *
+from [MGXMLProcessing].[dbo].[tblXML_DWCarrierMaster]
+where Processed = 0 
+	--and CarrierNum not in 
+	--(select VendorNum from [AJCDW].[dbo].[tblVendor] where FK_SystemID = 4)
+)cr;
+
+
+-- Insert New Carriers --
+insert into [AJCDW].[dbo].[tblVendor]
+select distinct CarrierNum, CarrierName, '' as CarrierAddr1, '' as CarrierAddr2, '' as CarrierCity, '' as CarrierState, '' as CarrierZip
+	, '' as VendPhone, '' as VendFax
+	, CarrierSalesP as VendContact
+	, '' as VendLiab, '' as VendAmt, '' as VendCAmt
+	, CarrierMCNum
+	, '' as VebndIns, '' as VendInsPolicy, '' as VenEquip1, '' as VenEquip2, '' as VenEquip3
+	, CarrierDOTNum--, CarrierSCAC
+	, '' as VendIns2, '' as VendInsPolicy2
+	, CarrierStatus
+	, CarrierActive
+	, FK_SystemID
+from [MGXMLProcessing].[dbo].[tblXML_DWCarrierMaster]
+where Processed = 0 and CarrierNum not in 
+	(select VendorNum from [AJCDW].[dbo].[tblVendor] where FK_SystemID = 4)
+order by CarrierNum;
+
+
+-- Update existing carrier's sales person --
+update [AJCDW].[dbo].[tblVendor]
+set [AJCDW].[dbo].[tblVendor].VendContact = dcr.CarrierSalesP
+--select v.VendorNum, v.VendName, v.VendContact, dcr.CarrierSalesP
+from [AJCDW].[dbo].[tblVendor] v
+	inner join [MGXMLProcessing].[dbo].[tblXML_DWCarrierMaster]  dcr
+		on v.VendorNum = dcr.CarrierNum
+where  dcr.Processed = 0
+	and v.FK_SystemID = 4
+	and dcr.CarrierSalesP is not null
+	and isnull(convert(varchar(50),v.VendContact), '') <> dcr.CarrierSalesP;
+
+
+update [MGXMLProcessing].[dbo].[tblXML_DWCarrierMaster]
+set Processed = 1
+where CarrierID in (select RecID from @RecIDs);
+
+
+END
+
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp-MGXML-LoadDWCarrMasterRecs]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
