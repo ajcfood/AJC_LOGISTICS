@@ -1,0 +1,106 @@
+USE [MGXMLProcessing]
+GO
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadCarrierInv]    Script Date: 5/21/2019 2:33:46 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+ALTER PROCEDURE [dbo].[sp-MGXML-LoadCarrierInv]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+
+--DECLARE @PriceSheetID Int;
+
+--SELECT TOP 1 @PriceSheetID = PriceSheetID
+--FROM [MGXMLProcessing].[dbo].[tblCarrierXML_PriceSheet]
+--WHERE PriceSheetType = 'Billed'
+
+--UPDATE [MGXMLProcessing].[dbo].[tblCarrierXML_CarrierDetails]
+--SET PriceSheetID = @PriceSheetID
+--WHERE PriceSheetID IS NULL
+
+
+insert into [tblCarrierXML_InvoiceLoadRecs]
+select distinct ref.[Shipping Order], ref.[Load ID], ref.[Release Number], ref.[PO Number]--, ref.[SCAC]
+	, carr.SCAC, carr.CarrierID, carr.CarrierName
+	, ent.[EnterpriseName], ent.[EnterpriseParentName], ent.[EnterpriseType], ent.[EnterpriseAccntNum]
+	, pri.[PriceSheetType], pri.[PriceSheetCurrency], pri.[PriceSheetCreatedBy], pri.[PriceSheetUpdatedBy]
+	, dt.[DateCategory], dt.[Pickup], dt.[Drop]
+	, chrgs.ChargesType, chrgs.ChargesSeqNum, left(chrgs.ChargesEDICode, 6) as ChargesEDICode, chrgs.ChargesDesc, chrgs.ChargesAmount, chrgs.InvNum, chrgs.InvDate
+	, GetDate() as LoadedDateTime
+	, pri.[FileName]
+	, pri.[FileCreatedDate]
+	, 0
+from (
+  select * from (
+    select [RefType],[RefValue]
+    from [MGXMLProcessing].[dbo].[tblCarrierXML_Ref]
+  ) t
+  pivot (
+    max([RefValue]) for [RefType] in ([Shipment ID], [PO Number], [Release Number], [Shipping Order], [Load ID], [SCAC], [Customer Acct Number] )
+  ) p
+) ref
+inner join
+(
+SELECT DISTINCT
+      [EnterpriseName]
+      ,[EnterpriseParentName]
+      ,[EnterpriseType]
+      ,[EnterpriseAccntNum]
+  FROM [MGXMLProcessing].[dbo].[tblCarrierXML_Enterprise]
+) ent
+on ref.[Customer Acct Number] = ent.EnterpriseAccntNum
+
+inner join [MGXMLProcessing].[dbo].[tblCarrierXML_PriceSheet] pri
+on ref.[Load ID] = pri.LoadID
+
+inner join
+(
+  select * from (
+    select [LoadID], [DateCategory], [DateType], [DateTime]
+    from [MGXMLProcessing].[dbo].[tblCarrierXML_Dates]
+  ) t
+  pivot (
+    max([DateTime]) for [DateType] in ([Pickup], [Drop] )
+  ) p
+) dt
+on pri.LoadID = dt.LoadID
+
+inner join [MGXMLProcessing].[dbo].[tblCarrierXML_Charges] chrgs
+on ref.[Load ID] = chrgs.LoadID and pri.PriceSheetID = chrgs.PriceSheetID
+
+left outer join [MGXMLProcessing].[dbo].[tblCarrierXML_CarrierDetails] carr
+on ref.[Load ID] = carr.LoadID and pri.PriceSheetID = carr.PriceSheetID;
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp-MGXML-LoadCarrierInv]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
