@@ -1,0 +1,156 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadSGACleansed]    Script Date: 5/21/2019 11:22:15 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER procedure [dbo].[spAJCDW_LoadSGACleansed]
+as
+BEGIN TRY
+begin
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+--STEP #1
+select 
+             AD.LINE_PERIOD_NAME, AD.LINE_ACCT_COMBO, 
+             AD.SEGMENT1, AD.SEGMENT2, AD.SEGMENT3,AD.SEGMENT4, AD.SEGMENT5, AD.SEGMENT6,AD.SEGMENT7, 
+             sum(ocost) as OCOST
+                     INTO #tmp1
+        from tblOracleNonFileTrans AD
+              WHERE AD.LINE_PERIOD_NAME LIKE '%-19'  -- change this to LIKE '%-20' in 2020
+             and AD.SEGMENT2 >= '6000'
+     Group by AD.LINE_PERIOD_NAME, AD.LINE_ACCT_COMBO, 
+             AD.SEGMENT1, AD.SEGMENT2, AD.SEGMENT3,AD.SEGMENT4, AD.SEGMENT5, AD.SEGMENT6,AD.SEGMENT7 
+      order by LINE_ACCT_COMBO
+
+--STEP #2
+SELECT pd.PERIOD_NAME,pd.ACCTMONTH,pd.ACCTYEAR,PD.LINE_ACCT_COMBO, PD.SEGMENT1,pd.SEGMENT2,pd.SEGMENT3,pd.SEGMENT4,pd.SEGMENT5,pd.SEGMENT6,pd.SEGMENT7,isnull([OCOST], 0)AS OCOST,
+             VALUE, 
+             VALUE - isnull([OCOST], 0) as VARIANCE
+INTO #tmp2
+from tblOracleNonFileTrans AD
+RIGHT OUTER JOIN tblOracleSGABudget PD
+ON (AD.LINE_ACCT_COMBO = PD.LINE_ACCT_COMBO AND AD.LINE_PERIOD_NAME = PD.PERIOD_NAME)
+WHERE AD.LINE_ACCT_COMBO IS NULL AND PD.PERIOD_NAME LIKE '%-19' -- change this to LIKE '%-20' in 2020
+order by pd.LINE_ACCT_COMBO
+
+--STEP #3
+select 
+             AD.LINE_PERIOD_NAME, pd.ACCTMONTH, pd.ACCTYEAR ,AD.LINE_ACCT_COMBO, 
+             AD.SEGMENT1, AD.SEGMENT2, AD.SEGMENT3,AD.SEGMENT4, AD.SEGMENT5, AD.SEGMENT6,AD.SEGMENT7, 
+             OCOST,
+                     isnull([VALUE], 0) [VALUE], 
+             isnull([VALUE], 0) - OCOST VARIANCE
+        INTO #tmp3
+        from #tmp1 AD
+       full outer join tblOracleSGABudget PD on 
+             AD.LINE_ACCT_COMBO = PD. LINE_ACCT_COMBO
+             and AD.LINE_PERIOD_NAME = PD.PERIOD_NAME
+             -- following doesn't seem to affect join criteria, thus left out
+             /*
+             and AD.SEGMENT1 = PD.SEGMENT1
+             and AD.SEGMENT2 = PD.SEGMENT2
+             and AD.SEGMENT3 = PD.SEGMENT3
+             and AD.SEGMENT4 = PD.SEGMENT4
+             and AD.SEGMENT5 = PD.SEGMENT5
+             and AD.SEGMENT6 = PD.SEGMENT6
+             and AD.SEGMENT7 = PD.SEGMENT7
+             */
+       where 
+             AD.LINE_PERIOD_NAME LIKE '%-19' -- change this to LIKE '%-20' in 2020
+             and AD.SEGMENT2 >= '6000'
+         group by 
+             AD.LINE_PERIOD_NAME,pd.ACCTMONTH, pd.ACCTYEAR, AD.LINE_ACCT_COMBO, 
+             AD.SEGMENT1, AD.SEGMENT2, AD.SEGMENT3,AD.SEGMENT4, AD.SEGMENT5, AD.SEGMENT6,AD.SEGMENT7, 
+             OCOST, [value]
+       order by LINE_ACCT_COMBO
+
+--STEP #4 - Join Budget and Actuals where values are Null or zero in one and not the other.  ALL ROWS.  Only use for troubleshooting
+/*
+SELECT * from #tmp3
+UNION
+SELECT * from #tmp2
+*/
+--STEP #5 - Load tables
+DELETE from tblOracleSGABudgetCleansed
+
+INSERT INTO tblOracleSGABudgetCleansed
+SELECT * from #tmp3
+UNION
+SELECT * from #tmp2
+
+--STEP #6 - Updte ACCTMONTH and ACCTYR for 
+
+UPDATE tblOracleSGABudgetCleansed
+SET ACCTMONTH = CASE
+		WHEN (PERIOD_NAME LIKE 'CALJAN%') THEN '1'
+		WHEN (PERIOD_NAME LIKE 'CALFEB%') THEN '2'
+		WHEN (PERIOD_NAME LIKE 'CALMAR%') THEN '3'
+		WHEN (PERIOD_NAME LIKE 'CALAPR%') THEN '4'
+		WHEN (PERIOD_NAME LIKE 'CALMAY%') THEN '5'
+		WHEN (PERIOD_NAME LIKE 'CALJUN%') THEN '6'
+		WHEN (PERIOD_NAME LIKE 'CALJUL%') THEN '7'
+		WHEN (PERIOD_NAME LIKE 'CALAUG%') THEN '8'
+		WHEN (PERIOD_NAME LIKE 'CALSEP%') THEN '9'
+		WHEN (PERIOD_NAME LIKE 'CALOCT%') THEN '10'
+		WHEN (PERIOD_NAME LIKE 'CALNOV%') THEN '11'
+		WHEN (PERIOD_NAME LIKE 'CALDEC%') THEN '12'
+		ELSE PERIOD_NAME
+	END	
+WHERE ACCTMONTH IS NULL
+
+UPDATE tblOracleSGABudgetCleansed
+SET ACCTYEAR = CASE
+		WHEN (PERIOD_NAME LIKE '%-19') THEN '2019'
+		WHEN (PERIOD_NAME LIKE '%-20') THEN '2020'
+		WHEN (PERIOD_NAME LIKE '%-21') THEN '2021'
+		WHEN (PERIOD_NAME LIKE '%-22') THEN '2022'
+		WHEN (PERIOD_NAME LIKE '%-23') THEN '2023'
+		ELSE PERIOD_NAME
+	END	
+WHERE ACCTYEAR IS NULL
+
+
+/*
+select * from #tmp1 where line_period_name = 'CALJAN-19' and SEGMENT2 >= '6000' order by LINE_ACCT_COMBO
+select * from #tmp2 where period_name = 'CALJAN-19' and SEGMENT2 >= '6000' order by LINE_ACCT_COMBO
+select * from #tmp3 where line_period_name = 'CALJAN-19' and SEGMENT2 >= '6000' order by LINE_ACCT_COMBO
+drop table #tmp1
+drop table #tmp2
+drop table #tmp3
+
+
+select * from tblOracleSGABudget
+where SEGMENT2 = '6283' and PERIOD_NAME = 'CALJAN-19' order by LINE_ACCT_COMBO
+
+select * from tblOracleNonFileTrans
+where SEGMENT2 = '6283' and LINE_PERIOD_NAME = 'CALJAN-19'
+*/
+end
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[spAJCDW_LoadSGACleansed]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
