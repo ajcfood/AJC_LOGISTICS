@@ -1,0 +1,209 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_01-UPDTDIMS]    Script Date: 5/21/2019 11:14:41 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[sp-AJCDW_01-UPDTDIMS]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+---------
+-- IES --
+---------
+
+-- Update Master Data  --
+-------------------------
+
+SELECT *
+into #tmp2
+FROM OPENQUERY(IES, '
+SELECT distinct cliend_id, acctg_id, type
+	, name, street, address, city, state
+	, zip_code, country, phone, fax, contact_name, BillTo_email, salesman
+	, case when active_status = 0 then 1 when active_status = 1 then 0 end as active
+	, 2 as sysid FROM CLIENT_DAT');
+
+insert into tblCustMaster 
+SELECT *
+FROM #tmp2 t2
+WHERE not exists (select CustMasterNum, CustMasterCode 
+	from tblCustMaster cm 
+	where cm.CustMasterNum = t2.cliend_id and cm.CustMasterCode = t2.acctg_id and cm.FK_SystemID = 2)
+		and ltrim(rtrim(t2.acctg_id)) <> '' 
+ORDER BY t2.name;
+
+update [AJCDW].[dbo].[tblCustMaster]
+set [AJCDW].[dbo].[tblCustMaster].Salesman = t2.Salesman
+--select c.CustMasterNum, c.CustName, c.Salesman, t2.Salesman
+from [AJCDW].[dbo].[tblCustMaster] c
+	inner join #tmp2 t2
+		on c.CustMasterNum = t2.cliend_id
+where c.FK_SystemID = 2;
+
+/*
+---------
+-- BP  --
+---------
+
+-- Get Customers --
+-------------------
+
+select *
+into #tmp1
+FROM OPENQUERY([USDCFAPBG01], '
+	select * from StgAJCDW.dbo.tblStgBPCustMast');
+
+
+insert into tblCustMaster
+select [CustMasterNum],[CustMasterCode],[Type],[Name],[Addr1],[Addr2],[City],[State],[Zip],[Country],[Phone],[Fax]
+      ,[Contact],[Email],[Salesman],[Active],[FK_SystemID]
+FROM #tmp1
+where CustMasterNum not in (select CustMasterNum
+	from tblCustMaster 
+	where fk_systemid = 3)
+order by CustMasterNum;
+
+
+update [AJCDW].[dbo].[tblCustMaster]
+set [AJCDW].[dbo].[tblCustMaster].Salesman = t1.Salesman
+--select c.CustMasterNum, c.CustName, c.Salesman, t1.Salesman
+from [AJCDW].[dbo].[tblCustMaster] c
+	inner join #tmp1 t1
+		on c.CustMasterNum = t1.CustMasterNum
+where c.FK_SystemID = 3;
+
+
+-- Get Vendors --
+-------------------
+
+insert into tblVendor
+select [VendorNum],[VendName],[VendAddr1],[VendAddr2],[VendCity],[VendState],[VendZip],[VendPhone],[VendFax]
+      ,[VendEmail],[VendLiab],[VendLAmt],[VendCAmt],[VendFHA],[VendLiabInsur],[VendLiabInsPolicy],[VendEquip1],[VendEquip2],[VendEquip3]
+      ,[VendDOTNum],[VendCargoInsur],[VendCargoInsPolicy],[VendStatus],[VendActive],[FK_SystemID]
+FROM OPENQUERY([USDCFAPBG01], '
+	select * from StgAJCDW.dbo.tblStgBPVendor')
+where VendorNum not in (select VendorNum
+	from tblVendor 
+	where fk_systemid = 3)
+order by VendorNum;
+
+
+-- Get Consignee --
+-------------------
+
+insert into tblConsg
+select distinct [ConsgID], [ConsgFileNum], [ConsgName], [ConsgAddr1], [ConsgAddr2], [ConsgCity], [ConsgState], [ConsgZip], [ConsgCountry]
+      ,[ConsgPhone], [ConsgFax], [ConsgContact], [ConsgEmail], [Active], [FK_SystemID]
+FROM OPENQUERY([USDCFAPBG01], '
+	select * from StgAJCDW.dbo.tblStgConsg')
+where ConsgFileNum not in (select ConsgFileNum
+	from tblConsg 
+	where fk_systemid = 3)
+order by ConsgFileNum;
+
+
+-- Get Shipper --
+-----------------
+
+insert into tblShipper
+select distinct [ShipperID], [ShipperFileNum], [ShipperName], [ShipperAddr1], [ShipperAddr2], [ShipperCity], [ShipperState], [ShipperZip]
+      , [ShipperCountry], [ShipperPhone], [ShipperFax], [ShipperContact], [ShipperEmail], [Active], [FK_SystemID]
+FROM OPENQUERY([USDCFAPBG01], '
+	select * from StgAJCDW.dbo.tblStgShipper')
+where ShipperFileNum not in (select ShipperFileNum
+	from tblShipper 
+	where fk_systemid = 3)
+order by ShipperFileNum;
+
+*/
+-----------
+--  CSA  --
+-----------
+
+-- Insert Customer --
+---------------------
+
+insert into AJCDW.dbo.tblCustMaster
+SELECT *
+FROM OPENQUERY(USDCFCSASQL01, '
+select distinct PK_CustNo, CustomerID, ''Customer'' as Type, CustName, CustAddress1, CustAddress2, CustCity, FK_CustState, CustZip
+	, FK_CustCountry, CustPhone, CustFax, custcontact, email, FK_Salesperson--, FK_StationId
+	, case when active = ''Y'' then ''1'' else ''0'' end as active
+	, 1 as fksysid
+from AirTrak.dbo.tbl_Customers')
+WHERE PK_CustNo not in (select CustMasterNum
+	from tblCustMaster 
+	where [Type] = 'Customer' and fk_systemid = 1)
+ORDER BY PK_CustNo;
+
+
+
+-- Insert Vendors  --
+---------------------
+
+insert into AJCDW.dbo.tblCustMaster
+SELECT *
+FROM OPENQUERY(USDCFCSASQL01, '
+select distinct PK_VendorNo, VendorID, ''Vendor'' as Type, VendorName, VendorAddress1, VendorAddress2, VendorCity, FK_VendorState, VendorZip
+	, FK_VendorCountry, VendorPhone, VendorFax, VendorEmail as Contact,  VendorEmail, '''' as Salesperson
+	, case when active = ''Y'' then ''1'' else ''0'' end as active
+	, 1 as fksysid
+from AirTrak.dbo.tbl_Vendors')
+WHERE PK_VendorNo not in (select CustMasterNum
+	from tblCustMaster 
+	where [Type] = 'Vendor' and fk_systemid = 1)
+ORDER BY PK_VendorNo;
+
+
+-- Insert Stations --
+---------------------
+insert into AJCDW.dbo.tblStations
+SELECT *
+FROM OPENQUERY(USDCFCSASQL01, '
+SELECT [PK_StationId], [StationName], [StationAddress1], [StationAddress2], [StationCity], [FK_StationState], [StationZip]
+      , [FK_StationCountry], [StationPhone], [StationFax], [StationEmail], 1 as Active
+      , 1 as SysID
+FROM [AirTrak].[dbo].[tbl_Stations]')
+WHERE PK_StationId not in (select StationNum
+	from tblStations 
+	where fk_systemid = 1)
+ORDER BY PK_StationId;
+
+
+--DROP TABLE #tmp1;
+DROP TABLE #tmp2;
+
+
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp-AJCDW_01-UPDTDIMS]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
