@@ -1,0 +1,84 @@
+USE [MGXMLProcessing]
+GO
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadOracleRouteRecords]    Script Date: 5/21/2019 2:42:51 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+
+
+ALTER PROCEDURE [dbo].[sp-MGXML-LoadOracleRouteRecords](@ORCLENV CHAR(15), @ORCLTBL CHAR(30))
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+DECLARE @SQL1 NVARCHAR(MAX);
+
+
+SET @SQL1 = '
+insert into
+openquery(' + @ORCLENV + ', ''select * from ' + @ORCLTBL + ''')
+select [RefShippingOrder]
+      ,[RefLoadID]
+      ,[RefReleaseNum]
+      ,[RefPONum]
+      ,[RefSCAC]
+      ,[CarrierID]
+      ,[CarrierName]
+      ,[RefCustomerAcctNum]
+	  ,[EntCustomerName]
+      ,[PriceSheetType]
+      ,[PriceSheetCurrency]
+      ,[PriceSheetCreatedBy]
+      ,[PriceSheetUpdatedBy]
+      ,[PriceSheetDateCategory]
+      ,[PriceSheetPickupDate]
+      ,[PriceSheetDropDate]
+      ,[ChargesType]
+      ,[ChargesSeqNum]
+      ,[ChargesEDICode]
+      ,[ChargesDesc]
+      ,[ChargesAmount]
+      ,[LoadedDateTime]
+      ,[FileName]
+      ,[FileCreatedDate]
+from [MGXMLProcessing].[dbo].[tblRouteXML_TransportLoadRecs] where [SentToOracle] = 0';
+
+EXEC sp_executesql @SQL1;
+
+
+update [MGXMLProcessing].[dbo].[tblRouteXML_TransportLoadRecs]
+set [SentToOracle] = 1
+where [SentToOracle] = 0;
+
+
+END
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp-MGXML-LoadOracleRouteRecords]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
