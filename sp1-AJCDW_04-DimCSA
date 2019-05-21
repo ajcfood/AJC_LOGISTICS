@@ -1,0 +1,95 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[sp1-AJCDW_04-DimCSA]    Script Date: 5/21/2019 11:08:30 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[sp1-AJCDW_04-DimCSA]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+-----------
+--  CSA  --
+-----------
+
+-- Insert Customer --
+---------------------
+
+insert into AJCDW.dbo.tblCustMaster
+select *
+FROM OPENQUERY(USDCFCSASQL01, '
+select distinct PK_CustNo, CustomerID, ''Customer'' as Type, CustName, CustAddress1, CustAddress2, CustCity, FK_CustState, CustZip
+	, FK_CustCountry, CustPhone, CustFax, custcontact, email, FK_Salesperson--, FK_StationId
+	, case when active = ''Y'' then ''1'' else ''0'' end as active
+	, 1 as fksysid
+from AirTrak.dbo.tbl_Customers
+');
+
+
+-- Insert Vendors  --
+---------------------
+
+insert into AJCDW.dbo.tblCustMaster
+select *
+FROM OPENQUERY(USDCFCSASQL01, '
+select distinct PK_VendorNo, VendorID, ''Vendor'' as Type, VendorName, VendorAddress1, VendorAddress2, VendorCity, FK_VendorState, VendorZip
+	, FK_VendorCountry, VendorPhone, VendorFax, VendorEmail as Contact,  VendorEmail, '''' as Salesperson
+	, case when active = ''Y'' then ''1'' else ''0'' end as active
+	, 1 as fksysid
+from AirTrak.dbo.tbl_Vendors
+');
+
+
+-- Insert Stations --
+---------------------
+insert into AJCDW.dbo.tblStations
+select *
+FROM OPENQUERY(USDCFCSASQL01, '
+SELECT [PK_StationId], [StationName], [StationAddress1], [StationAddress2], [StationCity], [FK_StationState], [StationZip]
+      , [FK_StationCountry], [StationPhone], [StationFax], [StationEmail], 1 as Active
+      , 1 as SysID
+FROM [AirTrak].[dbo].[tbl_Stations]
+');
+
+
+-- Insert Sales Person  --
+--------------------------
+/*
+insert into AJCDW.dbo.tblSalesP
+select pk_salespersonid, [description]
+	, 1 as fksysid
+from AirTrak.dbo.tbl_Salesperson
+*/
+
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp1-AJCDW_04-DimCSA]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
