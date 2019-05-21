@@ -1,0 +1,48 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[sp1-AJCDW_01-DimInit]    Script Date: 5/21/2019 11:07:40 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[sp1-AJCDW_01-DimInit]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+TRUNCATE TABLE [AJCDW].[dbo].[tblCustMaster];
+TRUNCATE TABLE [AJCDW].[dbo].[tblVendor];
+TRUNCATE TABLE [AJCDW].[dbo].[tblStations];
+TRUNCATE TABLE [AJCDW].[dbo].[tblConsg];
+TRUNCATE TABLE [AJCDW].[dbo].[tblShipper];
+TRUNCATE TABLE [AJCDW].[dbo].[tblOracleAccounts];
+
+
+END
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp1-AJCDW_01-DimInit]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
