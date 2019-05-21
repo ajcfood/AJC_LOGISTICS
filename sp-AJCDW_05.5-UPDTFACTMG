@@ -1,0 +1,139 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_05.5-UPDTFACTMG]    Script Date: 5/21/2019 11:16:25 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[sp-AJCDW_05.5-UPDTFACTMG]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+---------
+--  MG --
+---------
+
+
+-- LOAD SHIPMENT DATA --
+------------------------
+
+EXEC [MGXMLProcessing].[dbo].[sp-MGXML-LoadDWShipmentRecs2];
+
+
+-- Load Container Contents --
+-----------------------------
+
+EXEC [MGXMLProcessing].[dbo].[sp-MGXML-LoadDWContContents2];
+
+
+
+-- LOAD INVOICE DATA --
+-----------------------
+
+delete
+from tblInvoice
+where FK_SystemID = 4;
+
+insert into tblInvoice
+select sh.shipmentid, 'MG'+sh.RefNo as refno, sh.ShpBkgNum as invno
+	, t11.LINE_EFFECTIVE_DATE as invdate, NULL, NULL
+	, null, t11.OREVENUE, t11.OCOST, t11.OREVENUE-t11.OCOST AS GP
+	, t11.PERIOD_NAME, NULL, NULL, NULL
+	, t11.INV_TYPE, t11.LOB
+	, NULL, NULL, 4
+from tblShipment sh
+inner join tblOracleGLCleansed t11
+	on 'MG'+RefNo = t11.LINE_ATTRIBUTE11
+where sh.FK_SystemID = 4
+	and sh.ShipmentID not in
+		(select ShipmentID from tblInvoice)
+order by 'MG'+sh.RefNo;
+
+
+-------------------------
+-- Update Foreign Keys --
+-------------------------
+
+-- Division --
+--------------
+UPDATE tblShipment
+SET fk_divid = di.DivisionID
+FROM tblShipment sh
+    INNER JOIN tblDiv di
+		ON (sh.ShpDivID = di.DivisionNum
+			AND sh.ShpLOB = di.LOBNum)
+WHERE sh.FK_SystemID = 4; 
+
+
+-- Customer --
+--------------
+UPDATE tblShipment
+SET fk_custmasterid = cm.CustMasterID
+FROM tblShipment sh
+    INNER JOIN tblCustMaster cm
+		ON sh.ShpAccnt = cm.CustMasterCode AND sh.FK_SystemID = cm.fk_systemid
+WHERE LTRIM(RTRIM(sh.ShpAccnt)) <> '' AND sh.FK_SystemID = 4;
+
+
+-- Sales Person --
+------------------
+UPDATE tblShipment
+SET fk_salespid = sp.salespid
+FROM tblShipment sh
+    INNER JOIN tblCustMaster cm
+		ON sh.ShpAccnt = cm.CustMasterCode AND sh.FK_SystemID = cm.fk_systemid
+    INNER JOIN tblSalesP sp
+		ON cm.salesman = sp.salespcode AND cm.fk_systemid = sp.FK_SystemID
+WHERE LTRIM(RTRIM(sh.ShpAccnt)) <> '' AND sh.FK_SystemID = 4 AND sh.[FK_SalesPID] is null; 
+-- third part of AND statement in where clause should be used if we want historical loads to stay with "old" sales rep when rep is changed in MG
+
+
+UPDATE tblShipment
+SET fk_salespid = sp.salespid
+FROM tblShipment sh
+	INNER JOIN tblSalesP sp
+		ON sh.ShpSalesP = sp.SalesPName AND sh.FK_SystemID = sp.fk_systemid
+WHERE sh.[FK_SalesPID] is null and ltrim(rtrim(sh.ShpSalesP)) <> '' and sh.[FK_SystemID] = 4;
+
+
+-- Vendor --
+------------
+UPDATE tblShipment
+SET fk_vendid = v.vendorid
+FROM tblShipment sh
+    INNER JOIN tblVendor v
+		ON sh.ShpCarrier = v.VendorNum AND sh.FK_SystemID = v.fk_systemid
+WHERE LTRIM(RTRIM(sh.ShpCarrier)) <> '' AND sh.FK_SystemID = 4;
+
+
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp-AJCDW_05.5-UPDTFACTMG]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
