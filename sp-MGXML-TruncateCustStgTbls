@@ -1,0 +1,49 @@
+USE [MGXMLProcessing]
+GO
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-TruncateCustStgTbls]    Script Date: 5/21/2019 2:43:44 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+ALTER PROCEDURE [dbo].[sp-MGXML-TruncateCustStgTbls]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+truncate table tblCustomerXML_Enterprise;
+truncate table tblCustomerXML_Ref;
+truncate table tblCustomerXML_PriceSheet;
+truncate table tblCustomerXML_Dates;
+truncate table tblCustomerXML_Charges;
+truncate table tblCustomerXML_Item;
+truncate table tblCustomerXML_Locations;
+
+END
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp-MGXML-TruncateCustStgTbls]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
