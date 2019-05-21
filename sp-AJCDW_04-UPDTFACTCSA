@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 5/21/2019 2:05:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 5/21/2019 2:58:10 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -407,7 +407,7 @@ INSERT INTO [AJCDW].dbo.[tblTrackingNotes] (
 										   )
 SELECT				x.[PK_NoteNo], x.[FK_OrderNo], x.[DateTimeEntered], SUBSTRING(x.[Note],1,350), x.[FK_UserId] /*Took substring of 350 because that is the max that column will allow*/,
 					
-					ts.ShpShipDate, ts.ShpDelivDate, DATEDIFF(DD, ts.ShpDelivDate, tn.DateTimeEntered), z.InvRevenue, orad.Trx_Number, ts.ShpMaster, orad.CUSTOMER_NAME
+					ts.ShpShipDate, ts.ShpDelivDate, DATEDIFF(DD, ts.ShpDelivDate, x.DateTimeEntered), z.InvRevenue, orad.Trx_Number, ts.ShpMaster, orad.CUSTOMER_NAME
 FROM				#AddNewRecords x
 LEFT OUTER JOIN		AJCDW..tblTrackingNotes tn on tn.PK_NoteNo = x.PK_NoteNo
 INNER JOIN			AJCDW..tblShipment ts ON ts.ShipmentID = x.FK_OrderNo
@@ -419,7 +419,8 @@ CROSS APPLY			(
 						GROUP BY ShipmentID
 					) z
 
-WHERE				tn.PK_NoteNo IS NULL;
+WHERE				tn.PK_NoteNo IS NULL
+AND					ts.ShpDelivDate IS NULL;
 
 
 END
