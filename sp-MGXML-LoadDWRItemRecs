@@ -1,0 +1,56 @@
+USE [MGXMLProcessing]
+GO
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadDWRItemRecs]    Script Date: 5/21/2019 2:40:25 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+
+
+
+ALTER PROCEDURE [dbo].[sp-MGXML-LoadDWRItemRecs]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+
+
+insert into [MGXMLProcessing].[dbo].[tblXML_DW_LoadRItems]
+select min(ItemID) as ItemID, [Weight], Qty, QtyUOM, InsuredValue, Qty, QtyUOM, ItemDesc
+	, cast('201807'+cast(dbo.udf_GetNumeric(SOID) as varchar(50)) as int) as FileNo--, SOID
+	, WeightUOM, null as UnitPack, 4 as SystemID, 0 as Processed
+from [MGXMLProcessing].[dbo].[tblRouteXML_Item]
+group by [Weight], Qty, QtyUOM, InsuredValue, Qty, QtyUOM, ItemDesc, SOID, WeightUOM;
+
+
+
+END
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp-MGXML-LoadDWRItemRecs]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
