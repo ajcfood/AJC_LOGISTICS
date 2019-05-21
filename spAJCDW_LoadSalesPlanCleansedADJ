@@ -1,0 +1,134 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadSalesPlanCleansedADJ]    Script Date: 5/21/2019 11:21:42 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+-- ========================================================================================================
+-- Author: Salah El-Jamil
+-- Procedure Inital Create date: 3/3/19
+-- Description: Creted to build table of sales reps actuals vs plan for seasonal/adjusted sales goals/plan
+-- ========================================================================================================
+
+ALTER procedure [dbo].[spAJCDW_LoadSalesPlanCleansedADJ]
+as
+BEGIN TRY
+begin
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+-- ====================================================================================================================================================
+-- Step #1
+-- Description: Pull Actuals by sales person name for given time period.  Only have LOB 11 as of 3/26/19
+-- Note #1: update i.ACCTYR in where clause at the beginning of each year once accounting team confirms final integration is completed for current year 
+-- Note #2: update InvLOB in where clause to include other lines of business if we get their sales person plan numbers
+-- ====================================================================================================================================================
+SELECT sa.SalesPName, count(DISTINCT s.shipmentid) as LoadCnt, SUM(InvRevenue) as REV, sum(InvCost) as COST, SUM(InvGP) as GP
+	,InvLOB, i.ACCTYR, f.DELWEEK, f.DELYEAR
+INTO #tmp1
+from tblInvoice i
+JOIN tblFile f on i.ShipmentID = f.ShipmentID
+JOIN tblShipment s on f.ShipmentID = s.shipmentID
+JOIN tblSalesP sa on sa.SalesPID = s.FK_SalesPID
+where i.ACCTYR LIKE '%19' and InvLOB = '11'
+Group By sa.SalesPName, i.ACCTYR, InvLOB
+	,f.DELWEEK, f.DELYEAR
+Order by sa.SalesPName
+
+-- ====================================================================================================================
+-- Step #2
+-- Description: Results by delivery week showing actuals only where there is a planed amount for the given sales person
+-- ====================================================================================================================
+SELECT SPGSalesPName, rev, cost, gp
+	,InvLOB, acctyr, wknum, monthnum, SalesGoalYear, DELWEEK,DELYEAR
+	, ISNULL([GP],0) as ActualGP, SPGGPPerWeek as PlanGP, ISNULL([GP],0) -SPGGPPerWeek as GP_Variance
+	, ISNULL([LoadCnt],0) as ActVol, SPGLoadsPerWeek as PlannedVol, ISNULL([LoadCnt],0) - SPGLoadsPerWeek as LoadVar
+INTO #tmp2
+from #tmp1 t1
+RIGHT OUTER JOIN tblSalesPPlanADJ sp
+ON (sp.SPGSalesPName = t1.SalesPName AND sp.SalesGoalYear = t1.DELYEAR AND sp.WKNUM = t1.DELWEEK)
+
+-- ==================================================================================================================================
+-- Step #3
+-- Description: Results by delivery week showing plan amount only where there is actual GP for the given sales person in temp table 1
+-- ==================================================================================================================================
+SELECT SalesPName, rev, cost, gp
+	,InvLOB, acctyr, wknum, monthnum, SalesGoalYear, DELWEEK,DELYEAR
+	, GP as Actual_GP, isnull([SPGGPPerWeek],0) as PlanGP, GP-ISNULL([SPGGPPerWeek],0) as GP_Variance
+	, ISNULL([LoadCnt],0) as ActualVol, isnull([SPGLoadsPerWeek],0) as PlanVol, ISNULL([LoadCnt],0)-ISNULL([SPGLoadsPerWeek],0) as VolVar
+INTO #tmp3
+from #tmp1 t1
+FULL OUTER JOIN tblSalesPPlanADJ sp
+ON (sp.SPGSalesPName = t1.SalesPName AND sp.SalesGoalYear = t1.DELYEAR AND sp.WKNUM = t1.DELWEEK)
+WHERE SalesPName IS NOT NULL
+GROUP BY SalesPName,REV, COST, GP, InvLOB, ACCTYR, wknum, monthnum, SalesGoalYear
+	,DELWEEK,DELYEAR
+	, GP , isnull([SPGGPPerWeek],0), GP-ISNULL([SPGGPPerWeek],0) 
+	, ISNULL([LoadCnt],0), isnull([SPGLoadsPerWeek],0), ISNULL([LoadCnt],0)-ISNULL([SPGLoadsPerWeek],0)
+Order by SalesPName
+
+-- ====================================================================================================================================================
+-- Step #4
+-- Description: DELETE and INSERT statements into tblSalesPlanCleansed table.  Also updates for the Null values.
+-- Note #1: update i.ACCTYR in where clause at the beginning of each year once accounting team confirms final integration is completed for current year 
+-- ====================================================================================================================================================
+DELETE tblSalesPlanCleansedADJ
+WHERE ACCTYR >= 2019 OR SPCSalesGoalYear >= 2019
+
+INSERT INTO tblSalesPlanCleansedADJ
+SELECT * from #tmp3
+UNION
+SELECT * from #tmp2
+
+update tblSalesPlanCleansedADJ
+SET DELWEEK = WkNum
+WHERE DELWEEk IS NULL
+
+update tblSalesPlanCleansedADJ
+SET DELYEAR = SPCSalesGoalYear
+WHERE DELYEAR IS NULL
+
+/*
+--STEP 4: JOIN temp 2 and 3 for troublshooting only Surface Trans Only--
+SELECT * from #tmp3
+UNION
+SELECT * from #tmp2
+*/
+/*
+Drop Table #tmp1
+Drop Table #tmp2
+Drop Table #tmp3
+
+SELECT * From #tmp1
+SELECT * from #tmp2
+SELECT * from #tmp3
+*/
+
+
+end
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[spAJCDW_LoadSalesPlanCleansedADJ]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
