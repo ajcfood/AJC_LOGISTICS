@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 5/21/2019 2:58:10 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 5/21/2019 3:05:59 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -420,7 +420,7 @@ CROSS APPLY			(
 					) z
 
 WHERE				tn.PK_NoteNo IS NULL
-AND					ts.ShpDelivDate IS NULL;
+AND					ts.ShpDelivDate IS NOT NULL;
 
 
 END
