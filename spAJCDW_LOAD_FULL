@@ -1,0 +1,59 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LOAD_FULL]    Script Date: 5/21/2019 11:17:58 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[spAJCDW_LOAD_FULL]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+EXEC [sp1-AJCDW_01-DimInit];
+EXEC [sp1-AJCDW_02-DimIES];
+EXEC [sp1-AJCDW_03-DimBP];
+EXEC [sp1-AJCDW_04-DimCSA];
+EXEC [sp2-AJCDW_01-FactInit];
+EXEC [sp2-AJCDW_02-FactFullIES];
+EXEC [sp2-AJCDW_03-FactFullCSA];
+EXEC [sp2-AJCDW_04-FactFullBP];
+EXEC [sp2-AJCDW_05-FactFullAcctPeriod];
+EXEC [sp2-AJCDW_06-FactFullOutofPeriod];
+EXEC [sp2-AJCDW_07-FactFullDataCleanse];
+EXEC [sp2-AJCDW_08-FactFullLoadFile];
+EXEC [sp2-AJCDW_09-FactFullLoadARData];
+EXEC [sp2-AJCDW_10-FactFullUpdtInvNum];
+EXEC [sp2-AJCDW_11-FactFullLoadAPData];
+
+EXEC [spAJCDW_CreatePowerBI_Views];
+
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[spAJCDW_LOAD_FULL]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
