@@ -1,0 +1,299 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[sp2-AJCDW_03-FactFullCSA]    Script Date: 5/21/2019 11:09:50 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[sp2-AJCDW_03-FactFullCSA]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+---------------
+--    CSA    --
+---------------
+
+
+-- Insert Orders --
+---------------------
+
+-- Handlingstation = destination, controllingstation = origin
+-- Stationcity, Stationstate from tblStation for both origin and destination
+
+select *
+into #tmp1
+FROM OPENQUERY(USDCFCSASQL01, '
+select s.PK_OrderNo, s.HandlingStation, s.ControllingStation, s.Housebill, s.FK_ControlCustomerNo
+	, 70 as Div, 76 as LOB, s.Carrier, '''' as Exporter, s.FK_ControlCustomerNo as Cons, s.FK_Salesperson, s.PODName as Controller 
+	, '''' as BLNum
+	, '''' as Pier, '''' as Cont
+	, CONVERT(VARCHAR(50), NULL) as OriginCity, CONVERT(VARCHAR(5),NULL) as OriginState
+	, CONVERT(VARCHAR(50),NULL) as DelivCity, CONVERT(VARCHAR(5),NULL) as DelivState
+	, s.HandlingStation as PortofDsc, s.ControllingStation as PortofLoad, '''' as Vessel, '''' as CargoOrig, '''' as AESITN, '''' as AESStat
+	, s.Status
+	, 0 as GP, 0 as INVGP, s.LastUpdate
+from [AirTrak].[dbo].tbl_ShipmentHeader s
+--where s.Status <> ''C'' and s.Housebill <> ''0''
+');
+
+
+update #tmp1
+set DelivCity = s.Stationcity, DelivState = s.Stationstate
+from #tmp1 t1
+inner join tblStations s
+on t1.Handlingstation = s.Stationnum;
+
+
+update #tmp1
+set OriginCity = s.Stationcity, OriginState = s.Stationstate
+from #tmp1 t1
+inner join tblStations s
+on t1.ControllingStation = s.Stationnum;
+
+
+select *
+into #tmp2
+FROM OPENQUERY(USDCFCSASQL01, '
+select 	i.FK_OrderNo, i.FK_StationId+convert(varchar(50),i.Housebill)+''0''+convert(varchar(50),i.InvoiceSeqNo) as invoicenum
+		, i.PODDateTime as InvoiceDate
+		, case when i.APARCode = ''C'' then i.DueDate end as Inv_DueDate
+		, case when i.APARCode = ''V'' then i.DueDate end as Vendor_DueDate
+		, case when i.APARCode = ''C'' then i.Total end as Inv_Amount
+		, case when i.APARCode = ''V'' then i.InvoiceAmount end as Vendor_Amount
+		, i.Weight as Lbs, i.Quantity as TEU
+		, case when i.aparcode = ''C'' then i.Total else 0 end as TOT_Sale
+		, case when i.aparcode = ''V'' then i.InvoiceAmount else 0 end as TOT_Cost
+		, i.Currency
+		, i.ShipmentDateTime as ShipDate
+from [AirTrak].[dbo].tbl_interfaceAPAR i
+order by i.FK_OrderNo
+');
+
+
+select distinct fk_orderno, invoicenum, max(InvoiceDate) as InvoiceDate, max(ShipDate) as ShipDate
+into #tmp3
+from #tmp2 
+where InvoiceDate <> '1900-01-01 00:00:00.000'
+group by fk_orderno, invoicenum
+order by fk_orderno;
+
+
+select fk_orderno
+	, SUM(Inv_Amount) as inv_amount
+	, SUM(tot_sale) as tot_sale 
+	, SUM(tot_cost) as tot_cost
+	, (SUM(tot_sale) - SUM(tot_cost)) as gp
+into #tmp4
+from #tmp2
+group by fk_orderno
+order by fk_orderno;
+
+
+-- LOAD SHIPMENT DATA --
+------------------------
+insert into AJCDW.dbo.tblShipment
+select distinct t1.PK_OrderNo, '70-'+convert(varchar,t1.Housebill) as refno, t1.HandlingStation as bookno, t3.invoicenum, t1.FK_ControlCustomerNo as account, t1.Div, t1.LOB, t1.Carrier, t1.Exporter, t1.Cons, t1.FK_Salesperson
+	, t1.Controller, t1.BLNum, NULL, NULL
+	, t1.Pier, t1.Cont, t1.OriginCity, t1.OriginState, t1.DelivCity, t1.DelivState, t1.PortofDsc, t1.PortofLoad, t1.Vessel, t1.CargoOrig, t1.AESITN, t1.AESStat
+	, 0 as teu
+	, t4.tot_sale, t4.tot_cost, 0, t4.gp, 0
+	, t1.LastUpdate
+	, t3.invoicedate as deliverydate, t3.shipdate, t1.LastUpdate, GETDATE() AS LOADEDDATE, t1.Status
+	, 1 as SysID, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+from #tmp1 t1
+	inner join #tmp3 t3
+		on t1.PK_OrderNo = t3.FK_OrderNo
+		inner join #tmp4 t4
+		on t1.PK_OrderNo = t4.FK_OrderNo
+where t3.shipdate >= '1/1/2014'	
+order by t1.PK_OrderNo;
+
+
+-- LOAD INVOICE DATA --
+-----------------------
+insert into [AJCDW].[dbo].[tblInvoice]
+select t1.PK_OrderNo, '70-'+convert(varchar,t1.Housebill) as refno, t3.invoicenum, t11.LINE_EFFECTIVE_DATE, NULL, NULL
+	, null, t11.OREVENUE, t11.OCOST, t11.OREVENUE - t11.OCOST AS GP
+	, t11.PERIOD_NAME, NULL, NULL, NULL
+	, t11.INV_TYPE, t11.LOB
+	, NULL, NULL, 1
+from #tmp1 t1
+	inner join #tmp3 t3
+		on t1.PK_OrderNo = t3.FK_OrderNo
+		inner join tblOracleGLCleansed t11
+		on '70-'+convert(varchar,t1.Housebill) = t11.LINE_ATTRIBUTE11
+where t3.shipdate >= '1/1/2014'	
+order by t1.PK_OrderNo;
+
+
+-- Insert Invoices For Early CSA Records (IES/Double Entry) --
+--------------------------------------------------------------
+select csa.purchase_order
+	, csa.interface_header_attribute4
+into #tmp5
+from tblOracleCSAFileRef csa
+where csa.purchase_order not like '70-%' and csa.purchase_order not like 'JAX%'
+group by csa.purchase_order
+	, csa.interface_header_attribute4
+order by csa.purchase_order;
+
+
+select *
+into #tmp6
+from #tmp5 t5
+	inner join tblOracleGLCleansed t11
+		on t5.interface_header_attribute4 = t11.LINE_ATTRIBUTE11
+order by t5.purchase_order;
+
+
+insert into [AJCDW].[dbo].[tblInvoice]
+select s.ShipmentID, s.RefNo, t6.LINE_REFERENCE_4, t6.LINE_EFFECTIVE_DATE, NULL, NULL
+	, t6.LINE_ATTRIBUTE2, t6.OREVENUE, t6.OCOST, t6.OREVENUE - t6.OCOST as GP, t6.PERIOD_NAME
+	, NULL, NULL, NULL
+	, t6.INV_TYPE, t6.LOB
+	, NULL, NULL, 1
+from tblShipment s
+	inner join #tmp6 t6
+		on replace(t6.purchase_order,' ', '') = rtrim(ltrim(s.ShpBkgNum)) + RIGHT(s.RefNo, 4)
+where s.FK_SystemID = 1
+
+
+-- Process JAX POs - 8 digit Reference Number --
+------------------------------------------------
+select csa.purchase_order
+	, csa.interface_header_attribute4
+into #tmp7
+from tblOracleCSAFileRef csa
+where csa.purchase_order not like '70-%' and csa.purchase_order like 'JAX%'
+group by csa.purchase_order
+	, csa.interface_header_attribute4
+order by csa.purchase_order;
+
+
+select *
+into #tmp8
+from #tmp7 t7
+	inner join tblOracleGLCleansed t11
+		on t7.interface_header_attribute4 = t11.LINE_ATTRIBUTE11
+order by t7.purchase_order;
+
+
+insert into [AJCDW].[dbo].[tblInvoice]
+select s.ShipmentID, s.RefNo, t8.LINE_REFERENCE_4, t8.LINE_EFFECTIVE_DATE, NULL, NULL
+	, t8.LINE_ATTRIBUTE2, t8.OREVENUE, t8.OCOST, t8.OREVENUE - t8.OCOST as GP, t8.PERIOD_NAME
+	, NULL, NULL, NULL
+	, t8.INV_TYPE, t8.LOB
+	, NULL, NULL, 1
+from tblShipment s
+	inner join #tmp8 t8
+		on replace(t8.purchase_order,' ', '') = rtrim(ltrim(s.ShpBkgNum)) + RIGHT(s.RefNo, 8)
+where s.FK_SystemID = 1
+
+
+DROP TABLE #tmp1;
+DROP TABLE #tmp2;
+DROP TABLE #tmp3;
+DROP TABLE #tmp4;
+DROP TABLE #tmp5;
+DROP TABLE #tmp6;
+DROP TABLE #tmp7;
+DROP TABLE #tmp8;
+
+
+-------------------------
+-- Update Foreign Keys --
+-------------------------
+
+-- Update Division --
+---------------------
+UPDATE tblShipment
+SET fk_divid = di.DivisionID
+FROM tblShipment sh
+	INNER JOIN tblDiv di
+		ON (sh.ShpDivID = di.DivisionNum
+			AND sh.ShpLOB = di.LOBNum)
+WHERE LTRIM(RTRIM(sh.ShpDivID)) <> '' AND LTRIM(RTRIM(sh.ShpLOB)) <> '' AND sh.FK_SystemID = 1; 
+
+
+-- Update Customer --
+---------------------
+UPDATE tblShipment
+SET fk_custmasterid = c.CustMasterID
+from AJCDW.dbo.tblShipment s
+	inner join AJCDW.dbo.tblCustMaster c
+		on s.ShpAccnt = c.CustMasterNum and s.FK_SystemID = c.FK_SystemID
+where LTRIM(RTRIM(s.ShpAccnt)) <> '' and c.FK_SystemID = 1 and c.[CustType] = 'Customer';
+
+
+-- Update Consignee --
+----------------------
+UPDATE tblShipment
+SET ShpConsg = c.CustName
+from AJCDW.dbo.tblShipment s
+	inner join AJCDW.dbo.tblCustMaster c
+		on s.ShpAccnt = c.CustMasterNum and s.FK_SystemID = c.FK_SystemID
+where LTRIM(RTRIM(s.ShpAccnt)) <> '' and c.FK_SystemID = 1 and c.[CustType] = 'Customer';
+
+
+-- Update Salesperson --
+------------------------
+UPDATE tblShipment
+SET fk_salespid = sp.salespid
+FROM tblShipment sh
+    INNER JOIN tblSalesP sp
+		ON sh.ShpSalesP = sp.salespcode AND sh.FK_SystemID = sp.fk_systemid
+WHERE LTRIM(RTRIM(sh.ShpSalesP)) <> '' AND sh.FK_SystemID = 1; 
+
+
+-- Update Stations --
+---------------------
+UPDATE tblShipment
+SET fk_stationid = st.StationID
+FROM tblShipment sh
+    INNER JOIN tblStations st
+		ON sh.ShpBkgNum = st.StationNum AND sh.FK_SystemID = st.fk_systemid
+WHERE LTRIM(RTRIM(sh.RefNo)) <> '' AND sh.FK_SystemID = 1; 
+
+
+-- Insert Container Contents --
+-------------------------------
+insert into tblContainerContents
+select *
+FROM OPENQUERY(USDCFCSASQL01, '
+select sd.FK_OrderNo, sd.Weight, sd.Pieces, sd.FK_PieceTypeId, sd.DeclareValue, sd.CubicFeet, ''Cubic Feet'' as ContUnitType
+	, sd.Description, sd.FK_OrderNo as FileNo, '''', '''', 1 as SysID
+from [AirTrak].[dbo].tbl_ShipmentDesc sd
+order by sd.FK_OrderNo
+');
+
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp2-AJCDW_03-FactFullCSA]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
