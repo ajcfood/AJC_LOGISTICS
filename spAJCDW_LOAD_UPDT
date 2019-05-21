@@ -1,0 +1,64 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LOAD_UPDT]    Script Date: 5/21/2019 11:19:05 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[spAJCDW_LOAD_UPDT]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+EXEC [sp-AJCDW_01-UPDTDIMS];
+EXEC [sp-AJCDW_02-UPDTORCLGL];
+EXEC [sp-AJCDW_03-UPDTFACTIES];
+EXEC [sp-AJCDW_04-UPDTFACTCSA];
+--EXEC [sp-AJCDW_05-UPDTFACTBP];  --commented out on 3/27/19 per Operation that Broker Plus is no longer being used
+EXEC [sp-AJCDW_05.5-UPDTFACTMG];
+EXEC [sp2-AJCDW_05-FactFullAcctPeriod];
+EXEC [sp2-AJCDW_06-FactFullOutofPeriod];
+EXEC [sp2-AJCDW_07-FactFullDataCleanse];
+EXEC [sp-AJCDW_06-UPDTFACTLOADFILE];
+EXEC [sp2-AJCDW_09-FactFullLoadARData];
+EXEC [sp2-AJCDW_10-FactFullUpdtInvNum];
+EXEC [sp2-AJCDW_11-FactFullLoadAPData];
+
+EXEC [spAJCDW_CreatePowerBI_Views];
+EXEC [spAJCDW_LoadCommCalctbl];
+EXEC [spAJCDW_LoadSGACleansed]; -- update the date on this at the end of every year
+EXEC [spAJCDW_LoadWMSData]; -- update the data IDs in the queries on this at the end of every year to minimize processing time
+EXEC [spAJCDW_LoadCustPlanCleansed]; -- update customer plan vs actual info/table 
+EXEC [spAJCDW_LoadSalesPlanCleansedFLAT]; -- update sales person plan vs actual info/table with flat/nonseasonal budget
+EXEC [spAJCDW_LoadSalesPlanCleansedADJ]; -- update sales person plan vs actual info/table with adjusted/seasonal budget
+EXEC [spAJCDW_LoadCustPlanCleansedEAGLE]; -- update customer plan vs actual info/table EAGLE ONLY
+EXEC [spAJCDW_BillingLag]; -- update billing lag table
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[spAJCDW_LOAD_UPDT]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
