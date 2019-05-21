@@ -1,0 +1,334 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 5/21/2019 11:19:21 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+-- ==================================================================================================================================
+-- Author: Salah El-Jamil
+-- Procedure Inital Create date: 1/15/19
+-- Description: Automatically calculates commission amounts per sales rep for a given year, starting with accounting year 2019
+-- Note: Created in this format because (1) multiple sales reps can gain commission on one load and (2) was the only way
+--        possible at the time to be able to take all different commission calculations into account and keep everything in one table
+-- ===================================================================================================================================
+
+ALTER procedure [dbo].[spAJCDW_LoadCommCalcTbl]
+as
+BEGIN TRY
+begin
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+
+-- ====================================================================================================================================================
+-- Step #1
+-- Description: Calculates discount for a particular customer order
+-- Note #1: if we have a new commission agent in the future, we need to add them as a column to the current table and then add them to this procedure
+-- Note #2: update i.ACCTYR in where clause at the beginning of each year once accounting team confirms final integration is completed for current year 
+-- ====================================================================================================================================================
+SELECT ACCTYR
+	,ACCTMONTH
+	,ACCTPERIODNAME
+	,i.ShipmentID
+	,InvLOB
+	,i.RefNo
+	,s.ShpBkgNum as CSAStation
+	,s.ShpController as Dispatcher
+	,s.ShpMoveType as ShipType
+	,SalesPName
+	,InvCustName
+	,cast(sum(InvRevenue) as decimal(18,2)) as Rev
+	,cast(sum(InvCost) as decimal(18,2)) as Cost
+	,cast(sum(InvGP) as decimal(18,2)) as GP
+	,Convert(decimal(18,2),0.00) as RPComm -- Randolph Page
+	,Convert(decimal(18,2),0.00) as MJComm -- Missy Jensen
+	,Convert(decimal(18,2),0.00) as LPComm -- Lee Pantesco
+	,Convert(decimal(18,2),0.00) as TCComm -- Tyler Clendenen
+	,Convert(decimal(18,2),0.00) as LSComm -- Leo Serna
+	,Convert(decimal(18,2),0.00) as AAComm -- Andres Alonso
+	,Convert(decimal(18,2),0.00) as MBComm -- Michael Browder
+	,Convert(decimal(18,2),0.00) as NDComm -- Natalia Duenas
+	,Convert(decimal(18,2),0.00) as RMComm -- Ross Mielich
+	,Convert(decimal(18,2),0.00) as IOComm -- Ioann Okolnichy (starts April 2019 and same calc as Ross)
+	,Convert(decimal(18,2),0.00) as JDComm -- Jorge Desiderio
+	,Convert(decimal(18,2),0.00) as BMComm -- Bridgette Maycott
+	,Convert(decimal(18,2),0.00) as JCComm -- Jackson Cerna
+	,Convert(decimal(18,2),0.00) as MRComm -- Max Ritter
+	,Convert(decimal(18,2),0.00) as BWComm -- Brawnson Walter
+	,Convert(decimal(18,2),0.00) as BRComm -- Brett Rasmussen
+	,Convert(decimal(18,2),0.00) as DYComm -- Dale Yanagihara
+	,Convert(decimal(18,2),0.00) as JWComm -- Jim Wyant
+	,Convert(decimal(18,2),0.00) as MTComm -- Monica Thornton
+	,Convert(decimal(18,2),0.00) as CMComm -- Christine McVay
+	,Convert(decimal(18,2),0.00) as SFComm -- Suzanne Fairbanks
+	,Convert(decimal(18,2),0.00) as RMontComm -- Ricardo Monteiro
+into #tmp1
+from tblInvoice i
+JOIN tblShipment s on i.ShipmentID = s.ShipmentID
+join tblSalesP sp on s.FK_SalesPID = sp.SalesPID
+where i.ACCTYR >= 2019 -- needs to be modified to include ACCTMONTH when we start having commission changes.  Do not want to change historical calculations
+group by ACCTYR, ACCTMONTH, ACCTPERIODNAME,InvLOB,i.RefNo,SalesPName,InvCustName, i.ACCTQTR,s.ShpBkgNum, i.ShipmentID, s.ShpController, s.ShpMoveType
+
+
+-- =================================================================================================================================
+-- Step #2
+-- Description: Maintenance of tblCommCalc
+-- Note #1: update ACCTYR at the end of each year once we confirm that all invoicing for the current year is complete.
+-- Note #2: need to add ACCTMONTH to both DELETE and INSERT clause once we start having calculation changes for current sales reps. 
+--          Do not want to affect historical calculations
+-- ==================================================================================================================================
+DELETE from tblCommCalc
+where ACCTYR >=2019
+
+INSERT INTO tblCommCalc
+SELECT * from #tmp1
+where ACCTYR >= 2019
+
+-- ====================================================================================================================================
+-- Step #3
+-- Description: Update each sales reps column with their calculation
+-- Change History:
+--   3/20/19 Salah El-Jamil: Update Tyler Clendenen calculation for line of business 76.  He should get 6% GP of this line of business
+-- ====================================================================================================================================
+
+--HSI Calculations : 2% of settlement (Revenue) = total GP--
+update tblCommCalc
+set JDComm = (Rev*.02)/3, BMComm = (Rev*.02)/3, JCComm = (Rev*.02)/3
+where InvLOB = '12'
+
+--Lee Pantesco Calculation: 0.5% of Surface Trans GP
+update tblCommCalc
+set LPComm = GP*.005
+where InvLOB = '11'
+	and InvCustName NOT LIKE 'SUK-EXPORT'
+
+--Michael Browder Calculation: 18% of Surface Trans GP where he is Sales Rep
+update tblCommCalc
+set MBComm = GP*.18
+where SalesPName = 'Michael Browder'
+
+--Tyler Clendenen Calculation: 
+	--15% of GP where he is Sales Rep not in line of business 31,33,43, or 76
+	--6% of GP where he is Sales Rep in line of business 31,33,43, or 76
+update tblCommCalc
+set TCComm = GP*.15
+where SalesPName = 'Tyler Clendenen'
+	and InvLOB NOT IN ('31,33,43','76')
+
+update tblCommCalc
+set TCComm = GP*.06
+where SalesPName = 'Tyler Clendenen'
+	and InvLOB IN ('31,33,43','76')
+
+--Brawnson Walter Calculation: 15% of Surface Trans GP where he is Sales Rep
+update tblCommCalc
+set BWComm = GP*.15
+where SalesPName = 'Brawnson Walter'
+
+--Brett Rasmussen Calculation: 16% of Surface Trans GP where he is Sales Rep
+update tblCommCalc
+set BRComm = GP*.16
+where SalesPName = 'Brett Rasmussen'
+
+--Max Ritter Calculation: 15% of Surface Trans GP where he is Sales Rep
+update tblCommCalc
+set MRComm = GP*.15
+where SalesPName = 'Max Ritter'
+
+--Natalia Duenas Calculation: 0.125% of Surface Trans GP for SUKARNE only.  Not SUKARNE EXPORT
+update tblCommCalc
+set NDComm = GP*.00125
+where InvLOB = '11'
+	AND InvCustName IN ('SUKARNE','SUK - NORTH BOUND')
+
+--Ross Mielech Calculation: 0.125% of Surface Trans GP Minus Sukarne, Idaho Pacific, AGF Global, Dycinsa
+update tblCommCalc
+set RMComm = GP*.00125
+where InvLOB = '11'
+	AND InvCustName NOT LIKE 'SUK%'
+	AND InvCustName NOT LIKE 'IDAHO PACIFIC'
+	AND InvCustName NOT LIKE 'AGF GLOBAL'
+	AND InvCustName NOT LIKE 'DYCINSA'
+	
+--Andres Alonso Calculation: 7% of his own GP, 0.5% of Surf Trans GP--
+update tblCommCalc
+set AAComm = GP*.07
+where salespname = 'Andres Alonso'
+
+Update tblCommCalc
+set AAComm = GP*.005
+where InvLOB = '11'
+and SalesPName <> 'Andres Alonso'
+and InvCustName NOT LIKE 'SUK-EXPORT'
+
+--Leo Serna Calculation:
+	--7% of ST GP assigned to LS
+	--1% of SUKARNE and DYCINSA
+	--4% of SUK - EXPORT
+
+Update tblCommCalc
+set LSComm = GP*.07
+where SalesPName = 'Leo Serna'
+
+update tblCommCalc
+Set LSComm = GP*.04
+where InvCustName = 'SUK - EXPORT'
+
+update tblCommCalc
+set LSComm = GP*.01
+where InvCustName IN ('DYCINSA','SUKARNE', 'SUK - NORTH BOUND', 'SUKARNE SA DE CV', 'SUKARNE...')
+
+--Missy Jensen Calculation:
+	--5% of ST GP assigned to MJ
+	--2.75% of General Works Products GP
+	--2% of West Rock GP for LOB 41
+	--3% Sanderson Farms GP for LOB 11
+	--0.75% of RP GP minus Keystone and Sanderson Farms
+
+Update tblCommCalc
+set MJComm = GP*.05
+where SalesPName = 'Missy Jensen'
+and InvLOB = '11'
+
+Update tblCommCalc
+set MJComm = GP*.0275
+where InvCustName LIKE 'GENERAL WORK%'
+and InvLOB <> '11'
+
+update tblCommCalc
+set MJComm = GP*.02
+where InvCustName LIKE 'WESTROCK%'
+	and InvLOB = '41'
+
+update tblCommCalc
+set MJComm = GP*.03
+where InvCustName LIKE 'SAND%'
+	and InvLOB = '11'
+
+update tblCommCalc
+set MJComm = GP*.0075
+where SalesPName = 'Randolph Page'
+	AND InvCustName NOT LIKE 'KEYSTONE%'
+	AND InvCustName NOT LIKE 'SANDERSON%'
+	AND InvCustName NOT LIKE 'GENERAL WORK%'
+
+update tblCommCalc -- added this per 2/19/19 email from Rachel to exclude AJC INC for LOB 25
+set MJComm = 0
+where SalesPName = 'Randolph Page'
+	AND InvLOB = '25'
+	AND InvCustName = 'AJC INTERNATIONAL INC'
+
+--Randolph Page Commission Calculation:
+	--6% GP for LOB 11, 21, 41, 43,76 where RP is sales rep (DIRECT)
+	--15% GP for LOB 25 where RP is sales rep, but not AJC INTERNATIONAL INC (DIRECT)
+	--3% GP on Surf Trans direct reports (not Ricardo): MB,TC,AA,BW,MR,MJ,CC,BR (INDIRECT)
+	--4% GP on LOB 41&43 files under DT,CC,Ricardo,TC,MJ,MB
+
+update tblCommCalc
+set RPComm = GP*.06
+where InvLOB IN ('11','21','41','31,33,43')
+	and SalesPName = 'Randolph Page'
+
+update tblCommCalc
+set RPComm = GP*.15
+where InvLOB = '25'
+	AND SalesPName = 'Randolph Page'
+	AND InvCustName <> 'AJC INTERNATIONAL INC'
+
+update tblCommCalc
+set RPComm = GP*.03
+where InvLOB = '11'
+	AND SalesPName IN ('Carmen Colon'
+		,'Damaris Torres'
+		,'Tyler Clendenen'
+		,'Michael Browder'
+		,'Max Ritter'
+		,'Brett Rasmussen'
+		,'Missy Jensen'
+		,'Andres Alonso'
+		,'Brawnson Walter')
+
+update tblCommCalc
+set RPComm = GP*.04
+where InvLOB in ('41','31,33,43')
+	AND SalesPName IN ('Carmen Colon'
+		,'Damaris Torres'
+		,'Tyler Clendenen'
+		,'Ricardo Monteiro'
+		,'Max Ritter'
+		,'Brett Rasmussen'
+		,'Missy Jensen'
+		,'Andres Alonso'
+		,'Brawnson Walter')
+	AND InvCustName <> 'BALLESTER HERMANOS, INC'
+
+--Dale Yanagihara Calculation:
+	--4.2% of GP of own accounts in LOB 76 GP less 7% overhead
+update tblCommCalc
+set DYComm = (GP*.93)*.042
+where InvLOB = '76'
+	AND SalesPName = 'Dale Yanagihara'
+
+--Jim Wyant Calculation:
+	--15% of GP of own accounts in LOB 76 GP less 7% overhead
+update tblCommCalc
+set JWComm = (GP*.93)*.15
+where InvLOB = '76'
+	AND SalesPName = 'Jim Wyant'
+
+--Suzanne Fairbanks Calculation:
+	--15% of GP of own accounts in LOB 76 GP less 7% overhead
+update tblCommCalc
+set SFComm = (GP*.93)*.15
+where InvLOB = '76'
+	AND SalesPName = 'Suzanne Fairbanks'
+
+--Monica Thornton Calculation:
+	--4.2% of GP of own accounts in LOB 76 GP less 7% overhead
+update tblCommCalc
+set MTComm = (GP*.93)*.042
+where InvLOB = '76'
+	AND SalesPName = 'Monica Thornton'
+
+--Christine McVay Calculation: 1% GP on ANG & SEA Stations LOB 76
+update tblCommCalc
+set CMComm = GP*.01
+where InvLOB = '76'
+	AND CSAStation IN ('ANG','SEA')
+
+--Ricardo Monteiro Calculation: 5% of all GP where he is Sales Rep
+update tblCommCalc
+set RMontComm = GP*.05
+where SalesPName = 'Ricardo Monteiro'
+
+--SELECT * from #tmp1
+--drop table #tmp1
+
+end
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[spAJCDW_LoadCommCalcTbl]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
