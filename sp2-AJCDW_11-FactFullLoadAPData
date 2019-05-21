@@ -1,0 +1,95 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[sp2-AJCDW_11-FactFullLoadAPData]    Script Date: 5/21/2019 11:14:27 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[sp2-AJCDW_11-FactFullLoadAPData]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+-----------------------------------
+-- LOAD ORACLE VENDOR TERMS DATA --
+-----------------------------------
+
+TRUNCATE TABLE tblOracleVendTerms;
+
+INSERT INTO tblOracleVendTerms
+SELECT *
+FROM OPENQUERY(ORACLEPROD, '
+SELECT V.VENDOR_ID, V.VENDOR_NAME
+	, T.NAME AS TERMS, T.DESCRIPTION
+FROM PO_VENDORS V
+	LEFT OUTER JOIN AP_TERMS_TL T
+		ON V.TERMS_ID = T.TERM_ID
+ORDER BY V.VENDOR_NAME
+');
+
+-------------------------
+-- LOAD ORACLE AP DATA --
+-------------------------
+
+TRUNCATE TABLE tblOracleAPData;
+
+INSERT INTO tblOracleAPData
+SELECT *
+FROM OPENQUERY(ORACLEPROD, '
+SELECT distinct V.VENDOR_ID, V.VENDOR_NAME
+	, T.NAME AS TERMS
+	, I.INVOICE_ID
+  , I.INVOICE_NUM, I.INVOICE_DATE, I.INVOICE_AMOUNT, I.AMOUNT_PAID, I.DISCOUNT_AMOUNT_TAKEN, I.PAY_CURR_INVOICE_AMOUNT AS AMOUNT_REMAINING, I.DESCRIPTION
+  --, GL.BATCH_DATE_CREATED
+FROM PO_VENDORS V
+	LEFT OUTER JOIN AP_TERMS_TL T 
+		ON V.TERMS_ID = T.TERM_ID
+	INNER JOIN AP_INVOICES_ALL I
+		ON V.VENDOR_ID = I.VENDOR_ID
+	INNER JOIN AP_INVOICE_DISTRIBUTIONS_ALL D
+		ON I.INVOICE_ID = D.INVOICE_ID
+	--LEFT OUTER JOIN AJC_GL_JE_LINES_V GL
+	--	ON I.INVOICE_NUM = GL.LINE_REFERENCE_5 
+	--		AND V.VENDOR_NAME = GL.LINE_REFERENCE_1
+WHERE (I.AMOUNT_PAID = 0 OR I.AMOUNT_PAID IS NULL)
+  AND I.INVOICE_AMOUNT <> 0
+  AND I.INVOICE_DATE >= ''01-JAN-14''
+  AND I.SET_OF_BOOKS_ID = 222
+  AND I.ORG_ID = 5387 -- 5387 = Logistics and 5244 = Inc
+  AND D.MATCH_STATUS_FLAG = ''A'' -- A = Validated and T - Revalidation
+  --AND GL.SEGMENT1 IN (53,54)
+  --AND I.INVOICE_NUM <> ''23568''
+  --AND V.VENDOR_ID <> ''6205580''
+ORDER BY V.VENDOR_NAME;
+');
+
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp2-AJCDW_11-FactFullLoadAPData]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
