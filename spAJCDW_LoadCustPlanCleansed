@@ -1,0 +1,266 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansed]    Script Date: 5/21/2019 11:19:37 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+-- ==================================================================================================================================
+-- Author: Salah El-Jamil
+-- Procedure Inital Create date: 2/1/19
+-- Description: Compiles customer Actuals vs Plan for all lines of business, excluding Eagle (handled in seperate stored Procedure)
+-- Change History:
+-- ===================================================================================================================================
+
+
+ALTER procedure [dbo].[spAJCDW_LoadCustPlanCleansed]
+as
+BEGIN TRY
+begin
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+
+-- ===================================================================================================================================
+-- Step #1
+-- Description: Pull Actuals and Group for InvLOB 11 only (invlob 11 = Surface Transportation/Trucking)
+-- Note #1: We need to run Surface Trans (InvLOB = 11) seperate from other lines of business because we have to group by Delivery week 
+--          and other lines of business focus on Shipment Weeks
+-- ===================================================================================================================================
+
+SELECT InvCustName, count(DISTINCT s.shipmentid) as LoadCnt, SUM(InvRevenue) as REV, sum(InvCost) as COST, SUM(InvGP) as GP
+	,InvLOB, i.ACCTYR, f.DELWEEK, f.DELYEAR, NULL as SHPWEEK, NULL as SHPYEAR
+INTO #tmp1
+from tblInvoice i
+JOIN tblFile f on i.ShipmentID = f.ShipmentID
+JOIN tblShipment s on f.ShipmentID = s.shipmentID
+where i.ACCTYR LIKE '%19' and InvLOB = '11'
+Group By InvCustName, i.ACCTYR, InvLOB
+	,f.DELWEEK, f.DELYEAR
+Order by InvCustName
+
+-- ==================================================================================================================
+-- Step #2
+-- Description: Result will show rows where there is an actual amount only if there is a plan amount for the customer
+-- Note #1: Only Run for Surface Trans (InvLOB = 11) 
+-- ==================================================================================================================
+
+SELECT CustName, CustMasterCode, rev, cost, gp
+	,InvLOB, acctyr, wknum, monthnum, targetyear, DELWEEK,DELYEAR, SHPWEEK, SHPYEAR, FK_DivID, FK_LOBNum
+	, ISNULL([GP],0) as ActualGP, WklyGP as PlanGP, ISNULL([GP],0) -WklyGP as GP_Variance
+	, ISNULL([LoadCnt],0) as ActVol, WklyVol as PlannedVol, ISNULL([LoadCnt],0) - WklyVol as LoadVar
+INTO #tmp2
+from #tmp1 t1
+RIGHT OUTER JOIN tblCustPlan c
+ON (c.CustName = t1.InvCustName AND c.TargetYear = t1.DELYEAR AND c.WkNum = t1.DELWEEK)
+Where FK_LOBNum = '11'
+
+-- ==================================================================================================================
+-- Step #3
+-- Description: Result will show rows where there is a plan amount only if there is an actual amount for the customer
+-- Note #1: Only Run for Surface Trans (InvLOB = 11)
+-- ==================================================================================================================
+
+SELECT InvCustName, CustMasterCode,REV, COST, GP, InvLOB, ACCTYR, wknum, monthnum, targetyear
+	,DELWEEK, DELYEAR, SHPWEEK, SHPYEAR
+	,FK_DivID,FK_LOBNum
+	, GP as Actual_GP, isnull([WklyGP],0) as PlanGP, GP-ISNULL([WklyGP],0) as GP_Variance
+	, ISNULL([LoadCnt],0) as ActualVol, isnull([WklyVol],0) as PlanVol, ISNULL([LoadCnt],0)-ISNULL([WklyVol],0) as VolVar
+INTO #tmp3
+from #tmp1 t1
+FULL OUTER JOIN tblCustPlan c 
+ON (c.CustName = t1.InvCustName AND c.TargetYear = t1.DELYEAR AND c.WkNum = t1.DELWEEK)
+WHERE InvCustName IS NOT NULL
+GROUP BY InvCustName, CustMasterCode,REV, COST, GP, InvLOB, ACCTYR, wknum, monthnum, targetyear
+	,DELWEEK,DELYEAR, SHPWEEK, SHPYEAR
+	,FK_DivID,FK_LOBNum
+	, GP , isnull([WklyGP],0), GP-ISNULL([WklyGP],0) 
+	, ISNULL([LoadCnt],0), isnull([WklyVol],0), ISNULL([LoadCnt],0)-ISNULL([WklyVol],0)
+Order by InvCustName
+
+
+-- ==================================================================================================================
+-- Step #4: USE FOR TROUBLESHOOTING ON INSERTS
+/*
+SELECT * from #tmp3
+UNION
+SELECT * from #tmp2
+
+SELECT * from #tmp6
+UNION
+SELECT * from #tmp5
+*/
+-- ==================================================================================================================
+
+-- ====================================================================================================================
+-- Step #5
+-- Description: Pull Actuals and Group By for ALL LOB except Surface Trans [InvLOB 11] and Eagle [InvLOB 21]
+-- Note #1: Run for lines of business other than 11 and 21
+-- Note #2: Add lines of business to where clause as we get plan data from Accounting and import into tblCustPlan table
+-- ====================================================================================================================
+SELECT InvCustName, count(DISTINCT s.shipmentid) as LoadCnt, SUM(InvRevenue) as REV, sum(InvCost) as COST, SUM(InvGP) as GP
+	,InvLOB, i.ACCTYR, NULL as DELWEEK, NULL as DELYEAR, f.SHPWEEK, f.SHPYEAR
+INTO #tmp4
+from tblInvoice i
+JOIN tblFile f on i.ShipmentID = f.ShipmentID
+JOIN tblShipment s on f.ShipmentID = s.shipmentID
+where i.ACCTYR LIKE '%19' and InvLOB IN ('62','61')
+Group By InvCustName, i.ACCTYR, InvLOB
+	,f.SHPWEEK,f.SHPYEAR
+Order by InvCustName
+
+-- ==================================================================================================================
+-- Step #6
+-- Description: Result will show rows where there is an actual amount only if there is a plan amount for the customer
+-- Note #1: Run for lines of business other than 11 and 21
+-- Note #2: Add lines of business to where clause as we get plan data from Accounting and import into tblCustPlan table
+-- ==================================================================================================================
+SELECT CustName, CustMasterCode, rev, cost, gp
+	,InvLOB, acctyr, wknum, monthnum, targetyear, DELWEEK,DELYEAR, SHPWEEK, SHPYEAR, FK_DivID, FK_LOBNum
+	, ISNULL([GP],0) as ActualGP, WklyGP as PlanGP, ISNULL([GP],0) -WklyGP as GP_Variance
+	, ISNULL([LoadCnt],0) as ActVol, WklyVol as PlannedVol, ISNULL([LoadCnt],0) - WklyVol as LoadVar
+INTO #tmp5
+from #tmp4 t4
+RIGHT OUTER JOIN tblCustPlan c
+ON (c.CustName = t4.InvCustName AND c.TargetYear = t4.SHPYEAR AND c.WkNum = t4.SHPWEEK and t4.INVLob = c.FK_LOBNum)
+Where FK_LOBNum IN ('62','61') 
+
+-- ==================================================================================================================
+-- Step #7
+-- Description: Result will show rows where there is a plan amount only if there is an actual amount for the customer
+-- ==================================================================================================================
+SELECT InvCustName, CustMasterCode,REV, COST, GP, InvLOB, ACCTYR, wknum, monthnum, targetyear
+	,DELWEEK, DELYEAR, SHPWEEK, SHPYEAR
+	,FK_DivID,FK_LOBNum
+	, GP as Actual_GP, isnull([WklyGP],0) as PlanGP, GP-ISNULL([WklyGP],0) as GP_Variance
+	, ISNULL([LoadCnt],0) as ActualVol, isnull([WklyVol],0) as PlanVol, ISNULL([LoadCnt],0)-ISNULL([WklyVol],0) as VolVar
+INTO #tmp6
+from #tmp4 t4
+FULL OUTER JOIN tblCustPlan c 
+ON (c.CustName = t4.InvCustName AND c.TargetYear = t4.SHPYEAR AND c.WkNum = t4.SHPWEEK and t4.INVLob = c.FK_LOBNum)
+WHERE InvCustName IS NOT NULL
+GROUP BY InvCustName, CustMasterCode,REV, COST, GP, InvLOB, ACCTYR, wknum, monthnum, targetyear
+	,DELWEEK, DELYEAR, SHPWEEK, SHPYEAR
+	,FK_DivID,FK_LOBNum
+	, GP , isnull([WklyGP],0), GP-ISNULL([WklyGP],0) 
+	, ISNULL([LoadCnt],0), isnull([WklyVol],0), ISNULL([LoadCnt],0)-ISNULL([WklyVol],0)
+Order by InvCustName
+
+-- ===========================================================================================================================
+-- Step #8
+-- Description: DELETE and INSERT into tblCustPlanCleansed
+-- Note #1: Update ACCTYR or TargetYear at the end of each year once accounting confirms no more transactions for current year
+-- ===========================================================================================================================
+DELETE tblCustPlanCleansed
+WHERE ACCTYR >= 2019 OR TargetYear >= 2019
+
+INSERT INTO tblCustPlanCleansed
+SELECT * from #tmp6
+UNION
+SELECT * from #tmp5
+
+INSERT INTO tblCustPlanCleansed
+SELECT * from #tmp3
+UNION
+SELECT * from #tmp2
+
+-- ===========================================================================================================================
+-- Step #9
+-- Description: Update various NULL values in tblCustPlanCleansed so that data can be reported on consistently in Power BI
+-- ===========================================================================================================================
+
+UPDATE tblCustPlanCleansed
+SET InvLOB = FK_LOBNum
+WHERE InvLOB IS NULL
+
+UPDATE tblCustPlanCleansed
+SET FK_LOBNum = InvLOB
+WHERE FK_LOBNum IS NULL
+
+UPDATE tblCustPlanCleansed
+SET wknum = delweek
+WHERE wknum IS NULL
+	AND InvLOB = '11'
+
+UPDATE tblCustPlanCleansed
+SET wknum = SHPWEEK
+WHERE wknum IS NULL
+	AND InvLOB IN ('21','62','61')
+
+UPDATE tblCustPlanCleansed
+SET targetyear = delyear
+WHERE targetyear IS NULL
+	AND InvLOB = '11'
+
+UPDATE tblCustPlanCleansed
+SET targetyear = SHPYEAR
+WHERE targetyear IS NULL
+	AND InvLOB IN ('21','62','61')
+
+UPDATE tblCustPlanCleansed
+SET DELWEEK = WkNum
+WHERE DELWEEk IS NULL
+	AND FK_LOBNum = '11'
+
+
+UPDATE tblCustPlanCleansed
+SET DELYEAR = TargetYear
+WHERE DELYEAR IS NULL
+	AND FK_LOBNum = '11'
+
+UPDATE tblCustPlanCleansed
+SET SHPWEEK = WkNum
+WHERE SHPWEEK IS NULL
+	AND FK_LOBNum IN ('21','62','61')
+
+UPDATE tblCustPlanCleansed
+SET SHPYEAR = TargetYear
+WHERE SHPYEAR IS NULL
+	AND FK_LOBNum IN ('21','62','61')
+
+UPDATE tblCustPlanCleansed
+SET ACCTYR = TargetYear
+WHERE ACCTYR IS NULL
+
+/*
+Drop Table #tmp1
+Drop Table #tmp2
+Drop Table #tmp3
+Drop Table #tmp4
+Drop Table #tmp5
+Drop Table #tmp6
+
+SELECT * From #tmp1
+SELECT * from #tmp2
+SELECT * from #tmp3
+SELECT * from #tmp4
+SELECT * from #tmp5
+SELECT * from #tmp6
+*/
+
+end
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[spAJCDW_LoadCustPlanCleansed]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
