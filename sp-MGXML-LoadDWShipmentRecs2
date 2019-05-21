@@ -1,0 +1,87 @@
+USE [MGXMLProcessing]
+GO
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadDWShipmentRecs2]    Script Date: 5/21/2019 2:41:41 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+
+
+
+ALTER PROCEDURE [dbo].[sp-MGXML-LoadDWShipmentRecs2]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+DECLARE @RecIDs TABLE
+(RecID int);
+
+
+INSERT INTO @RecIDs
+select rr.RecID
+from 
+(
+select *
+from [MGXMLProcessing].[dbo].[tblXML_DWLoadRecs]
+where RecType = 'RR' and Processed = 0
+)rr;
+
+
+update [MGXMLProcessing].[dbo].[tblXML_DWLoadRecs]
+set Status = 'TONU'
+where ShipDate is null and DelivDate is not null and RecType = 'RR';
+
+
+insert into [AJCDW].[dbo].[tblShipment]
+select cast('201807'+cast(ShipmentID as varchar(50)) as int) as ShipmentID, ShippingOrder, LoadID, PONumber, EnterpriseAccntNum, DivID, LOB, CarrierID
+	, OriginName, DestinationName, ShpSalesP
+	, ShpController, ReleaseNumber, ShpMaster, FreightCategory, TractorNumber, TrailerNumber
+	, OriginCity, OriginState, DestinationCity, DestinationState
+	, ShpPortofDchg, ShpPortofLoad, EquipDesc, ShpPntOrigin, ShpAES_ITN, ShpAES_Status, ShpTEU
+	, Revenue
+	, Cost, FreightCost
+	, Revenue - Cost as GP
+	, 0 as ShpGPPerc
+	, CreateDate, DelivDate, ShipDate, UpdtDate, LoadedDateTime, [Status]
+	, 4, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+from [MGXMLProcessing].[dbo].[tblXML_DWLoadRecs]
+where RecType = 'RR' and Processed = 0;
+
+
+update [MGXMLProcessing].[dbo].[tblXML_DWLoadRecs]
+set Processed = 1
+where RecID in (select RecID from @RecIDs);
+
+
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp-MGXML-LoadDWShipmentRecs2]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
