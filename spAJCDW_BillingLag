@@ -1,0 +1,182 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[spAJCDW_BillingLag]    Script Date: 5/21/2019 11:17:25 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+-- ==================================================================================================================================
+-- Author: Salah El-Jamil
+-- Procedure Inital Create date:4/3/19
+-- Description: Populate tblBillingLag table with data from back office systems looking for files that should have been invoiced but
+--				were not.
+-- Change History:
+-- ===================================================================================================================================
+
+
+ALTER procedure [dbo].[spAJCDW_BillingLag]
+as
+BEGIN TRY
+begin
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+DECLARE @CYEAR CHAR(2);
+
+SELECT @CYEAR = RIGHT(DATEPART(YY, GETDATE()), 2);
+
+--- CSA Billing Lag ---
+-----------------------
+select s.RefNo, s.shplob, s.ShpShipDate, s.ShpDelivDate, s.ShpStatus, f.SHPWEEK, f.DELWEEK, f.ACCTYR, s.ShpREVENUE, s.ShpCOST, s.ShpGP 
+INTO #tmp1
+from tblShipment s
+JOIN tblfile f on f.ShipmentID = s.ShipmentID
+where s.refno not in (select I.RefNo from tblInvoice i)
+	and s.FK_SystemID = 1
+	--and ShpShipDate > '01-01-2019'
+	and ShpDelivDate > '01-01-20' + @CYEAR
+order by ShpDelivDate
+
+--- Eagle/FXF CBI/Wayne Billing Lag ---
+---------------------------------------
+select s.RefNo, s.shplob, s.ShpShipDate, s.ShpDelivDate, s.ShpStatus, f.SHPWEEK, f.DELWEEK, f.ACCTYR, s.ShpREVENUE, s.ShpCOST, s.ShpGP 
+INTO #tmp2
+from tblShipment s
+JOIN tblfile f on f.ShipmentID = s.ShipmentID
+where s.refno not in (select I.RefNo from tblInvoice i)
+	and s.FK_SystemID = 2
+	and s.ShpLOB IN ('21','31','33','25')
+	and ShpStatus NOT IN ('Cancelled','Filed/Closed')  -- added Filed/Closed per Ginger's email on 4/23/19
+	and ShpBkgNum NOT IN ('PICKUP', 'PICK UP')
+	--and ShpShipDate > '01-01-2019'
+	and ShpBkgNum NOT IN ('CANCEL', 'CANCELLED')
+	and ShpShipDate > '01-01-20' + @CYEAR
+order by ShpShipDate
+
+--- Domestic NVOCC Billing Lag ---
+----------------------------------
+select s.RefNo, s.shplob, s.ShpShipDate, s.ShpDelivDate, s.ShpStatus, f.SHPWEEK, f.DELWEEK, f.ACCTYR, s.ShpREVENUE, s.ShpCOST, s.ShpGP 
+INTO #tmp3
+from tblShipment s
+JOIN tblfile f on f.ShipmentID = s.ShipmentID
+where s.refno not in (select I.RefNo from tblInvoice i)
+	and s.FK_SystemID = 2
+	and s.ShpLOB = '41'
+	and ShpStatus NOT IN ('Cancelled','Filed/Closed')  -- added Filed/Closed per Ginger's email on 4/23/19
+	--and ShpShipDate > '01-01-2019'
+	and ShpBkgNum NOT IN ('CANCEL', 'CANCELLED')
+	and ShpTEU <> 0
+	and ShpShipDate > '01-01-20' + @CYEAR
+order by ShpShipDate
+
+--- Intl NVOCC Billing Lag (Imports)---
+---------------------------------------
+select s.RefNo, s.shplob, s.ShpShipDate, s.ShpDelivDate, s.ShpStatus, f.SHPWEEK, f.DELWEEK, f.ACCTYR, s.ShpREVENUE, s.ShpCOST, s.ShpGP 
+INTO #tmp4
+from tblShipment s
+JOIN tblfile f on f.ShipmentID = s.ShipmentID
+where s.refno not in (select I.RefNo from tblInvoice i)
+	and s.FK_SystemID = 2
+	and s.ShpLOB = '43'
+	and s.FK_ShipmentTypeID = 2
+	and ShpStatus NOT IN ('Cancelled','Filed/Closed')  -- added Filed/Closed per Ginger's email on 4/23/19
+	--and ShpDelivDate > '01-01-2019'
+	and ShpBkgNum NOT IN ('CANCEL', 'CANCELLED')
+	and ShpDelivDate > '01-01-20' + @CYEAR
+order by ShpDelivDate
+
+--- Intl NVOCC Billing Lag (Exports)---
+---------------------------------------
+select s.RefNo, s.shplob, s.ShpShipDate, s.ShpDelivDate, s.ShpStatus, f.SHPWEEK, f.DELWEEK, f.ACCTYR, s.ShpREVENUE, s.ShpCOST, s.ShpGP 
+INTO #tmp5
+from tblShipment s
+JOIN tblfile f on f.ShipmentID = s.ShipmentID
+where s.refno not in (select I.RefNo from tblInvoice i)
+	and s.FK_SystemID = 2
+	and s.ShpLOB = '43'
+	and s.FK_ShipmentTypeID = 1
+	and ShpStatus NOT IN ('Cancelled','Filed/Closed')  -- added Filed/Closed per Ginger's email on 4/23/19
+	--and ShpDelivDate > '01-01-2019'
+	and ShpBkgNum NOT IN ('CANCEL', 'CANCELLED')
+	and ShpGP <> 0
+	and ShpDelivDate > '01-01-20' + @CYEAR
+order by ShpDelivDate
+
+--- MG Billing Lag ---
+-----------------------
+select s.RefNo, s.shplob, s.ShpShipDate, ShpDelivDate, s.ShpStatus, f.SHPWEEK, f.DELWEEK, f.ACCTYR, s.ShpREVENUE, s.ShpCOST, s.ShpGP 
+INTO #tmp6
+from tblShipment s
+JOIN tblfile f on f.ShipmentID = s.ShipmentID
+where 'MG'+ s.refno not in (select I.RefNo from tblInvoice i)
+	and s.FK_SystemID = 4
+	--and ShpShipDate > '01-01-2019'
+    and ShpDelivDate > '01-01-20' + @CYEAR
+order by ShpDelivDate
+
+--- Update Billing Lag Table ---
+--------------------------------
+DELETE FROM tblBillingLag
+WHERE ACCTYR = '20' + @CYEAR
+
+INSERT INTO tblBillingLag
+SELECT * FROM #tmp1
+
+INSERT INTO tblBillingLag
+SELECT * FROM #tmp2
+
+INSERT INTO tblBillingLag
+SELECT * FROM #tmp3
+
+INSERT INTO tblBillingLag
+SELECT * FROM #tmp4
+
+INSERT INTO tblBillingLag
+SELECT * FROM #tmp5
+
+INSERT INTO tblBillingLag
+SELECT * FROM #tmp6
+
+/*
+DROP TABLE #tmp1
+DROP TABLE #tmp2
+DROP TABLE #tmp3
+DROP TABLE #tmp4
+DROP TABLE #tmp5
+DROP TABLE #tmp6
+
+SELECT * from #tmp1
+SELECT * from #tmp2
+SELECT * from #tmp3
+SELECT * from #tmp4
+SELECT * from #tmp5
+SELECT * from #tmp6
+*/
+
+
+end
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[spAJCDW_BillingLag]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
