@@ -41,6 +41,7 @@ EXEC [spAJCDW_LoadSalesPlanCleansedFLAT]; -- update sales person plan vs actual 
 EXEC [spAJCDW_LoadSalesPlanCleansedADJ]; -- update sales person plan vs actual info/table with adjusted/seasonal budget
 EXEC [spAJCDW_LoadCustPlanCleansedEAGLE]; -- update customer plan vs actual info/table EAGLE ONLY
 EXEC [spAJCDW_BillingLag]; -- update billing lag table
+EXEC [spAJCDW_YOYReportingUpdate]; --populate YOY data for reporting
 
 END
 
