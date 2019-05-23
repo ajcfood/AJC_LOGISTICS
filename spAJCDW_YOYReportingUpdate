@@ -14,23 +14,24 @@ BEGIN
 
 TRUNCATE TABLE AJCDW.DBO.tblYOYReporting
 
-INSERT INTO tblYOYReporting ([InvCustName], [invLOB], [Month], [Year], [TotalCost], [TotalRevenue], [TotalGP], [Total # Of Shipments in ACCT Month & YR], [Total_GP_Per_Load], [YOY_Cost], [YOY_Revenue], [YOY_GP], [YOY_GP_Per_Load])
+INSERT INTO tblYOYReporting ([InvCustName], [invLOB], [Month], [Year], [TotalCost], [TotalRevenue], [TotalGP], [Total # Of Shipments in ACCT Month & YR], [Total_GP_Per_Load], [YOY_Cost], [YOY_Revenue], [YOY_GP], [YOY_GP_Per_Load], [YOY_Volume])
 SELECT	InvCustName, invLOB, Month, Year, TotalCost, TotalRevenue, TotalGP, ShipmentCount [Total # Of Shipments in ACCT Month & YR]
 	   , GP_Per_Load Total_GP_Per_Load
        , ISNULL((TotalCost - LAG(TotalCost) over(partition by InvCustName, InvLOB, Month order by InvCustName, month, year)),0) as YOY_Cost
        , ISNULL((TotalRevenue - LAG(TotalRevenue) over(partition by InvCustName, InvLOB, Month order by InvCustName, month, year)),0) as YOY_Revenue
-       , ISNULL((TotalGP - LAG(TotalGP) over(partition by InvCustName, month order by InvCustName, month, year)),0) as YOY_GP
-       , ISNULL((GP_Per_Load - LAG(GP_Per_Load) over(partition by InvCustName, month order by InvCustName, month, year)),0) as YOY_GP_Per_Load
+       , ISNULL((TotalGP - LAG(TotalGP) over(partition by InvCustName, InvLOB, month order by InvCustName, month, year)),0) as YOY_GP
+       , ISNULL((GP_Per_Load - LAG(GP_Per_Load) over(partition by InvCustName, InvLOB, month order by InvCustName, month, year)),0) as YOY_GP_Per_Load
+       , ISNULL((ShipmentCount - LAG(ShipmentCount) over(partition by InvCustName, InvLOB, month order by InvCustName, month, year)),0) as YOY_Volume
 from  (
 			select InvCustName, invLOB, acctmonth Month, acctyr Year, sum(invcost) as TotalCost, sum(invrevenue) TotalRevenue, sum(InvGP) TotalGP
-			, (SELECT COUNT(DISTINCT SHIPMENTID) FROM tblInvoice WHERE InvCustName = ti.InvCustName and AcctMonth = ti.AcctMonth and AcctYr = ti.AcctYr and InvOutOfPeriod = 0) ShipmentCount
+			, (SELECT COUNT(DISTINCT SHIPMENTID) FROM tblInvoice WHERE InvCustName = ti.InvCustName and AcctMonth = ti.AcctMonth and AcctYr = ti.AcctYr and InvLOB = ti.invLOB and InvOutOfPeriod = 0) ShipmentCount
 			, CONVERT(DECIMAL(10,2),CASE WHEN (SELECT COUNT(DISTINCT SHIPMENTID) FROM tblInvoice WHERE InvCustName = ti.InvCustName and AcctMonth = ti.AcctMonth and AcctYr = ti.AcctYr and InvOutOfPeriod = 0) = 0 THEN 0 
 											ELSE sum(InvGP) / (SELECT COUNT(DISTINCT SHIPMENTID) FROM tblInvoice WHERE InvCustName = ti.InvCustName and AcctMonth = ti.AcctMonth and AcctYr = ti.AcctYr and InvOutOfPeriod = 0) END) GP_Per_Load
 			from tblInvoice ti
 			where ISNULL(InvCustName,'') <> ''
 			group by InvCustName, invLOB, acctmonth, acctyr
 	  ) annual
-order by InvCustName ASC, month ASC, year ASC 
+order by InvCustName ASC, invLOB, month, year  
 
 
 END
