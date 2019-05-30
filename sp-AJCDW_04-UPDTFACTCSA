@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 5/21/2019 3:05:59 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 5/30/2019 9:49:42 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -384,37 +384,44 @@ where t2.FK_OrderNo not in (select ContentsNum from tblContainerContents)
 --Load Intial Email Invoice Sent Date/Time
 
 IF OBJECT_ID ('TEMPDB..#AddNewRecords') IS NOT NULL  DROP TABLE #AddNewRecords
-SELECT *
-INTO	#AddNewRecords
-FROM OPENQUERY (USDCFCSASQL01, '
-WITH CTE AS (
-				select MIN([PK_NoteNo]) [PK_NoteNo], FK_OrderNo
-				from AirTrak..tbl_TrackingNotes x
-				where (note like ''Invoice Emailed to:%'' OR note like ''Print Invoice%'')
-				and [DateTimeEntered] >= ''4/1/19'' 
-				GROUP BY FK_OrderNo
-			)
 
-SELECT x.[PK_NoteNo], ''70'' + convert(varchar,x.[FK_OrderNo]) FK_OrderNo, [DateTimeEntered], [Note], [FK_UserId]
-FROM AirTrak..tbl_TrackingNotes x
-inner join CTE y on y.[PK_NoteNo] = x.[PK_NoteNo]
-order by [FK_OrderNo]
-');
+BEGIN
+
+			WITH CTE AS (
+							select MIN([PK_NoteNo]) [PK_NoteNo], FK_OrderNo
+							from USDCFCSASQL01.AirTrak.dbo.tbl_TrackingNotes x
+							where (
+										note like 'Invoice Emailed to:%' 
+									 OR note like 'Print Invoice%'
+									 OR note like 'Invoice 00 Printed%'
+								  )
+							and [DateTimeEntered] >= '4/1/19' 
+							GROUP BY FK_OrderNo
+						)
+
+			SELECT x.[PK_NoteNo], '70' + convert(varchar,x.[FK_OrderNo]) FK_OrderNo, [DateTimeEntered], [Note], [FK_UserId]
+			INTO	#AddNewRecords
+			FROM USDCFCSASQL01.AirTrak.dbo.tbl_TrackingNotes x
+			inner join CTE y on y.[PK_NoteNo] = x.[PK_NoteNo]
+			order by [FK_OrderNo]
+
+END
 
 INSERT INTO [AJCDW].dbo.[tblTrackingNotes] (
 												[PK_NoteNo], [FK_OrderNo], [DateTimeEntered], [Note], [FK_UserId], [SailDate], [DeliveryDate], [AgingIssue], 
 												[InvRev], [OracleInvNo], [CSAShipNo], [CustName]
 										   )
+
 SELECT				x.[PK_NoteNo], x.[FK_OrderNo], x.[DateTimeEntered], SUBSTRING(x.[Note],1,350), x.[FK_UserId] /*Took substring of 350 because that is the max that column will allow*/,
 					
 					ts.ShpShipDate, ts.ShpDelivDate, DATEDIFF(DD, ts.ShpDelivDate, x.DateTimeEntered), z.InvRevenue, orad.Trx_Number, ts.ShpMaster, orad.CUSTOMER_NAME
 FROM				#AddNewRecords x
-LEFT OUTER JOIN		AJCDW..tblTrackingNotes tn on tn.PK_NoteNo = x.PK_NoteNo
-INNER JOIN			AJCDW..tblShipment ts ON ts.ShipmentID = x.FK_OrderNo
-INNER JOIN			AJCDW..tblOracleARData orad ON orad.PURCHASE_ORDER = ts.ShpMaster
+LEFT OUTER JOIN		ajcdw.dbo.tblTrackingNotes tn on tn.PK_NoteNo = x.PK_NoteNo
+INNER JOIN			ajcdw.dbo.tblShipment ts ON ts.ShipmentID = x.FK_OrderNo
+INNER JOIN			ajcdw.dbo.tblOracleARData orad ON orad.PURCHASE_ORDER = ts.ShpMaster
 CROSS APPLY			(
 						SELECT	ShipmentID, SUM(InvRevenue) InvRevenue
-						FROM	AJCDW..tblInvoice ti
+						FROM	ajcdw.dbo.tblInvoice ti
 						WHERE ti.ShipmentID = ts.ShipmentID
 						GROUP BY ShipmentID
 					) z
