@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 5/21/2019 11:19:21 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 6/4/2019 12:09:03 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -24,6 +24,8 @@ SET NOCOUNT ON;
 
 /*
 05/17/2019 - SA - Added Error Logging
+6/1/2019 - SE - Stopped Commission Calculations for Ross, Natalia, and Brett as of April 2019
+6/1/2019 - SE - Added Manuel Yanez Commission Calculation and column to tblCommCalc
 
 */
 
@@ -70,6 +72,7 @@ SELECT ACCTYR
 	,Convert(decimal(18,2),0.00) as CMComm -- Christine McVay
 	,Convert(decimal(18,2),0.00) as SFComm -- Suzanne Fairbanks
 	,Convert(decimal(18,2),0.00) as RMontComm -- Ricardo Monteiro
+	,Convert(decimal(18,2),0.00) as MYComm -- Manuel Yanez
 into #tmp1
 from tblInvoice i
 JOIN tblShipment s on i.ShipmentID = s.ShipmentID
@@ -133,23 +136,28 @@ update tblCommCalc
 set BWComm = GP*.15
 where SalesPName = 'Brawnson Walter'
 
---Brett Rasmussen Calculation: 16% of Surface Trans GP where he is Sales Rep
+--Brett Rasmussen Calculation: 16% of Surface Trans GP where he is Sales Rep (stopped commission calculations as of end of April 2019)
 update tblCommCalc
 set BRComm = GP*.16
 where SalesPName = 'Brett Rasmussen'
+	AND ACCTMONTH IN (1,2,3,4)
+	AND ACCTYR = 2019
+
 
 --Max Ritter Calculation: 15% of Surface Trans GP where he is Sales Rep
 update tblCommCalc
 set MRComm = GP*.15
 where SalesPName = 'Max Ritter'
 
---Natalia Duenas Calculation: 0.125% of Surface Trans GP for SUKARNE only.  Not SUKARNE EXPORT
+--Natalia Duenas Calculation: 0.125% of Surface Trans GP for SUKARNE only.  Not SUKARNE EXPORT (stopped commission calculations as of end of April 2019)
 update tblCommCalc
 set NDComm = GP*.00125
 where InvLOB = '11'
 	AND InvCustName IN ('SUKARNE','SUK - NORTH BOUND')
+	AND ACCTMONTH IN (1,2,3,4)
+	AND ACCTYR = 2019
 
---Ross Mielech Calculation: 0.125% of Surface Trans GP Minus Sukarne, Idaho Pacific, AGF Global, Dycinsa
+--Ross Mielech Calculation: 0.125% of Surface Trans GP Minus Sukarne, Idaho Pacific, AGF Global, Dycinsa (stopped commission calculations as of end of April 2019)
 update tblCommCalc
 set RMComm = GP*.00125
 where InvLOB = '11'
@@ -157,6 +165,8 @@ where InvLOB = '11'
 	AND InvCustName NOT LIKE 'IDAHO PACIFIC'
 	AND InvCustName NOT LIKE 'AGF GLOBAL'
 	AND InvCustName NOT LIKE 'DYCINSA'
+	AND ACCTMONTH IN (1,2,3,4)
+	AND ACCTYR = 2019
 	
 --Andres Alonso Calculation: 7% of his own GP, 0.5% of Surf Trans GP--
 update tblCommCalc
@@ -234,7 +244,7 @@ where SalesPName = 'Randolph Page'
 
 update tblCommCalc
 set RPComm = GP*.06
-where InvLOB IN ('11','21','41','31,33,43')
+where InvLOB IN ('11','21','41','31,33,43','76')
 	and SalesPName = 'Randolph Page'
 
 update tblCommCalc
@@ -308,6 +318,18 @@ where InvLOB = '76'
 update tblCommCalc
 set RMontComm = GP*.05
 where SalesPName = 'Ricardo Monteiro'
+
+--Manual Yanez Calculation: 5% of all GP where he is Sales Rep for LOB 41 or 43 and 10% of all ST GP where he is the sales rep
+Update tblCommCalc
+set MJComm = GP*.10
+where SalesPName = 'Manuel Yanez'
+and InvLOB = '11'
+
+Update tblCommCalc
+set MJComm = GP*.05
+where SalesPName = 'Manuel Yanez'
+	AND InvLOB in ('41','31,33,43')
+
 
 --SELECT * from #tmp1
 --drop table #tmp1
