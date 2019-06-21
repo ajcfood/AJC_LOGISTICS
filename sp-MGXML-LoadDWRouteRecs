@@ -1,6 +1,6 @@
 USE [MGXMLProcessing]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadDWRouteRecs]    Script Date: 5/21/2019 2:40:40 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadDWRouteRecs]    Script Date: 6/21/2019 2:30:32 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -17,6 +17,7 @@ BEGIN TRY
 BEGIN
 
 SET NOCOUNT ON;
+DECLARE @ProcName VARCHAR(100) = (SELECT OBJECT_SCHEMA_NAME(qt.objectid,qt.dbid) + '.' + OBJECT_NAME(qt.objectid, qt.dbid) FROM sys.dm_exec_requests er CROSS APPLY sys.dm_exec_sql_text(er.sql_handle) AS qt)
 
 /*
 05/17/2019 - SA - Added Error Logging
@@ -25,6 +26,13 @@ SET NOCOUNT ON;
 
 -- Carrier --
 -------------
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
 select distinct dbo.udf_GetNumeric(ref.[Shipping Order]) as ShipmentID, ref.[Shipping Order], ref.[Load ID], ref.[PO Number]
 	, ref.[Customer Acct Number]--ent.[EnterpriseAccntNum]
 	, '10' as DivID, '11' as LOB
@@ -95,6 +103,17 @@ GROUP BY
 ) carr
 on ref.[Load ID] = carr.LoadID and pri.PriceSheetID = carr.PriceSheetID;
 
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
 
 -- Filter Out Vendor PriceSheet
 select distinct ShipmentID, [Shipping Order], [Load ID]
@@ -108,6 +127,18 @@ into #tmp1a
 from #tmp1
 where CarrierType = 'Responsible';
 
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 3, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
 -- Aggregate Costs (Including Vendor)
 select distinct ShipmentID
 	, SUM(Cost) as Cost, SUM (FreightCost) as FreightCost
@@ -115,10 +146,21 @@ into #tmp1b
 from #tmp1
 group by ShipmentID;
 
+/*****************************************************End Logging*******************************************************/
 
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 3, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
 
 -- Customer --
 --------------
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 4, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
 select distinct ref.[Shipping Order], ref.[Load ID], ref.[PO Number], ref.[Customer PO Number]
 	, ref.[Customer Acct Number]--ent.[EnterpriseAccntNum]
 	, '10' as DivID, '11' as LOB
@@ -180,8 +222,20 @@ on pri.TransportID = dt.TransportID
 inner join [MGXMLProcessing].[dbo].[tblRouteXML_Locations] loc
 on ref.[Shipping Order] = loc.SOID;
 
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 4, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
 
 --Combine Cust Recs
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 5, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
 select distinct [Shipping Order], [Load ID], [PO Number], [Customer PO Number]
 	, [Customer Acct Number]--EnterpriseAccntNum
 	, DivID, LOB, OriginName, OriginCity, OriginState
@@ -191,15 +245,38 @@ into #tmp2a
 from #tmp2
 where OriginName is not null;
 
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 5, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 6, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
 select distinct [Shipping Order], DestinationName, DestinationCity, DestinationState
 into #tmp2b
 from #tmp2
 where DestinationName is not null;
 
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 6, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
 
 
 -- Combine Results --
 ---------------------
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 7, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
 insert into [MGXMLProcessing].[dbo].[tblXML_DWLoadRecs]
 select t1a.ShipmentID, t1a.[Shipping Order], t1a.[Load ID]
 	, t2.[Customer PO Number]
@@ -243,7 +320,17 @@ inner join #tmp2b t2b
 )t2
 	on t1a.[Shipping Order] = t2.[Shipping Order];
 
+/*****************************************************End Logging*******************************************************/
 
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 7, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 8, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
 -- Cleanup --
 drop table #tmp1;
 drop table #tmp1a;
@@ -252,7 +339,11 @@ drop table #tmp2;
 drop table #tmp2a;
 drop table #tmp2b;
 
+/*****************************************************End Logging*******************************************************/
 
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 8, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
 
 END
 
