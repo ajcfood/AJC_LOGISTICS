@@ -1,6 +1,6 @@
 USE [MGXMLProcessing]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadCustomerInv]    Script Date: 5/21/2019 2:38:05 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadCustomerInv]    Script Date: 6/21/2019 2:24:10 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -16,10 +16,20 @@ BEGIN
 
 SET NOCOUNT ON;
 
+DECLARE @ProcName VARCHAR(100) = (SELECT OBJECT_SCHEMA_NAME(qt.objectid,qt.dbid) + '.' + OBJECT_NAME(qt.objectid, qt.dbid) FROM sys.dm_exec_requests er CROSS APPLY sys.dm_exec_sql_text(er.sql_handle) AS qt)
+
+
 /*
 05/17/2019 - SA - Added Error Logging
 
 */
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
 
 insert into [tblCustomerXML_InvoiceLoadRecs]
 select distinct ref.[Shipping Order], ref.[Load ID], ref.[Release Number], ref.[PO Number], ref.[SCAC]
@@ -99,6 +109,12 @@ SELECT [ChargesID]
   FROM [MGXMLProcessing].[dbo].[tblCustomerXML_Charges]
 ) chrgs
 on pri.SOID = chrgs.SOID and pri.PriceSheetID = chrgs.PriceSheetID;
+
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
 
 
 END
