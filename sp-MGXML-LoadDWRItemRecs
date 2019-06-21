@@ -1,6 +1,6 @@
 USE [MGXMLProcessing]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadDWRItemRecs]    Script Date: 5/21/2019 2:40:25 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadDWRItemRecs]    Script Date: 6/21/2019 2:29:59 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -18,6 +18,7 @@ BEGIN TRY
 BEGIN
 
 SET NOCOUNT ON;
+DECLARE @ProcName VARCHAR(100) = (SELECT OBJECT_SCHEMA_NAME(qt.objectid,qt.dbid) + '.' + OBJECT_NAME(qt.objectid, qt.dbid) FROM sys.dm_exec_requests er CROSS APPLY sys.dm_exec_sql_text(er.sql_handle) AS qt)
 
 /*
 05/17/2019 - SA - Added Error Logging
@@ -25,6 +26,11 @@ SET NOCOUNT ON;
 */
 
 
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
 
 insert into [MGXMLProcessing].[dbo].[tblXML_DW_LoadRItems]
 select min(ItemID) as ItemID, [Weight], Qty, QtyUOM, InsuredValue, Qty, QtyUOM, ItemDesc
@@ -33,7 +39,11 @@ select min(ItemID) as ItemID, [Weight], Qty, QtyUOM, InsuredValue, Qty, QtyUOM, 
 from [MGXMLProcessing].[dbo].[tblRouteXML_Item]
 group by [Weight], Qty, QtyUOM, InsuredValue, Qty, QtyUOM, ItemDesc, SOID, WeightUOM;
 
+/*****************************************************End Logging*******************************************************/
 
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
 
 END
 End Try
