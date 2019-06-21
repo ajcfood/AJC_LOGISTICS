@@ -1,6 +1,6 @@
 USE [MGXMLProcessing]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadCarrierInv]    Script Date: 5/21/2019 2:33:46 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadCarrierInv]    Script Date: 6/21/2019 2:25:20 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -14,6 +14,7 @@ BEGIN TRY
 BEGIN
 
 SET NOCOUNT ON;
+DECLARE @ProcName VARCHAR(100) = (SELECT OBJECT_SCHEMA_NAME(qt.objectid,qt.dbid) + '.' + OBJECT_NAME(qt.objectid, qt.dbid) FROM sys.dm_exec_requests er CROSS APPLY sys.dm_exec_sql_text(er.sql_handle) AS qt)
 
 /*
 05/17/2019 - SA - Added Error Logging
@@ -31,6 +32,11 @@ SET NOCOUNT ON;
 --SET PriceSheetID = @PriceSheetID
 --WHERE PriceSheetID IS NULL
 
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
 
 insert into [tblCarrierXML_InvoiceLoadRecs]
 select distinct ref.[Shipping Order], ref.[Load ID], ref.[Release Number], ref.[PO Number]--, ref.[SCAC]
@@ -83,6 +89,12 @@ on ref.[Load ID] = chrgs.LoadID and pri.PriceSheetID = chrgs.PriceSheetID
 
 left outer join [MGXMLProcessing].[dbo].[tblCarrierXML_CarrierDetails] carr
 on ref.[Load ID] = carr.LoadID and pri.PriceSheetID = carr.PriceSheetID;
+
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
 
 END
 
