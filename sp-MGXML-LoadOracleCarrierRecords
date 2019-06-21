@@ -17,7 +17,7 @@ BEGIN TRY
 BEGIN
 
 SET NOCOUNT ON;
-DECLARE @ProcName VARCHAR(100) = (SELECT OBJECT_SCHEMA_NAME(qt.objectid,qt.dbid) + '.' + OBJECT_NAME(qt.objectid, qt.dbid) FROM sys.dm_exec_requests er CROSS APPLY sys.dm_exec_sql_text(er.sql_handle) AS qt)
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 
 /*
 05/17/2019 - SA - Added Error Logging
