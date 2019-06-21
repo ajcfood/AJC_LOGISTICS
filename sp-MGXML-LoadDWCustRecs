@@ -1,12 +1,10 @@
 USE [MGXMLProcessing]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadDWCustRecs]    Script Date: 5/21/2019 2:39:50 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadDWCustRecs]    Script Date: 6/21/2019 2:15:51 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-
-
 
 
 ALTER PROCEDURE [dbo].[sp-MGXML-LoadDWCustRecs]
@@ -16,6 +14,8 @@ BEGIN TRY
 BEGIN
 
 SET NOCOUNT ON;
+
+DECLARE @ProcName VARCHAR(100) = (SELECT OBJECT_SCHEMA_NAME(qt.objectid,qt.dbid) + '.' + OBJECT_NAME(qt.objectid, qt.dbid) FROM sys.dm_exec_requests er CROSS APPLY sys.dm_exec_sql_text(er.sql_handle) AS qt)
 
 /*
 05/17/2019 - SA - Added Error Logging
@@ -94,6 +94,13 @@ SET NOCOUNT ON;
 
 -- Customer --
 --------------
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
 select distinct dbo.udf_GetNumeric(ref.[Shipping Order]) as ShipmentID, ref.[Shipping Order], ref.[Load ID], ref.[PO Number], ref.[Customer PO Number]
 	, ent.[EnterpriseAccntNum]
 	, '10' as DivID, '11' as LOB
@@ -155,6 +162,17 @@ on pri.SOID = dt.SOID
 inner join [MGXMLProcessing].[dbo].[tblCustomerXML_Locations] loc
 on ref.[Shipping Order] = loc.SOID;
 
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
 
 -- Combine Cust Recs
 select distinct ShipmentID, [Shipping Order], [Load ID], [PO Number], [Customer PO Number], EnterpriseAccntNum, DivID, LOB, OriginName, OriginCity, OriginState
@@ -168,6 +186,18 @@ select distinct [Shipping Order], DestinationName, DestinationCity, DestinationS
 into #tmp2b
 from #tmp2
 where DestinationName is not null;
+
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 3, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
 
 
 -- Combine Results --
@@ -209,6 +239,18 @@ inner join #tmp2b t2b
 	on t2a.[Shipping Order] = t2b.[Shipping Order]
 )t2;
 
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 3, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 4, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
 --left outer join 
 --(
 --select [Shipping Order], [Load ID]
@@ -231,6 +273,11 @@ drop table #tmp2;
 drop table #tmp2a;
 drop table #tmp2b;
 
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 4, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
 
 
 END
