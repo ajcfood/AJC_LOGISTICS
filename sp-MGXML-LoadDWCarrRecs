@@ -1,6 +1,6 @@
 USE [MGXMLProcessing]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadDWCarrRecs]    Script Date: 5/21/2019 2:38:41 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadDWCarrRecs]    Script Date: 6/21/2019 2:25:54 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -16,6 +16,7 @@ BEGIN TRY
 BEGIN
 
 SET NOCOUNT ON;
+DECLARE @ProcName VARCHAR(100) = (SELECT OBJECT_SCHEMA_NAME(qt.objectid,qt.dbid) + '.' + OBJECT_NAME(qt.objectid, qt.dbid) FROM sys.dm_exec_requests er CROSS APPLY sys.dm_exec_sql_text(er.sql_handle) AS qt)
 
 /*
 05/17/2019 - SA - Added Error Logging
@@ -24,6 +25,12 @@ SET NOCOUNT ON;
 
 -- Carrier --
 -------------
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
 select distinct dbo.udf_GetNumeric(ref.[Shipping Order]) as ShipmentID, ref.[Shipping Order], ref.[Load ID], ref.[PO Number]
 	, ent.[EnterpriseAccntNum]
 	, '10' as DivID, '11' as LOB
@@ -94,8 +101,21 @@ GROUP BY
 ) carr
 on ref.[Load ID] = carr.LoadID and pri.PriceSheetID = carr.PriceSheetID;
 
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
 
 -- Filter Out Vendor PriceSheet
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
 select distinct ShipmentID, [Shipping Order], [Load ID]
 	, [PO Number], EnterpriseAccntNum, DivID, LOB, CarrierID, CarrierType, [Release Number]
 	, [Freight Category], [Tractor Number], [Trailer Number], [AssignedTo], [Status], [CreateDate]
@@ -105,13 +125,31 @@ into #tmp1a
 from #tmp1
 where CarrierType = 'Responsible';
 
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
 -- Aggregate Costs (Including Vendor)
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 3, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
 select distinct ShipmentID
 	, SUM(Cost) as Cost, SUM (FreightCost) as FreightCost
 into #tmp1b
 from #tmp1
 group by ShipmentID;
 
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 3, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
 
 -- Customer --
 --------------
@@ -193,6 +231,13 @@ group by ShipmentID;
 
 -- Combine Results --
 ---------------------
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 4, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
 insert into [MGXMLProcessing].[dbo].[tblXML_DWLoadRecs]
 select t1a.ShipmentID, t1a.[Shipping Order], t1a.[Load ID], t1a.[PO Number], t1a.EnterpriseAccntNum, t1a.DivID, t1a.LOB, t1a.CarrierID
 	, '' as OriginName, '' as DestinationName
@@ -231,8 +276,20 @@ inner join #tmp1b t1b
 --)t2
 --	on t1a.[Shipping Order] = t2.[Shipping Order];
 
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 4, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
 
 -- Cleanup --
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 5, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
 drop table #tmp1;
 drop table #tmp1a;
 drop table #tmp1b;
@@ -240,6 +297,11 @@ drop table #tmp1b;
 --drop table #tmp2a;
 --drop table #tmp2b;
 
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 5, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
 
 END
 End Try
