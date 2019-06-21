@@ -452,6 +452,14 @@ DROP TABLE #tmp4;
 DROP TABLE #tmp5;
 DROP TABLE #tmp6;
 
+--Set ShpMoveType to Zone Number for FedEx Deliveries-- added by Salah on 6/21/19
+-------------------------------------------------------
+update s set ShpMoveType = t7.FORWARDERSRE
+from AJCDW..tblShipment s
+inner join [IES].[IES]..[SHIPMENT_DAT] t7 on s.ShipmentID = t7.shipment_id
+where s.shpLOB IN ('62','63')
+and t7.BUS_LINE IN ('62','63')
+and ISNULL(s.ShpMoveType,'') <> ''
 
 END
 
