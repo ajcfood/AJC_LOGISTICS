@@ -1,6 +1,6 @@
 USE [MGXMLProcessing]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadRoute]    Script Date: 5/21/2019 2:43:07 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadRoute]    Script Date: 6/21/2019 2:29:09 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -16,11 +16,19 @@ BEGIN TRY
 BEGIN
 
 SET NOCOUNT ON;
+DECLARE @ProcName VARCHAR(100) = (SELECT OBJECT_SCHEMA_NAME(qt.objectid,qt.dbid) + '.' + OBJECT_NAME(qt.objectid, qt.dbid) FROM sys.dm_exec_requests er CROSS APPLY sys.dm_exec_sql_text(er.sql_handle) AS qt)
 
 /*
 05/17/2019 - SA - Added Error Logging
 
 */
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
 
 insert into [MGXMLProcessing].[dbo].[tblRouteXML_TransportLoadRecs]
 
@@ -199,6 +207,11 @@ on pri.TransportID = chrgs.TransportID and pri.[TransportType] = chrgs.[Transpor
 inner join [MGXMLProcessing].[dbo].[tblRouteXML_CarrierDetails] carr
 on ref.[Load ID] = carr.[LoadID] and pri.PriceSheetID = carr.PriceSheetID
 
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
 
 END
 End Try
