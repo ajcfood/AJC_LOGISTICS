@@ -465,7 +465,7 @@ and ShpShipDate >= DATEADD(MM,-15,CAST(GETDATE() AS DATE))
 --Populate PowerBI Report for Harrison
 TRUNCATE TABLE AJCDW..RptFXFAnalysis
 
-insert into RptFXFAnalysis ([Manifest], [InvOutofPeriod], [Account], [LOB], [ACCTYR], [ACCTMONTH], [DeliveryDate], [Sum of InvRevenue], [Sum of InvCost], [Sum of InvGP], 
+insert into AJCDW..RptFXFAnalysis ([Manifest], [InvOutofPeriod], [Account], [LOB], [ACCTYR], [ACCTMONTH], [DeliveryDate], [Sum of InvRevenue], [Sum of InvCost], [Sum of InvGP], 
 [No. of Pros], [Zone 1 Pros], [Zone 2 Pros], [Zone 3 Pros], [Zone 4 Pros])
 
 select s.ShpBkgNum Manifest, ti.InvOutofPeriod InvOutofPeriod, s.ShpAccnt Account, s.ShpLOB LOB, ti.ACCTYR, ti.ACCTMONTH, ti.InvDate DeliveryDate, SUM(ti.InvRevenue) [Sum of InvRevenue],
