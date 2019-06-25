@@ -479,6 +479,7 @@ cross apply (
 					from AJCDW..tblShipment ts
 					where shpLOB IN ('62','63')
 					and ts.ShpBkgNum = s.ShpBkgNum
+					and ts.ShpAccnt = s.ShpAccnt
 					and ShpShipDate >= DATEADD(MM,-15,CAST(GETDATE() AS DATE))
 					and LTRIM(RTRIM(ShpMoveType)) in ('1','2','3','4')
 					group by ShpBkgNum
@@ -488,6 +489,7 @@ outer apply (
 					from AJCDW..tblShipment ts
 					where shpLOB IN ('62','63')
 					and ts.ShpBkgNum = s.ShpBkgNum
+					and ts.ShpAccnt = s.ShpAccnt
 					and ShpShipDate >= DATEADD(MM,-15,CAST(GETDATE() AS DATE))
 					and ShpMoveType = LTRIM(RTRIM('1'))
 					group by ShpBkgNum, LTRIM(RTRIM(ShpMoveType))
@@ -497,6 +499,7 @@ outer apply (
 					from AJCDW..tblShipment ts
 					where shpLOB IN ('62','63')
 					and ts.ShpBkgNum = s.ShpBkgNum
+					and ts.ShpAccnt = s.ShpAccnt
 					and ShpShipDate >= DATEADD(MM,-15,CAST(GETDATE() AS DATE))
 					and ShpMoveType = LTRIM(RTRIM('2')) 
 					group by ShpBkgNum, LTRIM(RTRIM(ShpMoveType))
@@ -506,6 +509,7 @@ outer apply (
 					from AJCDW..tblShipment ts
 					where shpLOB IN ('62','63')
 					and ts.ShpBkgNum = s.ShpBkgNum
+					and ts.ShpAccnt = s.ShpAccnt
 					and ShpShipDate >= DATEADD(MM,-15,CAST(GETDATE() AS DATE))
 					and ShpMoveType = LTRIM(RTRIM('3'))
 					group by ShpBkgNum, LTRIM(RTRIM(ShpMoveType))
@@ -515,6 +519,7 @@ outer apply (
 					from AJCDW..tblShipment ts
 					where shpLOB IN ('62','63')
 					and ts.ShpBkgNum = s.ShpBkgNum
+					and ts.ShpAccnt = s.ShpAccnt
 					and ShpShipDate >= DATEADD(MM,-15,CAST(GETDATE() AS DATE))
 					and ShpMoveType = LTRIM(RTRIM('4')) 
 					group by ShpBkgNum, LTRIM(RTRIM(ShpMoveType))
