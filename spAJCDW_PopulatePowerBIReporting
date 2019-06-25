@@ -1,0 +1,138 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[spAJCDW_PopulatePowerBIReporting]    Script Date: 6/25/2019 2:12:16 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+ALTER PROCEDURE [dbo].[spAJCDW_PopulatePowerBIReporting] AS
+BEGIN TRY
+
+BEGIN
+
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+/**************************************************************************************
+
+Workspace: AJCL-FedEx 
+Report Name: Manifest Analysis
+
+***************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+TRUNCATE TABLE AJCDW..RptFXFAnalysis
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+ /*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+insert into AJCDW..RptFXFAnalysis ([Manifest], [InvOutofPeriod], [Account], [LOB], [ACCTYR], [ACCTMONTH], [DeliveryDate], [Sum of InvRevenue], [Sum of InvCost], [Sum of InvGP], 
+[No. of Pros], [Zone 1 Pros], [Zone 2 Pros], [Zone 3 Pros], [Zone 4 Pros])
+
+select s.ShpBkgNum Manifest, ti.InvOutofPeriod InvOutofPeriod, s.ShpAccnt Account, s.ShpLOB LOB, ti.ACCTYR, ti.ACCTMONTH, ti.InvDate DeliveryDate, SUM(ti.InvRevenue) [Sum of InvRevenue],
+SUM(ti.InvCost) [Sum of InvCost], SUM(ti.InvGP) [Sum of InvGP], ISNULL([No. of Pros],0) [No. of Pros], ISNULL([Zone 1 Pros],'') [Zone 1 Pros], ISNULL([Zone 2 Pros],'') [Zone 2 Pros], 
+ISNULL([Zone 3 Pros],'') [Zone 3 Pros], ISNULL([Zone 4 Pros],'') [Zone 4 Pros]
+from AJCDW..tblShipment s
+inner join AJCDW..tblInvoice ti on ti.ShipmentID = s.ShipmentID
+inner join [IES].[IES]..[SHIPMENT_DAT] t7 on s.ShipmentID = t7.shipment_id
+cross apply (
+					select ShpBkgNum, count(*) [No. of Pros]
+					from AJCDW..tblShipment ts
+					where shpLOB IN ('62','63')
+					and ts.ShpBkgNum = s.ShpBkgNum
+					and ts.ShpAccnt = s.ShpAccnt
+					and ShpShipDate >= DATEADD(MM,-15,CAST(GETDATE() AS DATE))
+					and LTRIM(RTRIM(ShpMoveType)) in ('1','2','3','4')
+					group by ShpBkgNum
+			) NoOfPros 
+outer apply (
+					select ShpBkgNum, LTRIM(RTRIM(ShpMoveType)) ShpMoveType, count(*) [Zone 1 Pros]
+					from AJCDW..tblShipment ts
+					where shpLOB IN ('62','63')
+					and ts.ShpBkgNum = s.ShpBkgNum
+					and ts.ShpAccnt = s.ShpAccnt
+					and ShpShipDate >= DATEADD(MM,-15,CAST(GETDATE() AS DATE))
+					and ShpMoveType = LTRIM(RTRIM('1'))
+					group by ShpBkgNum, LTRIM(RTRIM(ShpMoveType))
+			) Zone1 
+outer apply (
+					select ShpBkgNum, LTRIM(RTRIM(ShpMoveType)) ShpMoveType, count(*) [Zone 2 Pros]
+					from AJCDW..tblShipment ts
+					where shpLOB IN ('62','63')
+					and ts.ShpBkgNum = s.ShpBkgNum
+					and ts.ShpAccnt = s.ShpAccnt
+					and ShpShipDate >= DATEADD(MM,-15,CAST(GETDATE() AS DATE))
+					and ShpMoveType = LTRIM(RTRIM('2')) 
+					group by ShpBkgNum, LTRIM(RTRIM(ShpMoveType))
+			) Zone2
+outer apply (
+					select ShpBkgNum, LTRIM(RTRIM(ShpMoveType)) ShpMoveType, count(*) [Zone 3 Pros]
+					from AJCDW..tblShipment ts
+					where shpLOB IN ('62','63')
+					and ts.ShpBkgNum = s.ShpBkgNum
+					and ts.ShpAccnt = s.ShpAccnt
+					and ShpShipDate >= DATEADD(MM,-15,CAST(GETDATE() AS DATE))
+					and ShpMoveType = LTRIM(RTRIM('3'))
+					group by ShpBkgNum, LTRIM(RTRIM(ShpMoveType))
+			) Zone3
+outer apply (
+					select ShpBkgNum, LTRIM(RTRIM(ShpMoveType)) ShpMoveType, count(*) [Zone 4 Pros]
+					from AJCDW..tblShipment ts
+					where shpLOB IN ('62','63')
+					and ts.ShpBkgNum = s.ShpBkgNum
+					and ts.ShpAccnt = s.ShpAccnt
+					and ShpShipDate >= DATEADD(MM,-15,CAST(GETDATE() AS DATE))
+					and ShpMoveType = LTRIM(RTRIM('4')) 
+					group by ShpBkgNum, LTRIM(RTRIM(ShpMoveType))
+			) Zone4
+where s.shpLOB IN ('62','63')
+and t7.BUS_LINE IN ('62','63')
+and ShpShipDate >= DATEADD(MM,-15,CAST(GETDATE() AS DATE))
+and isnull(s.ShpBkgNum,'') <> ''
+and ShpMaster <> 'M'
+group by s.ShpBkgNum, ti.InvOutofPeriod, s.ShpAccnt, s.ShpLOB, ti.ACCTYR, ti.ACCTMONTH, ti.InvDate, ISNULL([No. of Pros],0), ISNULL([Zone 1 Pros],''), ISNULL([Zone 2 Pros],''), 
+ISNULL([Zone 3 Pros],''), ISNULL([Zone 4 Pros],'')
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[spAJCDW_PopulatePowerBIReporting]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
