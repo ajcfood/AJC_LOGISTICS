@@ -42,5 +42,5 @@ EXEC [spAJCDW_LoadSalesPlanCleansedADJ]; -- update sales person plan vs actual i
 EXEC [spAJCDW_LoadCustPlanCleansedEAGLE]; -- update customer plan vs actual info/table EAGLE ONLY
 EXEC [spAJCDW_BillingLag]; -- update billing lag table
 EXEC [spAJCDW_YOYReportingUpdate]; --populate YOY data for reporting
-
+EXEC [spAJCDW_PopulatePowerBIReporting]; --Populate PowerBI Reporting Tables
 END
