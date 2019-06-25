@@ -459,8 +459,8 @@ from AJCDW..tblShipment s
 inner join [IES].[IES]..[SHIPMENT_DAT] t7 on s.ShipmentID = t7.shipment_id
 where s.shpLOB IN ('62','63')
 and t7.BUS_LINE IN ('62','63')
-and t7.FORWARDERSRE IN ('1','2','3','4')
-and ShpShipDate >= DATEADD(MM,-15,GETDATE())
+and LTRIM(RTRIM(t7.FORWARDERSRE)) IN ('1','2','3','4')
+and ShpShipDate >= DATEADD(MM,-15,CAST(GETDATE() AS DATE))
 
 
 END
