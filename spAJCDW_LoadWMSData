@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadWMSData]    Script Date: 7/2/2019 10:01:22 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadWMSData]    Script Date: 7/2/2019 3:45:57 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -17,7 +17,6 @@ SET NOCOUNT ON;
 05/17/2019 - SA - Added Error Logging
 
 */
-
 SELECT * 
 INTO #tmp1
 FROM OPENQUERY(IES, '
@@ -106,7 +105,7 @@ SELECT PO_InvoiceItem_UID
 	,PartNumber
 	,PartDescription
 	,t2.WHSE_RECEIPT_NO
-	,t3.Status
+--	,t3.Status
 	,t2.RECEIVEDDATE
 	,t2.DATEFILEOPEN AS WHSRCPTDATE
 	,t2.LASTCHGDATE AS WRLASTCHGDATE
@@ -122,7 +121,7 @@ SELECT PO_InvoiceItem_UID
 	,t1.Weight * t1.QuantityReceived as TotalItemWeight
 	,MarksNumbers AS TempZone
 	,REMARKS as RCVR
-	,File_No
+--	,File_No
 	,t1."WHS:UID"
 	,"PPL:UID"
 INTO #tmp5
@@ -135,7 +134,7 @@ GROUP BY  t1."WHS:ShipperReference"
 	,PartNumber
 	,PartDescription
 	,t2.WHSE_RECEIPT_NO
-	,t3.Status
+--	,t3.Status
 	,t2.RECEIVEDDATE
 	,t2.DATEFILEOPEN
 	,t2.LASTCHGDATE
@@ -151,11 +150,46 @@ GROUP BY  t1."WHS:ShipperReference"
 	,t1.Weight * t1.QuantityReceived
 	,MarksNumbers
 	,REMARKS
-	,File_No
+--	,File_No
 	,t1."WHS:UID"
 	,"PPL:UID"
 ORDER BY PO_InvoiceItem_UID
 
+--SELECT * from #tmp5 where WHSE_RECEIPT_NO = '080902'
+
+--ADD STATUS AND FILE_NO to #tmp5 results--
+SELECT
+	 t5.PO_InvoiceItem_UID
+	,t5.PONumber
+	,t5.PartNumber
+	,t5.PartDescription
+	,t5.WHSE_RECEIPT_NO
+	,t3.Status
+	,t5.RECEIVEDDATE
+	,t5.WHSRCPTDATE
+	,t5.WRLASTCHGDATE
+	,t5.CUSTOMER
+	,t5.SUPPLIER
+	,t5.WAREHOUSE
+	,t5.CONTROLLER
+	,t5.QuantityReceived
+	,t5.QuantityOnHand
+	,t5.QuantityAssigned
+	,t5.ItemWeight
+	,t5.WeightUnit
+	,t5.TotalItemWeight
+	,t5.TempZone
+	,t5.RCVR
+	,t3.File_No
+	,t5."WHS:UID"
+	,t5."PPL:UID"
+INTO #tmp12
+FROM #tmp5 t5
+JOIN #tmp3 t3 on t5."PPL:UID" = t3.UID
+
+--SELECT * from #tmp12 where WHSE_RECEIPT_NO = '080902'
+
+/*
 SELECT PO_InvoiceItem_UID
 	,t1."WHS:ShipperReference" AS PONumber
 	,PartNumber
@@ -210,41 +244,42 @@ GROUP BY  t1."WHS:ShipperReference"
 	,t1."WHS:UID"
 	,"PPL:UID"
 ORDER BY PO_InvoiceItem_UID
-
+*/
 
 -- Use Temp 6 for Inventory FOR SHIPMENTS ONLY --
-SELECT CAST (t5.PO_InvoiceItem_UID as varchar(250))as PO_InvoiceItem_UID
-	,CAST (t5.PONumber as varchar(250))as PONumber
-	,CAST (t5.PartNumber as varchar(250))as PartNumber
-	,CAST (t5.PartDescription as varchar(250))as PartDescription
-	,CAST (t5.WHSE_RECEIPT_NO as varchar(50))as WHSE_RECEIPT_NO
-	,CAST (t5.Status as varchar(50))as Status
-	,CAST (t5.RECEIVEDDATE as date)as RECEIVEDDATE
-	,CAST (t5.WHSRCPTDATE as date)as WHSRCPTDATE
-	,CAST (t5.WRLASTCHGDATE as date)as WRLASTCHGDATE
-	,CAST (t5.CUSTOMER as varchar(250))as CUSTOMER
-	,CAST (t5.SUPPLIER as varchar(250))as SUPPLIER
-	,CAST (t5.WAREHOUSE as varchar(20))as WAREHOUSE
-	,CAST (t5.CONTROLLER as varchar(250))as CONTROLLER
-	,CAST (t5.QuantityReceived as decimal(18,2))as QuantityReceived
-	,CAST (t5.QuantityOnHand as decimal(18,2))as QuantityOnHand
-	,CAST (t5.QuantityAssigned as decimal(18,2))as QuantityAssigned
-	,CAST (t5.ItemWeight as decimal(18,2))as ItemWeight
-	,CAST (t5.WeightUnit as varchar(50))as WeightUnit
-	,CAST (t5.TotalItemWeight as decimal(18,2))as TotalItemWeight
-	,CAST (t5.TempZone as varchar(100))as TempZone
-	,CAST (t5.RCVR as varchar(100))as RCVR
-	,CAST (t5.File_No as bigint)as FileNo
-	,CAST (t5.[WHS:UID] as bigint)as WHSUID
-	,CAST (t5.[PPL:UID] as bigint)as OverPackID
+SELECT CAST (t12.PO_InvoiceItem_UID as varchar(250))as PO_InvoiceItem_UID
+	,CAST (t12.PONumber as varchar(250))as PONumber
+	,CAST (t12.PartNumber as varchar(250))as PartNumber
+	,CAST (t12.PartDescription as varchar(250))as PartDescription
+	,CAST (t12.WHSE_RECEIPT_NO as varchar(50))as WHSE_RECEIPT_NO
+	,CAST (t12.Status as varchar(50))as Status
+	,CAST (t12.RECEIVEDDATE as date)as RECEIVEDDATE
+	,CAST (t12.WHSRCPTDATE as date)as WHSRCPTDATE
+	,CAST (t12.WRLASTCHGDATE as date)as WRLASTCHGDATE
+	,CAST (t12.CUSTOMER as varchar(250))as CUSTOMER
+	,CAST (t12.SUPPLIER as varchar(250))as SUPPLIER
+	,CAST (t12.WAREHOUSE as varchar(20))as WAREHOUSE
+	,CAST (t12.CONTROLLER as varchar(250))as CONTROLLER
+	,CAST (t12.QuantityReceived as decimal(18,2))as QuantityReceived
+	,CAST (t12.QuantityOnHand as decimal(18,2))as QuantityOnHand
+	,CAST (t12.QuantityAssigned as decimal(18,2))as QuantityAssigned
+	,CAST (t12.ItemWeight as decimal(18,2))as ItemWeight
+	,CAST (t12.WeightUnit as varchar(50))as WeightUnit
+	,CAST (t12.TotalItemWeight as decimal(18,2))as TotalItemWeight
+	,CAST (t12.TempZone as varchar(100))as TempZone
+	,CAST (t12.RCVR as varchar(100))as RCVR
+	,CAST (t12.File_No as bigint)as FileNo
+	,CAST (t12.[WHS:UID] as bigint)as WHSUID
+	,CAST (t12.[PPL:UID] as bigint)as OverPackID
 	,CAST (t4.Section_ as varchar(50))as Section
 	,CAST (t4.Row_ as varchar(50))as Row
 	,CAST (t4.Rack_ as varchar(50))as Rack
 	,CAST (t4.Bin_ as varchar(50))as Bin
 INTO #tmp6
-From #tmp5 t5
-JOIN #tmp4 t4 on t4.UID = t5."PPL:UID"
+From #tmp12 t12
+JOIN #tmp4 t4 on t4.UID = t12."PPL:UID"
 
+/*
 -- Use Temp 9 for tblWMSInv --
 SELECT CAST (t10.PO_InvoiceItem_UID as varchar(250))as PO_InvoiceItem_UID
 	,CAST (t10.PONumber as varchar(250))as PONumber
@@ -277,7 +312,7 @@ SELECT CAST (t10.PO_InvoiceItem_UID as varchar(250))as PO_InvoiceItem_UID
 INTO #tmp9 --change from #tmp6 to #tmp9 on 7/2/19 to populate tlbWMSInv
 From #tmp10 t10
 JOIN #tmp4 t4 on t4.UID = t10."PPL:UID"
-
+*/
 
 SELECT * 
 INTO #tmp7
@@ -313,7 +348,7 @@ DELETE tblWMSInv
 WHERE RECEIVEDDATE > '01-01-2019'
 
 INSERT INTO tblWMSInv
-SELECT * from #tmp9 --change from #tmp6 to #tmp9 on 7/2/19 to populate tlbWMSInv
+SELECT * from #tmp6 --change from #tmp6 to #tmp9 on 7/2/19 to populate tlbWMSInv
 
 --INSERT tblWMSLoads--
 DELETE tblWMSLoads
@@ -333,6 +368,7 @@ DRop Table #tmp7
 DRop Table #tmp8
 DRop Table #tmp9
 DRop Table #tmp10
+DRop Table #tmp12
 */
 
 /*
@@ -347,6 +383,7 @@ SELECT * FROM #tmp8
 WHERE WHSE_RECEIPT_NO = '071974'
 SELECT * FROM #tmp9
 SELECT * FROM #tmp10
+SELECT * FROM #tmp12
 */
 
 end
