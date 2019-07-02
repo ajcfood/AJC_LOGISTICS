@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadWMSData]    Script Date: 5/21/2019 11:22:33 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadWMSData]    Script Date: 7/2/2019 10:01:22 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -156,7 +156,63 @@ GROUP BY  t1."WHS:ShipperReference"
 	,"PPL:UID"
 ORDER BY PO_InvoiceItem_UID
 
--- Use Temp 6 for Inventory --
+SELECT PO_InvoiceItem_UID
+	,t1."WHS:ShipperReference" AS PONumber
+	,PartNumber
+	,PartDescription
+	,t2.WHSE_RECEIPT_NO
+	,t3.Status
+	,t2.RECEIVEDDATE
+	,t2.DATEFILEOPEN AS WHSRCPTDATE
+	,t2.LASTCHGDATE AS WRLASTCHGDATE
+	,BuyerCode AS CUSTOMER
+	,VendorCode AS SUPPLIER
+	,t2.WAREHOUSE
+	,CONTROLLER
+	,t1.QuantityReceived
+	,t1.QuantityOnHand
+	,t1.QuantityAssigned
+	,t1.Weight AS ItemWeight
+	,t1.WeightUnit
+	,t1.Weight * t1.QuantityReceived as TotalItemWeight
+	,MarksNumbers AS TempZone
+	,REMARKS as RCVR
+--	,File_No
+	,t1."WHS:UID"
+	,"PPL:UID"
+INTO #tmp10
+FROM #tmp1 t1
+JOIN #tmp2 t2 on t1."WHS:UID" = t2.Shipment_ID
+JOIN #tmp3 t3 on t1."WHS:UID" = t3."WHS:UID"
+--WHERE WHSE_RECEIPT_NO = '069162'
+GROUP BY  t1."WHS:ShipperReference"
+	,PO_InvoiceItem_UID
+	,PartNumber
+	,PartDescription
+	,t2.WHSE_RECEIPT_NO
+	,t3.Status
+	,t2.RECEIVEDDATE
+	,t2.DATEFILEOPEN
+	,t2.LASTCHGDATE
+	,BuyerCode
+	,VendorCode
+	,t2.WAREHOUSE
+	,CONTROLLER
+	,t1.QuantityReceived
+	,t1.QuantityOnHand
+	,t1.QuantityAssigned
+	,t1.Weight
+	,t1.WeightUnit
+	,t1.Weight * t1.QuantityReceived
+	,MarksNumbers
+	,REMARKS
+--	,File_No
+	,t1."WHS:UID"
+	,"PPL:UID"
+ORDER BY PO_InvoiceItem_UID
+
+
+-- Use Temp 6 for Inventory FOR SHIPMENTS ONLY --
 SELECT CAST (t5.PO_InvoiceItem_UID as varchar(250))as PO_InvoiceItem_UID
 	,CAST (t5.PONumber as varchar(250))as PONumber
 	,CAST (t5.PartNumber as varchar(250))as PartNumber
@@ -188,6 +244,40 @@ SELECT CAST (t5.PO_InvoiceItem_UID as varchar(250))as PO_InvoiceItem_UID
 INTO #tmp6
 From #tmp5 t5
 JOIN #tmp4 t4 on t4.UID = t5."PPL:UID"
+
+-- Use Temp 9 for tblWMSInv --
+SELECT CAST (t10.PO_InvoiceItem_UID as varchar(250))as PO_InvoiceItem_UID
+	,CAST (t10.PONumber as varchar(250))as PONumber
+	,CAST (t10.PartNumber as varchar(250))as PartNumber
+	,CAST (t10.PartDescription as varchar(250))as PartDescription
+	,CAST (t10.WHSE_RECEIPT_NO as varchar(50))as WHSE_RECEIPT_NO
+	,CAST (t10.Status as varchar(50))as Status
+	,CAST (t10.RECEIVEDDATE as date)as RECEIVEDDATE
+	,CAST (t10.WHSRCPTDATE as date)as WHSRCPTDATE
+	,CAST (t10.WRLASTCHGDATE as date)as WRLASTCHGDATE
+	,CAST (t10.CUSTOMER as varchar(250))as CUSTOMER
+	,CAST (t10.SUPPLIER as varchar(250))as SUPPLIER
+	,CAST (t10.WAREHOUSE as varchar(20))as WAREHOUSE
+	,CAST (t10.CONTROLLER as varchar(250))as CONTROLLER
+	,CAST (t10.QuantityReceived as decimal(18,2))as QuantityReceived
+	,CAST (t10.QuantityOnHand as decimal(18,2))as QuantityOnHand
+	,CAST (t10.QuantityAssigned as decimal(18,2))as QuantityAssigned
+	,CAST (t10.ItemWeight as decimal(18,2))as ItemWeight
+	,CAST (t10.WeightUnit as varchar(50))as WeightUnit
+	,CAST (t10.TotalItemWeight as decimal(18,2))as TotalItemWeight
+	,CAST (t10.TempZone as varchar(100))as TempZone
+	,CAST (t10.RCVR as varchar(100))as RCVR
+--	,CAST (t10.File_No as bigint)as FileNo  --commented out by Salah on 7/2/19 to remove duplicate records in tblWMSInv
+	,CAST (t10.[WHS:UID] as bigint)as WHSUID
+	,CAST (t10.[PPL:UID] as bigint)as OverPackID
+	,CAST (t4.Section_ as varchar(50))as Section
+	,CAST (t4.Row_ as varchar(50))as Row
+	,CAST (t4.Rack_ as varchar(50))as Rack
+	,CAST (t4.Bin_ as varchar(50))as Bin
+INTO #tmp9 --change from #tmp6 to #tmp9 on 7/2/19 to populate tlbWMSInv
+From #tmp10 t10
+JOIN #tmp4 t4 on t4.UID = t10."PPL:UID"
+
 
 SELECT * 
 INTO #tmp7
@@ -223,7 +313,7 @@ DELETE tblWMSInv
 WHERE RECEIVEDDATE > '01-01-2019'
 
 INSERT INTO tblWMSInv
-SELECT * from #tmp6
+SELECT * from #tmp9 --change from #tmp6 to #tmp9 on 7/2/19 to populate tlbWMSInv
 
 --INSERT tblWMSLoads--
 DELETE tblWMSLoads
@@ -241,6 +331,8 @@ Drop Table #tmp5
 Drop Table #tmp6
 DRop Table #tmp7
 DRop Table #tmp8
+DRop Table #tmp9
+DRop Table #tmp10
 */
 
 /*
@@ -253,6 +345,8 @@ SELECT * FROM #tmp6
 SELECT * FROM #tmp7
 SELECT * FROM #tmp8
 WHERE WHSE_RECEIPT_NO = '071974'
+SELECT * FROM #tmp9
+SELECT * FROM #tmp10
 */
 
 end
