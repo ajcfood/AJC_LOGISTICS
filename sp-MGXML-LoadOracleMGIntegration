@@ -1,0 +1,189 @@
+USE [MGXMLProcessing]
+GO
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadOracleMGIntegration]    Script Date: 7/3/2019 8:31:06 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+ALTER PROCEDURE [dbo].[sp-MGXML-LoadOracleMGIntegration]  AS 
+
+BEGIN TRY
+
+BEGIN
+
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+--Gather all files that need to be processed
+;with CTE AS (
+				select distinct filename
+				from MGXMLProcessing.dbo.tblXML_DWCarrierMaster
+				where filename is not null 
+				and CAST(DateAdded AS DATE) = DATEADD(DD,-1,CAST(GETDATE () AS DATE))	--Only process yesterday's carrier file
+
+			)
+
+SELECT Filename , ROW_NUMBER() OVER (ORDER BY FILENAME) Row, 0 Status
+into #tmp
+FROM CTE
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+ /*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+--Pull files dynamically from C: drive on APPROD01
+DECLARE		   @Filepath NVARCHAR(MAX) = 'C:\Temp\XML\Master\Archive\'
+			 , @sql NVARCHAR(MAX) 
+			 , @ROW INT = (SELECT MIN(ROW) FROM #tmp)
+DECLARE		   @Filename VARCHAR(255) = (SELECT Filename From #tmp where Row = @Row)
+
+WHILE (@ROW <= (SELECT MAX(ROW) FROM #tmp))
+BEGIN
+
+BEGIN
+
+set @Filename = (SELECT Filename From #tmp where Row = @Row)
+set @sql= 
+N'INSERT INTO tblMGMaster_Carrier(XMLData, LoadedDateTime, Filename) SELECT CONVERT(XML, BulkColumn) AS BulkColumn, GETDATE(),'''+@filename+ 
+N'''FROM OPENROWSET(BULK'''+@filepath+@filename+
+N''', SINGLE_BLOB) AS x; '
+
+EXECUTE sp_executesql @SQL
+
+--Parse XML File
+DECLARE @XML AS XML, @hDoc AS INT
+
+SELECT @XML = XMLData FROM AJCDW..tblMGMaster_Carrier where filename = @filename and processed IS NULL
+
+EXEC sp_xml_preparedocument @hDoc OUTPUT, @XML
+
+IF OBJECT_ID ('TEMPDB..#Carrier') IS NOT NULL  DROP TABLE #Carrier
+SELECT	LocationCode, LocationActive , CarrierActive, AddressLine1, AddressLine2, City, State, PostalCode, LocationType, CarrierLocationReferences, CarrierNum, CarrierMCNumber, CarrierName,
+		DOTNumber, SCAC, CAST(NULL AS VARCHAR(50)) Type, CAST(NULL AS VARCHAR(50)) Value, 4 FK_SystemID
+INTO #Carrier
+FROM OPENXML(@hDoc, 'mercurygate/carriers/carrier/locations/location/primaryContact')
+WITH 
+(
+		
+		LocationActive [varchar] (10) '../active'
+	,	CarrierActive [varchar] (10) '../../../active'
+	,	LocationCode [varchar] (20) '../locationCode'
+	,	addressLine1 [varchar] (250) '../addressLine1'
+	,	addressLine2 [varchar] (250) '../addressLine2'
+	,	city [varchar] (50) '../city'
+	,	postalCode [varchar] (5) '../postalCode'
+	,	state [varchar] (2) '../state'
+	,	locationtype [varchar] (20) '../type'
+	,	CarrierLocationReferences [varchar] (50) '../name'
+	,	CarrierNum [varchar] (20) '../../../carrierId'
+	,	carrierMCNumber [varchar] (20) '../../../carrierMCNumber'
+	,	carriername [varchar] (100) '../../../name'
+	,	dotNumber [varchar] (20) '../../../dotNumber'
+	,	scac [varchar] (10) '../../../scac'
+
+
+)
+ORDER BY CarrierName 
+
+EXEC sp_xml_removedocument @hDoc
+
+--Dont need below logic but kept it because you need this in order to parse the file in its entirety
+/*
+--Get Commission Agent Info
+DECLARE @XML1 AS XML, @hDoc1 AS INT--, @SQL NVARCHAR (MAX)
+
+SELECT @XML1 = XMLData FROM AJCDW..tblMGMaster_Carrier where filename = @filename and processed IS NULL
+
+EXEC sp_xml_preparedocument @hDoc1 OUTPUT, @XML1
+
+IF OBJECT_ID ('TEMPDB..#CommissionAgent') IS NOT NULL  DROP TABLE #CommissionAgent
+SELECT	DISTINCT carrierId CarrierNum, type, value 
+INTO #CommissionAgent
+FROM OPENXML(@hDoc1, 'mercurygate/carriers/carrier/references/reference/*')
+with (
+		carrierId [varchar] (20) '../../../carrierId'
+	,	type [varchar] (150) '../type'
+	,	value [varchar] (150) '../value'
+	
+
+	)
+where type = 'Commission Agent'
+EXEC sp_xml_removedocument @hDoc1
+*/*/
+
+
+
+--Update processed to 1 so files are not parsed and moved to oracle staging again
+update AJCDW..tblMGMaster_Carrier set processed = 1 where filename = @filename and ISNULL(processed,0) = 0
+
+--Insert into final MGXML table
+insert into MGXMLProcessing..tblOracleCarriers ([LocationCode], [LocationActive], [CarrierActive], [AddressLine1], [AddressLine2], [City], [State], [PostalCode], [LocationType], [CarrierLocationReferences], 
+[CarrierNum], [CarrierMCNumber], [CarrierName], [filename])
+select LocationCode, LocationActive , CarrierActive, AddressLine1, AddressLine2, City, State, PostalCode, LocationType, CarrierLocationReferences, CarrierNum, CarrierMCNumber, CarrierName, @Filename
+from #Carrier 
+where locationtype = 'Remit To'
+and locationcode like 'CL%'
+
+--insert data into oracle staging
+insert into
+openquery(ORACLEPROD, 'select * from AJCL_MG_CARRIER_INTERFACE')
+select [LocationCode], [AddressLine1], ISNULL([AddressLine2],'') [AddressLine2], [City], [State], [PostalCode], [CarrierLocationReferences], [CarrierNum], [CarrierName]
+from [MGXMLProcessing].[dbo].[tblOracleCarriers] 
+where ISNULL([Processed],0) = 0
+and locationtype = 'Remit To'
+and locationcode like 'CL%'
+
+update MGXMLProcessing..[tblOracleCarriers] set processed = 1 where filename = @filename and ISNULL(processed,0) = 0
+
+
+END
+
+BEGIN
+UPDATE #tmp SET STATUS = 1 WHERE ROW = @ROW
+SET @ROW = (SELECT MIN(ROW) FROM #tmp WHERE STATUS = 0)
+END
+
+END
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp-MGXML-LoadOracleMGIntegration]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
