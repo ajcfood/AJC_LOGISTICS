@@ -59,7 +59,7 @@ BEGIN
 
 set @Filename = (SELECT Filename From #tmp where Row = @Row)
 set @sql= 
-N'INSERT INTO tblMGMaster_Carrier(XMLData, LoadedDateTime, Filename) SELECT CONVERT(XML, BulkColumn) AS BulkColumn, GETDATE(),'''+@filename+ 
+N'INSERT INTO ajcdw..tblMGMaster_Carrier(XMLData, LoadedDateTime, Filename) SELECT CONVERT(XML, BulkColumn) AS BulkColumn, GETDATE(),'''+@filename+ 
 N'''FROM OPENROWSET(BULK'''+@filepath+@filename+
 N''', SINGLE_BLOB) AS x; '
 
