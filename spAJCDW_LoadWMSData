@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadWMSData]    Script Date: 7/5/2019 11:23:39 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadWMSData]    Script Date: 7/5/2019 11:28:35 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -79,7 +79,7 @@ WHERE "WHS:UID" > '210050070131' -- this is 1/1/19 start
 /*************************************************************************************************************************/
 
 --Load tblWMSInv
-DELETE ajcdw..tblWMSInv_test
+DELETE ajcdw..tblWMSInv
 WHERE RECEIVEDDATE > '01-01-2019'
 
 /*****************************************************End Logging*******************************************************/
@@ -93,7 +93,7 @@ WHERE RECEIVEDDATE > '01-01-2019'
  EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 5, @BeginOrEnd = 0, @ProcName = @ProcName
 
 /*************************************************************************************************************************/
-insert into ajcdw..tblWMSInv_test ([PO_InvoiceItem_UID], [PONumber], [PartNumber], [PartDescription], [WHSE_RECEIPT_NO], [Status], [RECEIVEDDATE], [WHSRCPTDATE], [WRLASTCHGDATE], [CUSTOMER], [SUPPLIER], [WAREHOUSE], [CONTROLLER], 
+insert into ajcdw..tblWMSInv ([PO_InvoiceItem_UID], [PONumber], [PartNumber], [PartDescription], [WHSE_RECEIPT_NO], [Status], [RECEIVEDDATE], [WHSRCPTDATE], [WRLASTCHGDATE], [CUSTOMER], [SUPPLIER], [WAREHOUSE], [CONTROLLER], 
 [QuantityReceived], [QuantityOnHand], [QuantityAssigned], [ItemWeight], [WeightUnit], [TotalItemWeight], [TempZone], [RCVR], [FileNo], [WHSUID], [OverPackID], [Section], [Row], [Rack], [Bin] )
 
 select DISTINCT CAST (z.PO_InvoiceItem_UID as varchar(250))/*as PO_InvoiceItem_UID*/,CAST (z."WHS:ShipperReference" as varchar(250))/*as PONumber*/,CAST (z.PartNumber as varchar(250))/*as PartNumber*/
@@ -121,7 +121,7 @@ inner join #PO_INVIT_DAT z on z."WHS:UID" = x."WHS:UID" and z."PPL:UID" = x.UID
 /*************************************************************************************************************************/
 
 --Load tblWMSLoads
-DELETE ajcdw..tblWMSLoads_test
+DELETE ajcdw..tblWMSLoads
 WHERE ShpShipDate > '2019-01-01'
 
 /*****************************************************End Logging*******************************************************/
@@ -144,7 +144,7 @@ FROM OPENQUERY(IES, '
 	WHERE FILE_NO >= ''210020294307''  -- this is 1/1/19 start
 	')
 
-INSERT INTO ajcdw..tblWMSLoads_test ([PO_InvoiceItem_UID], [PONumber], [PartNumber], [PartDescription], [WHSE_RECEIPT_NO], [Status], [RECEIVEDDATE], [WHSRCPTDATE], [WRLASTCHGDATE], [CUSTOMER], [SUPPLIER], [WAREHOUSE], [CONTROLLER], 
+INSERT INTO ajcdw..tblWMSLoads ([PO_InvoiceItem_UID], [PONumber], [PartNumber], [PartDescription], [WHSE_RECEIPT_NO], [Status], [RECEIVEDDATE], [WHSRCPTDATE], [WRLASTCHGDATE], [CUSTOMER], [SUPPLIER], [WAREHOUSE], [CONTROLLER], 
 [QuantityReceived], [QuantityOnHand], [QuantityAssigned], [ItemWeight], [WeightUnit], [TotalItemWeight], [TempZone], [RCVR], [FileNo], [WHSUID], [OverPackID], [Section], [Row], [Rack], [Bin], [RefNo], [ShpPortofLoad], [ShpPortofDchg], 
 [ShpCarrier], [ShpVessel_Equipment], [ShpBkgNum], [ShpShipDate], [ContainerNo], [ContainerType], [ContainerSeal], [ContTempMin], [ContTempMax], [ContTempUnit])
 
@@ -185,7 +185,7 @@ BEGIN CATCH
               SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
               
               Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
-              Select '[spAJCDW_LoadWMSData_TEST]', @ErrorMessage, @ErrorLine, @ErrorDate
+              Select '[spAJCDW_LoadWMSData]', @ErrorMessage, @ErrorLine, @ErrorDate
 
 
 
