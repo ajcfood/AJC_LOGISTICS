@@ -27,7 +27,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 
 SELECT "WHS:ShipperReference", BuyerCode, VendorCode, PO_InvoiceItem_UID, PartNumber, PartDescription, QuantityAssigned, QuantityOnHand, Weight, WeightUnit, "WHS:UID", "PPL:UID", QuantityReceived
 INTO  #PO_INVIT_DAT
-FROM [IES].[IES]..PO_INVIT_DAT
+FROM [IES].[IES]..PO_INVIT_DAT WITH (NOLOCK)
 WHERE "WHS:UID" > '210050070131' -- this is 1/1/19 start
 
 /*****************************************************End Logging*******************************************************/
@@ -45,7 +45,7 @@ WHERE "WHS:UID" > '210050070131' -- this is 1/1/19 start
 SELECT SHIPMENT_ID,  WHSE_RECEIPT_NO,  WAREHOUSE,  EXPORTER,  EXPORTER_REF_NO,  CONSIGNEE,  SUPPLIER,  SUPPLIER_REF_NO,  CONTROLLER,  DATEFILEOPEN,  RECEIVEDDATE,  LASTCHGDATE,  TOT_LBS,  TOTAL_PIECES
 ,  QuantityAssigned,  QuantityOnHand,  REMARKS
 INTO  #WAREHOUS_DAT
-FROM [IES].[IES]..WAREHOUS_DAT
+FROM [IES].[IES]..WAREHOUS_DAT WITH (NOLOCK)
 WHERE WHSE_RECEIPT_NO > '071970' -- this is 1/1/19 start
 
 /*****************************************************End Logging*******************************************************/
@@ -63,7 +63,7 @@ WHERE WHSE_RECEIPT_NO > '071970' -- this is 1/1/19 start
 SELECT UID,  Status,  Pallet_Lbs,  Payload_Lbs,  Payload_Quantity,  Warehouse,  Load_Date,  Load_Time,  Container_UID,  File_No,  InDate,  OutDate,  "WHS:UID",  MarksNumbers,  BuyerID,  Payload_Gross_Lbs
 ,  Section_,  Row_,  Rack_,  Bin_
 INTO  #PO_PALLT_DAT
-FROM  [IES].[IES]..PO_PALLT_DAT
+FROM  [IES].[IES]..PO_PALLT_DAT WITH (NOLOCK)
 WHERE "WHS:UID" > '210050070131' -- this is 1/1/19 start
 
 /*****************************************************End Logging*******************************************************/
