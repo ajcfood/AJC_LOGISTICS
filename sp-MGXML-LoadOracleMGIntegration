@@ -1,6 +1,6 @@
 USE [MGXMLProcessing]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadOracleMGIntegration]    Script Date: 7/3/2019 8:31:06 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadOracleMGIntegration]    Script Date: 7/10/2019 11:11:59 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -136,7 +136,7 @@ insert into MGXMLProcessing..tblOracleCarriers ([LocationCode], [LocationActive]
 [CarrierNum], [CarrierMCNumber], [CarrierName], [filename])
 select LocationCode, LocationActive , CarrierActive, AddressLine1, AddressLine2, City, State, PostalCode, LocationType, CarrierLocationReferences, CarrierNum, CarrierMCNumber, CarrierName, @Filename
 from #Carrier 
-where locationtype = 'Remit To'
+where locationtype like '%Remit To%' -- changed to locationtype LIKE '%Remit To%' to include both location types with Remit to in them: Remit To and Carrier/Remit To
 and locationcode like 'CL%'
 
 --insert data into oracle staging
@@ -145,7 +145,7 @@ openquery(ORACLEPROD, 'select * from AJCL_MG_CARRIER_INTERFACE')
 select [LocationCode], [AddressLine1], ISNULL([AddressLine2],'') [AddressLine2], [City], [State], [PostalCode], [CarrierLocationReferences], [CarrierNum], [CarrierName]
 from [MGXMLProcessing].[dbo].[tblOracleCarriers] 
 where ISNULL([Processed],0) = 0
-and locationtype = 'Remit To'
+and locationtype like '%Remit To%' -- changed to locationtype LIKE '%Remit To%' to include both location types with Remit to in them: Remit To and Carrier/Remit To
 and locationcode like 'CL%'
 
 update MGXMLProcessing..[tblOracleCarriers] set processed = 1 where filename = @filename and ISNULL(processed,0) = 0
