@@ -1,0 +1,1515 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[LSCCapacityProfitability]    Script Date: 7/12/2019 11:47:02 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+ALTER procedure [dbo].[LSCCapacityProfitability] as 
+BEGIN TRY
+BEGIN
+
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+
+DELETE AJCDW.dbo.RptWHSERevAndVolMTDTempZone WHERE Date >= LEFT(CONVERT(varchar, DATEADD(MM, -15, GetDate()),112),6) --Delete previous 15 months of data and pull in a fresh copy
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+
+IF OBJECT_ID ('TEMPDB..##WHSECapacityProf_MTD') IS NOT NULL  DROP TABLE ##WHSECapacityProf_MTD
+Select  LEFT(CONVERT(varchar, DATEADD(MM, -15, GetDate()),112),6) Date, 0 Status 
+into ##WHSECapacityProf_MTD 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -14, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -13, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -12, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -11, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -10, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -9, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -8, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -7, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -6, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -5, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -4, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -3, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -2, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -1, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, GetDate(),112),6) Date, 0 Status 
+
+
+DECLARE		@Date INT = (SELECT MIN(Date) FROM ##WHSECapacityProf_MTD)
+		,	@PrevYear INT 
+		,	@CurrYear INT 
+		,	@CurrMonth INT 
+
+WHILE (@Date <= (SELECT MAX(Date) FROM ##WHSECapacityProf_MTD))
+BEGIN
+
+BEGIN
+
+SET @CurrYear = LEFT(@Date,4)
+SET @CurrMonth = RIGHT(@Date,2)
+SET @PrevYear = LEFT(@Date,4) - 1
+
+--select @CurrYear curryear, @CurrMonth currmonth, @PrevYear prevyear
+
+
+--Dry = containerType NOT LIKE '%RF' and ContTempMin = '' and TempZone NOT LIKE PROD%
+--Chilled = ContTempMin >= 28
+--Frozen = ContTempMin <= 27
+
+/******************************************************************************************************************************************
+
+																	PREVIOUS YEAR REVENUE
+
+******************************************************************************************************************************************/
+
+IF @Date = (SELECT MIN(Date) FROM ##WHSECapacityProf_MTD)
+BEGIN 
+
+IF OBJECT_ID ('TEMPDB..#AJC_AP_IES_INBOUND_DATA') IS NOT NULL  DROP TABLE #AJC_AP_IES_INBOUND_DATA
+select *
+into #AJC_AP_IES_INBOUND_DATA
+FROM OPENQUERY (ORACLEPROD, '
+select  CHARGE_TYPE,CHARGE_TYPE_CODE,COMPANY_NUMBER,DIVISION,BUSINESS_LINE,TASK,GL_ACCOUNT,LOCATION,PROJECT,INVOICE_NUMBER,INVOICE_TYPE,FINANCIAL_PARTY,ME_NUMBER,TRANSACTION_TYPE,ACCOUNTING_DATE,DUE_DATE
+,CAST(CHARGE_AMOUNT AS DECIMAL(18,2)) CHARGE_AMOUNT,CURRENCY_CODE,TERMS,REFERENCE_TYPE_1,REFERENCE_VALUE_1,DESTINATION_COUNTRY,ORIGIN_COUNTRY,LAST_UPDATE_DATE,LAST_UPDATED_BY,INBOUND_FILE_NAME,CREATED_BY,CREATION_DATE,INTERFACE_STATUS
+,DESCRIPTION,ORIGINAL_AMOUNT,INVOICE_AMOUNT,ORIG_AP_INTERNAL,CARRIER,TYPE_OF_MOVE,MASTER_BLAWB_NUMBER,HOUSE_BLAWB_NUMBER,SHIPMENT_REFERENCE,FINANCIAL_PARTY_EXTERNAL_ID
+from AJC_AP_IES_INBOUND_DATA 
+Where Financial_Party = ''20'' 
+and Accounting_Date >= ''2018-01-01'''
+)
+
+CREATE NONCLUSTERED INDEX IX_Shipment_Reference ON #AJC_AP_IES_INBOUND_DATA (shipment_reference ASC)
+
+
+END 
+
+INSERT INTO AJCDW.dbo.RptWHSERevAndVolMTDTempZone (Date, tempzone) VALUES
+(@Date, 'Dry'),
+(@Date, 'Chilled'),
+(@Date, 'Frozen'),
+(@Date, 'Produce'),
+(@Date, 'All')
+
+--select @PrevYear, @CurrYear, @CurrMonth
+--Dry
+UPDATE x SET TotalRevMTD_PrevYear =    (
+										select ISNULL(SUM(Charge_Amount),0) + ISNULL(SUM(ShpRevenue),0)
+										from (
+												select distinct LTRIM(RTRIM(RefNo)) RefNo
+												from AJCDW.dbo.tblWMSLoads 
+												where YEAR(ShpShipDate) = @PrevYear
+												and MONTH(ShpShipDate) = @CurrMonth
+												and LTRIM(RTRIM(containerType)) NOT LIKE '%RF'
+												and ISNULL(ContTempMin,'') = ''
+												and LTRIM(RTRIM(TempZone)) NOT LIKE 'PROD%'
+													
+											 ) wms
+										inner join (
+														select shipment_reference, SUM(Charge_Amount) Charge_Amount 
+														from   #AJC_AP_IES_INBOUND_DATA  
+														group by shipment_reference 	
+										
+													) ti on ti.Shipment_Reference = wms.RefNo 
+										left outer join AJCDW.dbo.tblShipment ts on LTRIM(RTRIM(ts.RefNo)) = wms.RefNo and YEAR(ShpShipDate) = @PrevYear and MONTH(ShpShipDate) = @CurrMonth and ShpLOB = 25
+									)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Dry'
+AND Date = @Date 
+
+--Chilled
+UPDATE x SET TotalRevMTD_PrevYear =    (
+										select ISNULL(SUM(Charge_Amount),0) + ISNULL(SUM(ShpRevenue),0)
+										from (
+												select distinct LTRIM(RTRIM(RefNo)) RefNo
+												from AJCDW.dbo.tblWMSLoads 
+												where YEAR(ShpShipDate) = @PrevYear
+												and MONTH(ShpShipDate) = @CurrMonth
+												and ContTempMin >= 28
+													
+											 ) wms
+										inner join (
+														select shipment_reference, SUM(Charge_Amount) Charge_Amount 
+														from   #AJC_AP_IES_INBOUND_DATA  
+														group by shipment_reference 	
+										
+													) ti on ti.Shipment_Reference = wms.RefNo 
+										left outer join AJCDW.dbo.tblShipment ts on LTRIM(RTRIM(ts.RefNo)) = wms.RefNo and YEAR(ShpShipDate) = @PrevYear and MONTH(ShpShipDate) = @CurrMonth and ShpLOB = 25
+									)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Chilled'
+AND Date = @Date 
+
+--Frozen
+UPDATE x SET TotalRevMTD_PrevYear =    (
+										select ISNULL(SUM(Charge_Amount),0) + ISNULL(SUM(ShpRevenue),0)
+										from (
+												select distinct LTRIM(RTRIM(RefNo)) RefNo
+												from AJCDW.dbo.tblWMSLoads 
+												where YEAR(ShpShipDate) = @PrevYear
+												and MONTH(ShpShipDate) = @CurrMonth
+												and ContTempMin <= 27
+													
+											 ) wms
+										inner join (
+														select shipment_reference, SUM(Charge_Amount) Charge_Amount 
+														from   #AJC_AP_IES_INBOUND_DATA  
+														group by shipment_reference 	
+										
+													) ti on ti.Shipment_Reference = wms.RefNo 
+										left outer join AJCDW.dbo.tblShipment ts on LTRIM(RTRIM(ts.RefNo)) = wms.RefNo and YEAR(ShpShipDate) = @PrevYear and MONTH(ShpShipDate) = @CurrMonth and ShpLOB = 25
+									)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Frozen'
+AND Date = @Date 
+
+
+--Produce
+UPDATE x SET TotalRevMTD_PrevYear =    (
+										select ISNULL(SUM(Charge_Amount),0)
+										from AJCDW.dbo.tblShipment ts
+										inner join (
+														select distinct FileNo 
+														from AJCDW.dbo.tblContainerContents 
+														where ContUnitPack LIKE 'PROD%'
+												    )  tcc on tcc.FileNo = ts.shipmentID 
+										inner join (
+														select shipment_reference, SUM(Charge_Amount) Charge_Amount 
+														from   #AJC_AP_IES_INBOUND_DATA  
+														group by shipment_reference 	
+										
+													) ti on ti.Shipment_Reference = LTRIM(RTRIM(ts.RefNo))
+										where LTRIM(RTRIM(ts.RefNo)) NOT IN ('','60-012046-##') --Invalid files
+										and YEAR(ShpShipDate) = @PrevYear
+										and MONTH(ShpShipDate) = @CurrMonth
+									)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Produce'
+AND Date = @Date 
+
+
+--All
+UPDATE x SET TotalRevMTD_PrevYear =    (
+										select ISNULL(SUM(TotalRevMTD_PrevYear),0)
+										from AJCDW.dbo.RptWHSERevAndVolMTDTempZone
+										where TempZone <> 'All'
+										AND Date = @Date 	 
+									)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'All'
+AND Date = @Date 
+
+/******************************************************************************************************************************************
+
+																	CURRENT YEAR REVENUE
+
+******************************************************************************************************************************************/
+
+--Dry
+UPDATE x SET TotalRevMTD_CurrYear =    (
+										select ISNULL(SUM(Charge_Amount),0) + ISNULL(SUM(ShpRevenue),0)
+										from (
+												select distinct LTRIM(RTRIM(RefNo)) RefNo
+												from AJCDW.dbo.tblWMSLoads 
+												where YEAR(ShpShipDate) = @CurrYear
+												and MONTH(ShpShipDate) = @CurrMonth
+												and LTRIM(RTRIM(containerType)) NOT LIKE '%RF'
+												and ISNULL(ContTempMin,'') = ''
+												and LTRIM(RTRIM(TempZone)) NOT LIKE 'PROD%'
+													
+											 ) wms
+										inner join (
+														select shipment_reference, SUM(Charge_Amount) Charge_Amount 
+														from   #AJC_AP_IES_INBOUND_DATA  
+														group by shipment_reference 	
+										
+													) ti on ti.Shipment_Reference = wms.RefNo 
+										left outer join AJCDW.dbo.tblShipment ts on LTRIM(RTRIM(ts.RefNo)) = wms.RefNo and YEAR(ShpShipDate) = @PrevYear and MONTH(ShpShipDate) = @CurrMonth and ShpLOB = 25
+									)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Dry'
+AND Date = @Date 
+
+--Chilled
+UPDATE x SET TotalRevMTD_CurrYear =    (
+										select ISNULL(SUM(Charge_Amount),0) + ISNULL(SUM(ShpRevenue),0)
+										from (
+												select distinct LTRIM(RTRIM(RefNo)) RefNo
+												from AJCDW.dbo.tblWMSLoads 
+												where YEAR(ShpShipDate) = @CurrYear
+												and MONTH(ShpShipDate) = @CurrMonth
+												and ContTempMin >= 28
+													
+											 ) wms
+										inner join (
+														select shipment_reference, SUM(Charge_Amount) Charge_Amount 
+														from   #AJC_AP_IES_INBOUND_DATA  
+														group by shipment_reference 	
+										
+													) ti on ti.Shipment_Reference = wms.RefNo 
+										left outer join AJCDW.dbo.tblShipment ts on LTRIM(RTRIM(ts.RefNo)) = wms.RefNo and YEAR(ShpShipDate) = @PrevYear and MONTH(ShpShipDate) = @CurrMonth and ShpLOB = 25
+									)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Chilled'
+AND Date = @Date 
+
+--Frozen
+UPDATE x SET TotalRevMTD_CurrYear =    (
+										select ISNULL(SUM(Charge_Amount),0) + ISNULL(SUM(ShpRevenue),0)
+										from (
+												select distinct LTRIM(RTRIM(RefNo)) RefNo
+												from AJCDW.dbo.tblWMSLoads 
+												where YEAR(ShpShipDate) = @CurrYear
+												and MONTH(ShpShipDate) = @CurrMonth
+												and ContTempMin <= 27
+													
+											 ) wms
+										inner join (
+														select shipment_reference, SUM(Charge_Amount) Charge_Amount 
+														from   #AJC_AP_IES_INBOUND_DATA  
+														group by shipment_reference 	
+										
+													) ti on ti.Shipment_Reference = wms.RefNo 
+										left outer join AJCDW.dbo.tblShipment ts on LTRIM(RTRIM(ts.RefNo)) = wms.RefNo and YEAR(ShpShipDate) = @PrevYear and MONTH(ShpShipDate) = @CurrMonth and ShpLOB = 25
+									)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Frozen'
+AND Date = @Date 
+
+
+--Produce
+UPDATE x SET TotalRevMTD_CurrYear =    (
+										select ISNULL(SUM(Charge_Amount),0)
+										from AJCDW.dbo.tblShipment ts
+										inner join (
+														select distinct FileNo 
+														from AJCDW.dbo.tblContainerContents 
+														where ContUnitPack LIKE 'PROD%'
+												    )  tcc on tcc.FileNo = ts.shipmentID 
+										inner join (
+														select shipment_reference, SUM(Charge_Amount) Charge_Amount 
+														from   #AJC_AP_IES_INBOUND_DATA  
+														group by shipment_reference 	
+										
+													) ti on ti.Shipment_Reference = ts.RefNo 
+										where LTRIM(RTRIM(ts.RefNo)) NOT IN ('','60-012046-##') --Invalid files
+										and YEAR(ShpShipDate) = @CurrYear
+										and MONTH(ShpShipDate) = @CurrMonth
+									)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Produce'
+AND Date = @Date 
+
+
+--All
+UPDATE x SET TotalRevMTD_CurrYear =    (
+										select ISNULL(SUM(TotalRevMTD_CurrYear),0)
+										from AJCDW.dbo.RptWHSERevAndVolMTDTempZone
+										where TempZone <> 'All'
+										AND Date = @Date 	 
+									)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'All'
+AND Date = @Date 
+
+/******************************************************************************************************************************************
+
+															TOTAL CONTAINER SHIPPED PREVIOUS YEAR
+
+******************************************************************************************************************************************/
+
+--Dry
+UPDATE x SET TotalContShippedMTD_PrevYear =    (
+													select ISNULL(SUM(tc.TotalContShipped),0) 
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo 
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @PrevYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and LTRIM(RTRIM(containerType)) NOT LIKE '%RF'
+															and ISNULL(ContTempMin,'') = ''
+															and LTRIM(RTRIM(TempZone)) NOT LIKE 'PROD%'
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and (ContType LIKE '%53%' OR ContType LIKE '%45%' OR ContType LIKE '%40%')
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Dry'
+AND Date = @Date 
+
+
+--Chilled
+UPDATE x SET TotalContShippedMTD_PrevYear =    (
+													select ISNULL(SUM(tc.TotalContShipped),0) 
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo 
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @PrevYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and ContTempMin >= 28
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and (ContType LIKE '%53%' OR ContType LIKE '%45%' OR ContType LIKE '%40%')
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Chilled'
+AND Date = @Date 
+
+--Frozen
+UPDATE x SET TotalContShippedMTD_PrevYear =    (
+													select ISNULL(SUM(tc.TotalContShipped),0)
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo 
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @PrevYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and ContTempMin <= 27
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and (ContType LIKE '%53%' OR ContType LIKE '%45%' OR ContType LIKE '%40%')
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Frozen'
+AND Date = @Date 
+
+
+--Produce
+UPDATE x SET TotalContShippedMTD_PrevYear =    (
+													select COUNT(ISNULL(ts.ShipmentID,0))
+													from AJCDW.dbo.tblShipment ts
+													inner join (
+																	select distinct FileNo 
+																	from AJCDW.dbo.tblContainerContents 
+																	where ContUnitPack LIKE 'PROD%'
+
+																)  tcc on tcc.FileNo = ts.shipmentID 
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and (ContType LIKE '%53%' OR ContType LIKE '%45%' OR ContType LIKE '%40%')
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = ts.ShipmentID 
+													where LTRIM(RTRIM(ts.RefNo)) NOT IN ('','60-012046-##') --Invalid files
+													and YEAR(ShpShipDate) = @PrevYear
+													and MONTH(ShpShipDate) = @CurrMonth
+													and shplob in ('21','25')
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Produce'
+AND Date = @Date 
+
+
+--All
+UPDATE x SET TotalContShippedMTD_PrevYear =    (
+													select ISNULL(SUM(TotalContShippedMTD_PrevYear),0)
+													from AJCDW.dbo.RptWHSERevAndVolMTDTempZone
+													where TempZone <> 'All'
+													AND Date = @Date 
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'All'
+AND Date = @Date 
+
+
+/******************************************************************************************************************************************
+
+															TOTAL 53' CONTAINER SHIPPED PREVIOUS YEAR
+
+******************************************************************************************************************************************/
+
+--Dry
+UPDATE x SET Total53ContShippedMTD_PrevYear =    (
+													select ISNULL(SUM(TotalContShipped),0)
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @PrevYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and LTRIM(RTRIM(containerType)) NOT LIKE '%RF'
+															and ISNULL(ContTempMin,'') = ''
+															and LTRIM(RTRIM(TempZone)) NOT LIKE 'PROD%'
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%53%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+													inner join (
+																	select LTRIM(RTRIM(ShipmentID)) ShipmentID
+																	from   AJCDW.dbo.tblShipment  
+																	where YEAR(ShpShipDate) = @PrevYear
+																	and MONTH(ShpShipDate) = @CurrMonth
+																	and shplob in ('21','25')
+																											
+																) ts on ts.ShipmentID = tc.FileNo 				
+
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Dry'
+AND Date = @Date 
+
+
+--Chilled
+UPDATE x SET Total53ContShippedMTD_PrevYear =    (
+													select ISNULL(SUM(TotalContShipped),0)
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo 
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @PrevYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and ContTempMin >= 28
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%53%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+													inner join (
+																	select LTRIM(RTRIM(ShipmentID)) ShipmentID
+																	from   AJCDW.dbo.tblShipment  
+																	where YEAR(ShpShipDate) = @PrevYear
+																	and MONTH(ShpShipDate) = @CurrMonth
+																	and shplob in ('21','25')
+																											
+																) ts on ts.ShipmentID = tc.FileNo 	
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Chilled'
+AND Date = @Date 
+
+--Frozen
+UPDATE x SET Total53ContShippedMTD_PrevYear =    (
+													select ISNULL(SUM(TotalContShipped),0)
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo 
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @PrevYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and ContTempMin <= 27
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%53%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+													inner join (
+																	select LTRIM(RTRIM(ShipmentID)) ShipmentID
+																	from   AJCDW.dbo.tblShipment  
+																	where YEAR(ShpShipDate) = @PrevYear
+																	and MONTH(ShpShipDate) = @CurrMonth
+																	and shplob in ('21','25')
+																											
+																) ts on ts.ShipmentID = tc.FileNo 	
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Frozen'
+AND Date = @Date 
+
+
+--Produce
+UPDATE x SET Total53ContShippedMTD_PrevYear =    (
+													select COUNT(ISNULL(ts.ShipmentID,0))
+													from AJCDW.dbo.tblShipment ts
+													inner join (
+																	select distinct FileNo 
+																	from AJCDW.dbo.tblContainerContents 
+																	where ContUnitPack LIKE 'PROD%'
+
+																)  tcc on tcc.FileNo = ts.shipmentID 
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%53%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = ts.ShipmentID 
+													where LTRIM(RTRIM(ts.RefNo)) NOT IN ('','60-012046-##') --Invalid files
+													and YEAR(ShpShipDate) = @PrevYear
+													and MONTH(ShpShipDate) = @CurrMonth
+													and shplob in ('21','25')
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Produce'
+AND Date = @Date 
+
+
+--All
+UPDATE x SET Total53ContShippedMTD_PrevYear =    (
+													select ISNULL(SUM(Total53ContShippedMTD_PrevYear),0)
+													from AJCDW.dbo.RptWHSERevAndVolMTDTempZone
+													where TempZone <> 'All'
+													AND Date = @Date 
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'All'
+AND Date = @Date 
+
+
+/******************************************************************************************************************************************
+
+															TOTAL 45' CONTAINER SHIPPED PREVIOUS YEAR
+
+******************************************************************************************************************************************/
+
+--Dry
+UPDATE x SET Total45ContShippedMTD_PrevYear =    (
+													select ISNULL(SUM(TotalContShipped),0)
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @PrevYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and LTRIM(RTRIM(containerType)) NOT LIKE '%RF'
+															and ISNULL(ContTempMin,'') = ''
+															and LTRIM(RTRIM(TempZone)) NOT LIKE 'PROD%'
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%45%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+													inner join (
+																	select LTRIM(RTRIM(ShipmentID)) ShipmentID
+																	from   AJCDW.dbo.tblShipment  
+																	where YEAR(ShpShipDate) = @PrevYear
+																	and MONTH(ShpShipDate) = @CurrMonth
+																	and shplob in ('21','25')
+																											
+																) ts on ts.ShipmentID = tc.FileNo 				
+
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Dry'
+AND Date = @Date 
+
+
+--Chilled
+UPDATE x SET Total45ContShippedMTD_PrevYear =    (
+													select ISNULL(SUM(TotalContShipped),0)
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo 
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @PrevYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and ContTempMin >= 28
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%45%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+													inner join (
+																	select LTRIM(RTRIM(ShipmentID)) ShipmentID
+																	from   AJCDW.dbo.tblShipment  
+																	where YEAR(ShpShipDate) = @PrevYear
+																	and MONTH(ShpShipDate) = @CurrMonth
+																	and shplob in ('21','25')
+																											
+																) ts on ts.ShipmentID = tc.FileNo 	
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Chilled'
+AND Date = @Date 
+
+--Frozen
+UPDATE x SET Total45ContShippedMTD_PrevYear =    (
+													select ISNULL(SUM(TotalContShipped),0)
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo 
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @PrevYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and ContTempMin <= 27
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%45%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+													inner join (
+																	select LTRIM(RTRIM(ShipmentID)) ShipmentID
+																	from   AJCDW.dbo.tblShipment  
+																	where YEAR(ShpShipDate) = @PrevYear
+																	and MONTH(ShpShipDate) = @CurrMonth
+																	and shplob in ('21','25')
+																											
+																) ts on ts.ShipmentID = tc.FileNo 	
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Frozen'
+AND Date = @Date 
+
+
+--Produce
+UPDATE x SET Total45ContShippedMTD_PrevYear =    (
+													select COUNT(ISNULL(ts.ShipmentID,0))
+													from AJCDW.dbo.tblShipment ts
+													inner join (
+																	select distinct FileNo 
+																	from AJCDW.dbo.tblContainerContents 
+																	where ContUnitPack LIKE 'PROD%'
+
+																)  tcc on tcc.FileNo = ts.shipmentID 
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%45%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = ts.ShipmentID 
+													where LTRIM(RTRIM(ts.RefNo)) NOT IN ('','60-012046-##') --Invalid files
+													and YEAR(ShpShipDate) = @PrevYear
+													and MONTH(ShpShipDate) = @CurrMonth
+													and shplob in ('21','25')
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Produce'
+AND Date = @Date 
+
+
+--All
+UPDATE x SET Total45ContShippedMTD_PrevYear =    (
+													select ISNULL(SUM(Total45ContShippedMTD_PrevYear),0)
+													from AJCDW.dbo.RptWHSERevAndVolMTDTempZone
+													where TempZone <> 'All'
+													AND Date = @Date 
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'All'
+AND Date = @Date 
+
+
+/******************************************************************************************************************************************
+
+															TOTAL 40' CONTAINER SHIPPED PREVIOUS YEAR
+
+******************************************************************************************************************************************/
+
+--Dry
+UPDATE x SET Total40ContShippedMTD_PrevYear =    (
+													select ISNULL(SUM(TotalContShipped),0)
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @PrevYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and LTRIM(RTRIM(containerType)) NOT LIKE '%RF'
+															and ISNULL(ContTempMin,'') = ''
+															and LTRIM(RTRIM(TempZone)) NOT LIKE 'PROD%'
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%40%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+													inner join (
+																	select LTRIM(RTRIM(ShipmentID)) ShipmentID
+																	from   AJCDW.dbo.tblShipment  
+																	where YEAR(ShpShipDate) = @PrevYear
+																	and MONTH(ShpShipDate) = @CurrMonth
+																	and shplob in ('21','25')
+																											
+																) ts on ts.ShipmentID = tc.FileNo 				
+
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Dry'
+AND Date = @Date 
+
+
+--Chilled
+UPDATE x SET Total40ContShippedMTD_PrevYear =    (
+													select ISNULL(SUM(TotalContShipped),0)
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo 
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @PrevYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and ContTempMin >= 28
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%40%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+													inner join (
+																	select LTRIM(RTRIM(ShipmentID)) ShipmentID
+																	from   AJCDW.dbo.tblShipment  
+																	where YEAR(ShpShipDate) = @PrevYear
+																	and MONTH(ShpShipDate) = @CurrMonth
+																	and shplob in ('21','25')
+																											
+																) ts on ts.ShipmentID = tc.FileNo 	
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Chilled'
+AND Date = @Date 
+
+--Frozen
+UPDATE x SET Total40ContShippedMTD_PrevYear =    (
+													select ISNULL(SUM(TotalContShipped),0)
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo 
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @PrevYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and ContTempMin <= 27
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%40%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+													inner join (
+																	select LTRIM(RTRIM(ShipmentID)) ShipmentID
+																	from   AJCDW.dbo.tblShipment  
+																	where YEAR(ShpShipDate) = @PrevYear
+																	and MONTH(ShpShipDate) = @CurrMonth
+																	and shplob in ('21','25')
+																											
+																) ts on ts.ShipmentID = tc.FileNo 	
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Frozen'
+AND Date = @Date 
+
+
+--Produce
+UPDATE x SET Total40ContShippedMTD_PrevYear =    (
+													select COUNT(ISNULL(ts.ShipmentID,0))
+													from AJCDW.dbo.tblShipment ts
+													inner join (
+																	select distinct FileNo 
+																	from AJCDW.dbo.tblContainerContents 
+																	where ContUnitPack LIKE 'PROD%'
+
+																)  tcc on tcc.FileNo = ts.shipmentID 
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%40%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = ts.ShipmentID 
+													where LTRIM(RTRIM(ts.RefNo)) NOT IN ('','60-012046-##') --Invalid files
+													and YEAR(ShpShipDate) = @PrevYear
+													and MONTH(ShpShipDate) = @CurrMonth
+													and shplob in ('21','25')
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Produce'
+AND Date = @Date 
+
+
+--All
+UPDATE x SET Total40ContShippedMTD_PrevYear =    (
+													select ISNULL(SUM(Total40ContShippedMTD_PrevYear),0)
+													from AJCDW.dbo.RptWHSERevAndVolMTDTempZone
+													where TempZone <> 'All'
+													AND Date = @Date 
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'All'
+AND Date = @Date 
+
+
+
+/******************************************************************************************************************************************
+
+																	TOTAL CONTAINER SHIPPED CURRENT YEAR
+
+******************************************************************************************************************************************/
+
+--Dry
+UPDATE x SET TotalContShippedMTD_CurrYear =    (
+													select ISNULL(SUM(tc.TotalContShipped),0) 
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo 
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @CurrYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and LTRIM(RTRIM(containerType)) NOT LIKE '%RF'
+															and ISNULL(ContTempMin,'') = ''
+															and LTRIM(RTRIM(TempZone)) NOT LIKE 'PROD%'
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and (ContType LIKE '%53%' OR ContType LIKE '%45%' OR ContType LIKE '%40%')
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Dry'
+AND Date = @Date 
+
+
+--Chilled
+UPDATE x SET TotalContShippedMTD_CurrYear =    (
+													select ISNULL(SUM(TotalContShipped),0)
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo 
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @CurrYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and ContTempMin >= 28
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and (ContType LIKE '%53%' OR ContType LIKE '%45%' OR ContType LIKE '%40%')
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Chilled'
+AND Date = @Date 
+
+--Frozen
+UPDATE x SET TotalContShippedMTD_CurrYear =    (
+													select ISNULL(SUM(TotalContShipped),0)
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo 
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @CurrYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and ContTempMin <= 27
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and (ContType LIKE '%53%' OR ContType LIKE '%45%' OR ContType LIKE '%40%')
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Frozen'
+AND Date = @Date 
+
+
+--Produce
+UPDATE x SET TotalContShippedMTD_CurrYear =    (
+													select COUNT(ISNULL(ts.ShipmentID,0))
+													from AJCDW.dbo.tblShipment ts
+													inner join (
+																	select distinct FileNo 
+																	from AJCDW.dbo.tblContainerContents 
+																	where ContUnitPack LIKE 'PROD%'
+
+																)  tcc on tcc.FileNo = ts.shipmentID 
+																										inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and (ContType LIKE '%53%' OR ContType LIKE '%45%' OR ContType LIKE '%40%')
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = ts.ShipmentID 
+													where LTRIM(RTRIM(ts.RefNo)) NOT IN ('','60-012046-##        ') --Invalid files
+													and YEAR(ShpShipDate) = @CurrYear
+													and MONTH(ShpShipDate) = @CurrMonth
+													and shplob in ('21','25')
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Produce'
+AND Date = @Date 
+
+
+--All
+UPDATE x SET TotalContShippedMTD_CurrYear =    (
+													select ISNULL(SUM(TotalContShippedMTD_CurrYear),0)
+													from AJCDW.dbo.RptWHSERevAndVolMTDTempZone
+													where TempZone <> 'All'
+													AND Date = @Date 
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'All'
+AND Date = @Date 
+
+
+/******************************************************************************************************************************************
+
+															TOTAL 53' CONTAINER SHIPPED CURRENT YEAR
+
+******************************************************************************************************************************************/
+
+--Dry
+UPDATE x SET Total53ContShippedMTD_CurrYear =    (
+													select ISNULL(SUM(TotalContShipped),0)
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @CurrYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and LTRIM(RTRIM(containerType)) NOT LIKE '%RF'
+															and ISNULL(ContTempMin,'') = ''
+															and LTRIM(RTRIM(TempZone)) NOT LIKE 'PROD%'
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%53%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+													inner join (
+																	select LTRIM(RTRIM(ShipmentID)) ShipmentID
+																	from   AJCDW.dbo.tblShipment  
+																	where YEAR(ShpShipDate) = @CurrYear
+																	and MONTH(ShpShipDate) = @CurrMonth
+																	and shplob in ('21','25')
+																											
+																) ts on ts.ShipmentID = tc.FileNo 				
+
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Dry'
+AND Date = @Date 
+
+
+--Chilled
+UPDATE x SET Total53ContShippedMTD_CurrYear =    (
+													select ISNULL(SUM(TotalContShipped),0)
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo 
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @CurrYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and ContTempMin >= 28
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%53%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+													inner join (
+																	select LTRIM(RTRIM(ShipmentID)) ShipmentID
+																	from   AJCDW.dbo.tblShipment  
+																	where YEAR(ShpShipDate) = @CurrYear
+																	and MONTH(ShpShipDate) = @CurrMonth
+																	and shplob in ('21','25')
+																											
+																) ts on ts.ShipmentID = tc.FileNo 	
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Chilled'
+AND Date = @Date 
+
+--Frozen
+UPDATE x SET Total53ContShippedMTD_CurrYear =    (
+													select ISNULL(SUM(TotalContShipped),0)
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo 
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @CurrYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and ContTempMin <= 27
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%53%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+													inner join (
+																	select LTRIM(RTRIM(ShipmentID)) ShipmentID
+																	from   AJCDW.dbo.tblShipment  
+																	where YEAR(ShpShipDate) = @CurrYear
+																	and MONTH(ShpShipDate) = @CurrMonth
+																	and shplob in ('21','25')
+																											
+																) ts on ts.ShipmentID = tc.FileNo 	
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Frozen'
+AND Date = @Date 
+
+
+--Produce
+UPDATE x SET Total53ContShippedMTD_CurrYear =    (
+													select COUNT(ISNULL(ts.ShipmentID,0))
+													from AJCDW.dbo.tblShipment ts
+													inner join (
+																	select distinct FileNo 
+																	from AJCDW.dbo.tblContainerContents 
+																	where ContUnitPack LIKE 'PROD%'
+
+																)  tcc on tcc.FileNo = ts.shipmentID 
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%53%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = ts.ShipmentID 
+													where LTRIM(RTRIM(ts.RefNo)) NOT IN ('','60-012046-##') --Invalid files
+													and YEAR(ShpShipDate) = @CurrYear
+													and MONTH(ShpShipDate) = @CurrMonth
+													and shplob in ('21','25')
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Produce'
+AND Date = @Date 
+
+
+--All
+UPDATE x SET Total53ContShippedMTD_CurrYear =    (
+													select ISNULL(SUM(Total53ContShippedMTD_CurrYear),0)
+													from AJCDW.dbo.RptWHSERevAndVolMTDTempZone
+													where TempZone <> 'All'
+													AND Date = @Date 
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'All'
+AND Date = @Date 
+
+
+/******************************************************************************************************************************************
+
+															TOTAL 45' CONTAINER SHIPPED CURRENT YEAR
+
+******************************************************************************************************************************************/
+
+--Dry
+UPDATE x SET Total45ContShippedMTD_CurrYear =    (
+													select ISNULL(SUM(TotalContShipped),0)
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @CurrYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and LTRIM(RTRIM(containerType)) NOT LIKE '%RF'
+															and ISNULL(ContTempMin,'') = ''
+															and LTRIM(RTRIM(TempZone)) NOT LIKE 'PROD%'
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%45%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+													inner join (
+																	select LTRIM(RTRIM(ShipmentID)) ShipmentID
+																	from   AJCDW.dbo.tblShipment  
+																	where YEAR(ShpShipDate) = @CurrYear
+																	and MONTH(ShpShipDate) = @CurrMonth
+																	and shplob in ('21','25')
+																											
+																) ts on ts.ShipmentID = tc.FileNo 				
+
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Dry'
+AND Date = @Date 
+
+
+--Chilled
+UPDATE x SET Total45ContShippedMTD_CurrYear =    (
+													select ISNULL(SUM(TotalContShipped),0)
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo 
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @CurrYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and ContTempMin >= 28
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%45%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+													inner join (
+																	select LTRIM(RTRIM(ShipmentID)) ShipmentID
+																	from   AJCDW.dbo.tblShipment  
+																	where YEAR(ShpShipDate) = @CurrYear
+																	and MONTH(ShpShipDate) = @CurrMonth
+																	and shplob in ('21','25')
+																											
+																) ts on ts.ShipmentID = tc.FileNo 	
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Chilled'
+AND Date = @Date 
+
+--Frozen
+UPDATE x SET Total45ContShippedMTD_CurrYear =    (
+													select ISNULL(SUM(TotalContShipped),0)
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo 
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @CurrYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and ContTempMin <= 27
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%45%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+													inner join (
+																	select LTRIM(RTRIM(ShipmentID)) ShipmentID
+																	from   AJCDW.dbo.tblShipment  
+																	where YEAR(ShpShipDate) = @CurrYear
+																	and MONTH(ShpShipDate) = @CurrMonth
+																	and shplob in ('21','25')
+																											
+																) ts on ts.ShipmentID = tc.FileNo 	
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Frozen'
+AND Date = @Date 
+
+
+--Produce
+UPDATE x SET Total45ContShippedMTD_CurrYear =    (
+													select COUNT(ISNULL(ts.ShipmentID,0))
+													from AJCDW.dbo.tblShipment ts
+													inner join (
+																	select distinct FileNo 
+																	from AJCDW.dbo.tblContainerContents 
+																	where ContUnitPack LIKE 'PROD%'
+
+																)  tcc on tcc.FileNo = ts.shipmentID 
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%45%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = ts.ShipmentID 
+													where LTRIM(RTRIM(ts.RefNo)) NOT IN ('','60-012046-##') --Invalid files
+													and YEAR(ShpShipDate) = @CurrYear
+													and MONTH(ShpShipDate) = @CurrMonth
+													and shplob in ('21','25')
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Produce'
+AND Date = @Date 
+
+
+--All
+UPDATE x SET Total45ContShippedMTD_CurrYear =    (
+													select ISNULL(SUM(Total45ContShippedMTD_CurrYear),0)
+													from AJCDW.dbo.RptWHSERevAndVolMTDTempZone
+													where TempZone <> 'All'
+													AND Date = @Date 
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'All'
+AND Date = @Date 
+
+
+/******************************************************************************************************************************************
+
+															TOTAL 40' CONTAINER SHIPPED CURRENT YEAR
+
+******************************************************************************************************************************************/
+
+--Dry
+UPDATE x SET Total40ContShippedMTD_CurrYear =    (
+													select ISNULL(SUM(TotalContShipped),0)
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @CurrYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and LTRIM(RTRIM(containerType)) NOT LIKE '%RF'
+															and ISNULL(ContTempMin,'') = ''
+															and LTRIM(RTRIM(TempZone)) NOT LIKE 'PROD%'
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%40%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+													inner join (
+																	select LTRIM(RTRIM(ShipmentID)) ShipmentID
+																	from   AJCDW.dbo.tblShipment  
+																	where YEAR(ShpShipDate) = @CurrYear
+																	and MONTH(ShpShipDate) = @CurrMonth
+																	and shplob in ('21','25')
+																											
+																) ts on ts.ShipmentID = tc.FileNo 				
+
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Dry'
+AND Date = @Date 
+
+
+--Chilled
+UPDATE x SET Total40ContShippedMTD_CurrYear =    (
+													select ISNULL(SUM(TotalContShipped),0)
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo 
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @CurrYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and ContTempMin >= 28
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%40%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+													inner join (
+																	select LTRIM(RTRIM(ShipmentID)) ShipmentID
+																	from   AJCDW.dbo.tblShipment  
+																	where YEAR(ShpShipDate) = @CurrYear
+																	and MONTH(ShpShipDate) = @CurrMonth
+																	and shplob in ('21','25')
+																											
+																) ts on ts.ShipmentID = tc.FileNo 	
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Chilled'
+AND Date = @Date 
+
+--Frozen
+UPDATE x SET Total40ContShippedMTD_CurrYear =    (
+													select ISNULL(SUM(TotalContShipped),0)
+													from (
+															select distinct LTRIM(RTRIM(FileNo)) FileNo 
+															from AJCDW.dbo.tblWMSLoads 
+															where YEAR(ShpShipDate) = @CurrYear
+															and MONTH(ShpShipDate) = @CurrMonth
+															and ContTempMin <= 27
+													
+														 ) wms
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%40%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = wms.FileNo 
+													inner join (
+																	select LTRIM(RTRIM(ShipmentID)) ShipmentID
+																	from   AJCDW.dbo.tblShipment  
+																	where YEAR(ShpShipDate) = @CurrYear
+																	and MONTH(ShpShipDate) = @CurrMonth
+																	and shplob in ('21','25')
+																											
+																) ts on ts.ShipmentID = tc.FileNo 	
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Frozen'
+AND Date = @Date 
+
+
+--Produce
+UPDATE x SET Total40ContShippedMTD_CurrYear =    (
+													select COUNT(ISNULL(ts.ShipmentID,0))
+													from AJCDW.dbo.tblShipment ts
+													inner join (
+																	select distinct FileNo 
+																	from AJCDW.dbo.tblContainerContents 
+																	where ContUnitPack LIKE 'PROD%'
+
+																)  tcc on tcc.FileNo = ts.shipmentID 
+													inner join (
+																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+																	from   tblContainer 
+																	where ContBusLine in ('21','25')
+																	and ContType LIKE '%40%'
+																	group by LTRIM(RTRIM(FileNo)) 	
+										
+																) tc on tc.FileNo = ts.ShipmentID 
+													where LTRIM(RTRIM(ts.RefNo)) NOT IN ('','60-012046-##') --Invalid files
+													and YEAR(ShpShipDate) = @CurrYear
+													and MONTH(ShpShipDate) = @CurrMonth
+													and shplob in ('21','25')
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'Produce'
+AND Date = @Date 
+
+
+--All
+UPDATE x SET Total40ContShippedMTD_CurrYear =    (
+													select ISNULL(SUM(Total40ContShippedMTD_CurrYear),0)
+													from AJCDW.dbo.RptWHSERevAndVolMTDTempZone
+													where TempZone <> 'All'
+													AND Date = @Date 
+												)
+FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
+WHERE TempZone = 'All'
+AND Date = @Date 
+
+
+
+/******************************************************************************************************************************************
+
+									CALCULATE AVERAGE REVENUE PER CONTAINER MTD CURRENT YEAR & PREV YEAR
+
+******************************************************************************************************************************************/
+
+UPDATE AJCDW.dbo.RptWHSERevAndVolMTDTempZone SET AvgRevPerContMTD_CurrYear = CAST(
+																		ISNULL(
+																				((RevPer53ContMTD_CurrYear + RevPer45ContMTD_CurrYear + RevPer40ContMTD_CurrYear) / 3)
+																			,0) as decimal(18,2)
+													) --Average Rev per Cont Curr Year
+
+UPDATE AJCDW.dbo.RptWHSERevAndVolMTDTempZone SET AvgRevPerContMTD_PrevYear = CAST(
+																		ISNULL(
+																				((RevPer53ContMTD_PrevYear + RevPer45ContMTD_PrevYear + RevPer40ContMTD_PrevYear) / 3)
+																			,0) as decimal(18,2)
+													) --Average Rev per Cont Prev Year
+
+END
+
+BEGIN
+UPDATE ##WHSECapacityProf_MTD SET STATUS = 1 WHERE Date = @Date
+SET @Date = (SELECT MIN(Date) FROM ##WHSECapacityProf_MTD WHERE STATUS = 0)
+END
+
+END
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[LSCCapacityProfitability]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
