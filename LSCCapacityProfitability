@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[LSCCapacityProfitability]    Script Date: 7/12/2019 11:47:02 AM ******/
+/****** Object:  StoredProcedure [dbo].[LSCCapacityProfitability]    Script Date: 7/12/2019 3:46:12 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -352,7 +352,7 @@ UPDATE x SET TotalContShippedMTD_PrevYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and (ContType LIKE '%53%' OR ContType LIKE '%45%' OR ContType LIKE '%40%')
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -377,7 +377,7 @@ UPDATE x SET TotalContShippedMTD_PrevYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and (ContType LIKE '%53%' OR ContType LIKE '%45%' OR ContType LIKE '%40%')
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -401,7 +401,7 @@ UPDATE x SET TotalContShippedMTD_PrevYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and (ContType LIKE '%53%' OR ContType LIKE '%45%' OR ContType LIKE '%40%')
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -425,7 +425,7 @@ UPDATE x SET TotalContShippedMTD_PrevYear =    (
 																)  tcc on tcc.FileNo = ts.shipmentID 
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and (ContType LIKE '%53%' OR ContType LIKE '%45%' OR ContType LIKE '%40%')
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -474,7 +474,7 @@ UPDATE x SET Total53ContShippedMTD_PrevYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%53%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -508,7 +508,7 @@ UPDATE x SET Total53ContShippedMTD_PrevYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%53%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -540,7 +540,7 @@ UPDATE x SET Total53ContShippedMTD_PrevYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%53%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -572,7 +572,7 @@ UPDATE x SET Total53ContShippedMTD_PrevYear =    (
 																)  tcc on tcc.FileNo = ts.shipmentID 
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%53%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -621,7 +621,7 @@ UPDATE x SET Total45ContShippedMTD_PrevYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%45%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -655,7 +655,7 @@ UPDATE x SET Total45ContShippedMTD_PrevYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%45%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -687,7 +687,7 @@ UPDATE x SET Total45ContShippedMTD_PrevYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%45%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -719,7 +719,7 @@ UPDATE x SET Total45ContShippedMTD_PrevYear =    (
 																)  tcc on tcc.FileNo = ts.shipmentID 
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%45%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -768,7 +768,7 @@ UPDATE x SET Total40ContShippedMTD_PrevYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%40%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -802,7 +802,7 @@ UPDATE x SET Total40ContShippedMTD_PrevYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%40%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -834,7 +834,7 @@ UPDATE x SET Total40ContShippedMTD_PrevYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%40%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -866,7 +866,7 @@ UPDATE x SET Total40ContShippedMTD_PrevYear =    (
 																)  tcc on tcc.FileNo = ts.shipmentID 
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%40%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -916,7 +916,7 @@ UPDATE x SET TotalContShippedMTD_CurrYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and (ContType LIKE '%53%' OR ContType LIKE '%45%' OR ContType LIKE '%40%')
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -941,7 +941,7 @@ UPDATE x SET TotalContShippedMTD_CurrYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and (ContType LIKE '%53%' OR ContType LIKE '%45%' OR ContType LIKE '%40%')
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -965,7 +965,7 @@ UPDATE x SET TotalContShippedMTD_CurrYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and (ContType LIKE '%53%' OR ContType LIKE '%45%' OR ContType LIKE '%40%')
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -989,7 +989,7 @@ UPDATE x SET TotalContShippedMTD_CurrYear =    (
 																)  tcc on tcc.FileNo = ts.shipmentID 
 																										inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and (ContType LIKE '%53%' OR ContType LIKE '%45%' OR ContType LIKE '%40%')
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -1038,7 +1038,7 @@ UPDATE x SET Total53ContShippedMTD_CurrYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%53%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -1072,7 +1072,7 @@ UPDATE x SET Total53ContShippedMTD_CurrYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%53%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -1104,7 +1104,7 @@ UPDATE x SET Total53ContShippedMTD_CurrYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%53%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -1136,7 +1136,7 @@ UPDATE x SET Total53ContShippedMTD_CurrYear =    (
 																)  tcc on tcc.FileNo = ts.shipmentID 
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%53%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -1185,7 +1185,7 @@ UPDATE x SET Total45ContShippedMTD_CurrYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%45%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -1219,7 +1219,7 @@ UPDATE x SET Total45ContShippedMTD_CurrYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%45%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -1251,7 +1251,7 @@ UPDATE x SET Total45ContShippedMTD_CurrYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%45%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -1283,7 +1283,7 @@ UPDATE x SET Total45ContShippedMTD_CurrYear =    (
 																)  tcc on tcc.FileNo = ts.shipmentID 
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%45%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -1332,7 +1332,7 @@ UPDATE x SET Total40ContShippedMTD_CurrYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%40%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -1366,7 +1366,7 @@ UPDATE x SET Total40ContShippedMTD_CurrYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%40%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -1398,7 +1398,7 @@ UPDATE x SET Total40ContShippedMTD_CurrYear =    (
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%40%'
 																	group by LTRIM(RTRIM(FileNo)) 	
@@ -1430,7 +1430,7 @@ UPDATE x SET Total40ContShippedMTD_CurrYear =    (
 																)  tcc on tcc.FileNo = ts.shipmentID 
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-																	from   tblContainer 
+																	from   AJCDW.dbo.tblContainer 
 																	where ContBusLine in ('21','25')
 																	and ContType LIKE '%40%'
 																	group by LTRIM(RTRIM(FileNo)) 	
