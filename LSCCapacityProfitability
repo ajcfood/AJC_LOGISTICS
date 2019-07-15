@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[LSCCapacityProfitability]    Script Date: 7/15/2019 12:49:54 PM ******/
+/****** Object:  StoredProcedure [dbo].[LSCCapacityProfitability]    Script Date: 7/15/2019 4:08:38 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1467,42 +1467,17 @@ AND Date = @Date
 
 UPDATE AJCDW.dbo.RptWHSERevAndVolMTDTempZone SET AvgRevPerContMTD_CurrYear = CAST(
 																		ISNULL(
-																				((RevPer53ContMTD_CurrYear + RevPer45ContMTD_CurrYear + RevPer40ContMTD_CurrYear) / 3)
+																				(NULLIF(TotalRevMTD_CurrYear,0) / NULLIF(TotalContShippedMTD_CurrYear,0))
 																			,0) as decimal(18,2)
 													) --Average Rev per Cont Curr Year
 
 UPDATE AJCDW.dbo.RptWHSERevAndVolMTDTempZone SET AvgRevPerContMTD_PrevYear = CAST(
 																		ISNULL(
-																				((RevPer53ContMTD_PrevYear + RevPer45ContMTD_PrevYear + RevPer40ContMTD_PrevYear) / 3)
+																				(NULLIF(TotalRevMTD_PrevYear,0) / NULLIF(TotalContShippedMTD_PrevYear,0))
 																			,0) as decimal(18,2)
 													) --Average Rev per Cont Prev Year
 
 
-
-/******************************************************************************************************************************************
-
-														CALCULATE REV PER CONTAINER VARIANCES
-
-******************************************************************************************************************************************/
-
-UPDATE AJCDW.dbo.RptWHSERevAndVolMTDTempZone SET [RevPer53ContVariance] = CAST(
-																		ISNULL(
-																				([RevPer53ContMTD_CurrYear]-[RevPer53ContMTD_PrevYear])
-																			,0) as decimal(18,2)
-													) --Average Rev per 53' Cont 
-
-
-UPDATE AJCDW.dbo.RptWHSERevAndVolMTDTempZone SET [RevPer45ContVariance] = CAST(
-																		ISNULL(
-																				([RevPer45ContMTD_CurrYear]-[RevPer45ContMTD_PrevYear])
-																			,0) as decimal(18,2)
-													) --Average Rev per 45' Cont 
-
-UPDATE AJCDW.dbo.RptWHSERevAndVolMTDTempZone SET [RevPer40ContVariance] = CAST(
-																		ISNULL(
-																				([RevPer40ContMTD_CurrYear]-[RevPer40ContMTD_PrevYear])
-																			,0) as decimal(18,2)
-													) --Average Rev per 40' Cont 
 
 
 END
