@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_PopulatePowerBIReporting]    Script Date: 7/12/2019 11:54:55 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_PopulatePowerBIReporting]    Script Date: 7/16/2019 10:55:57 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -127,6 +127,21 @@ ISNULL([Zone 3 Pros],''), ISNULL([Zone 4 Pros],'')
  /*****************************************************End Logging*******************************************************/
 
  EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 3, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+   /*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 4, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+ --Populate WHSE Capacity Profitability Report
+ exec ajcdw..[LSCCustomerProfitability] 
+
+ /*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 4, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
 
  /***********************************************************************************************************************/
 
