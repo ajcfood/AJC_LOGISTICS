@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[LSCCustomerProfitability]    Script Date: 7/16/2019 10:52:07 AM ******/
+/****** Object:  StoredProcedure [dbo].[LSCCustomerProfitability]    Script Date: 7/16/2019 1:47:16 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -110,10 +110,6 @@ select DISTINCT @Date, LTRIM(RTRIM((CustName)))
 from AJCDW.dbo.tblCustMaster
 INNER JOIN AJCDW.dbo.tblWMSLoads on CustMasterCode = CUSTOMER
 where ISNULL(CustName,'') <> ''
-
-UNION 
-
-select @Date, 'zzAll'	--called All Customers zzAll so that it shows up at the bottom of the customer list since by default SQL Server orders by this column ASC
 
 
 UPDATE x SET TotalRevMTD_PrevYear = Charge_Amount
