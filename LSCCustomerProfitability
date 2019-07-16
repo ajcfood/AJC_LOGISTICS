@@ -1,0 +1,600 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[LSCCustomerProfitability]    Script Date: 7/16/2019 10:52:07 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+
+
+ALTER PROCEDURE [dbo].[LSCCustomerProfitability] AS
+
+BEGIN TRY
+BEGIN
+
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+DELETE AJCDW.dbo.RptWHSERevAndVolMTDTempZone WHERE Date >= LEFT(CONVERT(varchar, DATEADD(MM, -15, GetDate()),112),6) --Delete previous 15 months of data and pull in a fresh copy
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+IF OBJECT_ID ('TEMPDB..##CustByCont') IS NOT NULL  DROP TABLE ##CustByCont
+Select  LEFT(CONVERT(varchar, DATEADD(MM, -15, GetDate()),112),6) Date, 0 Status 
+into ##CustByCont 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -14, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -13, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -12, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -11, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -10, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -9, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -8, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -7, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -6, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -5, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -4, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -3, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -2, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -1, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, GetDate(),112),6) Date, 0 Status 
+
+
+DECLARE		@Date INT = (SELECT MIN(Date) FROM ##CustByCont)
+		,	@PrevYear INT 
+		,	@CurrYear INT 
+		,	@CurrMonth INT 
+
+WHILE (@Date <= (SELECT MAX(Date) FROM ##CustByCont))
+BEGIN
+
+BEGIN
+
+SET @CurrYear = LEFT(@Date,4)
+SET @CurrMonth = RIGHT(@Date,2)
+SET @PrevYear = LEFT(@Date,4) - 1
+
+--select @CurrYear curryear, @CurrMonth currmonth, @PrevYear prevyear
+
+
+--Dry = containerType NOT LIKE '%RF' and ContTempMin = '' and TempZone NOT LIKE PROD%
+--Chilled = ContTempMin >= 28
+--Frozen = ContTempMin <= 27
+
+/******************************************************************************************************************************************
+
+																	PREVIOUS YEAR REVENUE
+
+******************************************************************************************************************************************/
+
+IF @Date = (SELECT MIN(Date) FROM ##CustByCont)
+BEGIN 
+
+IF OBJECT_ID ('TEMPDB..#AJC_AP_IES_INBOUND_DATA') IS NOT NULL  DROP TABLE #AJC_AP_IES_INBOUND_DATA
+select *
+into #AJC_AP_IES_INBOUND_DATA
+FROM OPENQUERY (ORACLEPROD, '
+select  CHARGE_TYPE,CHARGE_TYPE_CODE,COMPANY_NUMBER,DIVISION,BUSINESS_LINE,TASK,GL_ACCOUNT,LOCATION,PROJECT,INVOICE_NUMBER,INVOICE_TYPE,FINANCIAL_PARTY,ME_NUMBER,TRANSACTION_TYPE,ACCOUNTING_DATE,DUE_DATE
+,CAST(CHARGE_AMOUNT AS DECIMAL(18,2)) CHARGE_AMOUNT,CURRENCY_CODE,TERMS,REFERENCE_TYPE_1,REFERENCE_VALUE_1,DESTINATION_COUNTRY,ORIGIN_COUNTRY,LAST_UPDATE_DATE,LAST_UPDATED_BY,INBOUND_FILE_NAME,CREATED_BY,CREATION_DATE,INTERFACE_STATUS
+,DESCRIPTION,ORIGINAL_AMOUNT,INVOICE_AMOUNT,ORIG_AP_INTERNAL,CARRIER,TYPE_OF_MOVE,MASTER_BLAWB_NUMBER,HOUSE_BLAWB_NUMBER,SHIPMENT_REFERENCE,FINANCIAL_PARTY_EXTERNAL_ID
+from AJC_AP_IES_INBOUND_DATA 
+Where Financial_Party = ''20'' 
+and Accounting_Date >= ''2018-01-01'''
+)
+
+CREATE NONCLUSTERED INDEX IX_Shipment_Reference ON #AJC_AP_IES_INBOUND_DATA (shipment_reference ASC)
+
+
+END 
+
+INSERT INTO AJCDW.dbo.RptCustByContMTD (Date, Customer) 
+select DISTINCT @Date, LTRIM(RTRIM((CustName)))
+from AJCDW.dbo.tblCustMaster
+INNER JOIN AJCDW.dbo.tblWMSLoads on CustMasterCode = CUSTOMER
+where ISNULL(CustName,'') <> ''
+
+UNION 
+
+select @Date, 'zzAll'	--called All Customers zzAll so that it shows up at the bottom of the customer list since by default SQL Server orders by this column ASC
+
+
+UPDATE x SET TotalRevMTD_PrevYear = Charge_Amount
+FROM AJCDW.dbo.RptCustByContMTD x
+INNER JOIN 
+				(
+					select ISNULL(SUM(Charge_Amount),0) Charge_Amount, CustName 
+					from (
+							select distinct RefNo, LTRIM(RTRIM(tcm.CustName)) CustName  
+							from AJCDW.dbo.tblWMSLoads wms
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
+							where YEAR(ShpShipDate) = @PrevYear
+							and MONTH(ShpShipDate) = @CurrMonth												
+							) wms
+					inner join (
+									select shipment_reference, SUM(Charge_Amount) Charge_Amount 
+									from   #AJC_AP_IES_INBOUND_DATA  
+									group by shipment_reference 	
+										
+								) ti on ti.Shipment_Reference = wms.RefNo 
+					group by CustName
+				) cust on cust.CustName = x.Customer
+WHERE Date = @Date 
+
+
+
+--All
+UPDATE x SET TotalRevMTD_PrevYear =    (
+										select ISNULL(SUM(TotalRevMTD_PrevYear),0)
+										from AJCDW.dbo.RptCustByContMTD
+										where Customer <> 'zzAll'
+											 
+									)
+FROM AJCDW.dbo.RptCustByContMTD x
+WHERE Customer = 'zzAll'
+AND Date = @Date 
+
+/******************************************************************************************************************************************
+
+																	CURRENT YEAR REVENUE
+
+******************************************************************************************************************************************/
+
+UPDATE x SET TotalRevMTD_CurrYear = Charge_Amount
+FROM AJCDW.dbo.RptCustByContMTD x
+INNER JOIN 
+				(
+					select ISNULL(SUM(Charge_Amount),0) Charge_Amount, CustName 
+					from (
+							select distinct RefNo, LTRIM(RTRIM(tcm.CustName)) CustName  
+							from AJCDW.dbo.tblWMSLoads wms
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
+							where YEAR(ShpShipDate) = @CurrYear
+							and MONTH(ShpShipDate) = @CurrMonth												
+							) wms
+					inner join (
+									select shipment_reference, SUM(Charge_Amount) Charge_Amount 
+									from   #AJC_AP_IES_INBOUND_DATA  
+									group by shipment_reference 	
+										
+								) ti on ti.Shipment_Reference = wms.RefNo 
+					group by CustName
+				) cust on cust.CustName = x.Customer
+WHERE Date = @Date 
+
+
+
+--All
+UPDATE x SET TotalRevMTD_CurrYear =    (
+											select ISNULL(SUM(TotalRevMTD_CurrYear),0)
+											from AJCDW.dbo.RptCustByContMTD
+											where Customer <> 'zzAll'
+											 
+										)
+FROM AJCDW.dbo.RptCustByContMTD x
+WHERE Customer = 'zzAll'
+AND Date = @Date 
+
+
+/******************************************************************************************************************************************
+
+															TOTAL CONTAINER SHIPPED PREVIOUS YEAR
+
+******************************************************************************************************************************************/
+
+
+UPDATE x SET TotalContShippedMTD_PrevYear = TotalContShipped
+FROM AJCDW.dbo.RptCustByContMTD x
+INNER JOIN 
+				(
+					select ISNULL(SUM(tc.TotalContShipped),0) TotalContShipped, CustName 
+					from (
+							select distinct FileNo, LTRIM(RTRIM(tcm.CustName)) CustName  
+							from AJCDW.dbo.tblWMSLoads wms
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
+							where YEAR(ShpShipDate) = @PrevYear
+							and MONTH(ShpShipDate) = @CurrMonth												
+							) wms
+					inner join (
+									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+									from   AJCDW.dbo.tblContainer 
+									where ContBusLine in ('21','25')
+									and (ContType LIKE '%53%' OR ContType LIKE '%45%' OR ContType LIKE '%40%')
+									group by LTRIM(RTRIM(FileNo)) 	
+										
+								) tc on tc.FileNo = wms.FileNo 
+					group by CustName
+				) cust on cust.CustName = x.Customer
+WHERE Date = @Date 
+
+--All
+UPDATE x SET TotalContShippedMTD_PrevYear =    (
+											select ISNULL(SUM(TotalContShippedMTD_PrevYear),0)
+											from AJCDW.dbo.RptCustByContMTD
+											where Customer <> 'zzAll'
+											 
+										)
+FROM AJCDW.dbo.RptCustByContMTD x
+WHERE Customer = 'zzAll'
+AND Date = @Date 
+
+
+/******************************************************************************************************************************************
+
+															TOTAL 53' CONTAINER SHIPPED PREVIOUS YEAR
+
+******************************************************************************************************************************************/
+
+
+UPDATE x SET Total53ContShippedMTD_PrevYear = TotalContShipped
+FROM AJCDW.dbo.RptCustByContMTD x
+INNER JOIN 
+				(
+					select ISNULL(SUM(tc.TotalContShipped),0) TotalContShipped, CustName 
+					from (
+							select distinct FileNo, LTRIM(RTRIM(tcm.CustName)) CustName  
+							from AJCDW.dbo.tblWMSLoads wms
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
+							where YEAR(ShpShipDate) = @PrevYear
+							and MONTH(ShpShipDate) = @CurrMonth												
+							) wms
+					inner join (
+									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+									from   AJCDW.dbo.tblContainer 
+									where ContBusLine in ('21','25')
+									and (ContType LIKE '%53%')
+									group by LTRIM(RTRIM(FileNo)) 	
+										
+								) tc on tc.FileNo = wms.FileNo 
+					group by CustName
+				) cust on cust.CustName = x.Customer
+WHERE Date = @Date 
+
+--All
+UPDATE x SET Total53ContShippedMTD_PrevYear =    (
+											select ISNULL(SUM(Total53ContShippedMTD_PrevYear),0)
+											from AJCDW.dbo.RptCustByContMTD
+											where Customer <> 'zzAll'
+											 
+										)
+FROM AJCDW.dbo.RptCustByContMTD x
+WHERE Customer = 'zzAll'
+AND Date = @Date 
+
+
+/******************************************************************************************************************************************
+
+															TOTAL 45' CONTAINER SHIPPED PREVIOUS YEAR
+
+******************************************************************************************************************************************/
+
+UPDATE x SET Total45ContShippedMTD_PrevYear = TotalContShipped
+FROM AJCDW.dbo.RptCustByContMTD x
+INNER JOIN 
+				(
+					select ISNULL(SUM(tc.TotalContShipped),0) TotalContShipped, CustName 
+					from (
+							select distinct FileNo, LTRIM(RTRIM(tcm.CustName)) CustName  
+							from AJCDW.dbo.tblWMSLoads wms
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
+							where YEAR(ShpShipDate) = @PrevYear
+							and MONTH(ShpShipDate) = @CurrMonth												
+							) wms
+					inner join (
+									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+									from   AJCDW.dbo.tblContainer 
+									where ContBusLine in ('21','25')
+									and (ContType LIKE '%45%')
+									group by LTRIM(RTRIM(FileNo)) 	
+										
+								) tc on tc.FileNo = wms.FileNo 
+					group by CustName
+				) cust on cust.CustName = x.Customer
+WHERE Date = @Date 
+
+
+--All
+UPDATE x SET Total45ContShippedMTD_PrevYear =    (
+											select ISNULL(SUM(Total45ContShippedMTD_PrevYear),0)
+											from AJCDW.dbo.RptCustByContMTD
+											where Customer <> 'zzAll'
+											 
+										)
+FROM AJCDW.dbo.RptCustByContMTD x
+WHERE Customer = 'zzAll'
+AND Date = @Date 
+
+
+/******************************************************************************************************************************************
+
+															TOTAL 40' CONTAINER SHIPPED PREVIOUS YEAR
+
+******************************************************************************************************************************************/
+
+UPDATE x SET Total40ContShippedMTD_PrevYear = TotalContShipped
+FROM AJCDW.dbo.RptCustByContMTD x
+INNER JOIN 
+				(
+					select ISNULL(SUM(tc.TotalContShipped),0) TotalContShipped, CustName 
+					from (
+							select distinct FileNo, LTRIM(RTRIM(tcm.CustName)) CustName   
+							from AJCDW.dbo.tblWMSLoads wms
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
+							where YEAR(ShpShipDate) = @PrevYear
+							and MONTH(ShpShipDate) = @CurrMonth												
+							) wms
+					inner join (
+									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+									from   AJCDW.dbo.tblContainer 
+									where ContBusLine in ('21','25')
+									and (ContType LIKE '%40%')
+									group by LTRIM(RTRIM(FileNo)) 	
+										
+								) tc on tc.FileNo = wms.FileNo 
+					group by CustName
+				) cust on cust.CustName = x.Customer
+WHERE Date = @Date 
+
+
+--All
+UPDATE x SET Total40ContShippedMTD_PrevYear =    (
+											select ISNULL(SUM(Total40ContShippedMTD_PrevYear),0)
+											from AJCDW.dbo.RptCustByContMTD
+											where Customer <> 'zzAll'
+											 
+										)
+FROM AJCDW.dbo.RptCustByContMTD x
+WHERE Customer = 'zzAll'
+AND Date = @Date 
+
+
+/******************************************************************************************************************************************
+
+																	TOTAL CONTAINER SHIPPED CURRENT YEAR
+
+******************************************************************************************************************************************/
+
+UPDATE x SET TotalContShippedMTD_CurrYear = TotalContShipped
+FROM AJCDW.dbo.RptCustByContMTD x
+INNER JOIN 
+				(
+					select ISNULL(SUM(tc.TotalContShipped),0) TotalContShipped, CustName 
+					from (
+							select distinct FileNo, LTRIM(RTRIM(tcm.CustName)) CustName   
+							from AJCDW.dbo.tblWMSLoads wms
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
+							where YEAR(ShpShipDate) = @CurrYear
+							and MONTH(ShpShipDate) = @CurrMonth												
+							) wms
+					inner join (
+									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+									from   AJCDW.dbo.tblContainer 
+									where ContBusLine in ('21','25')
+									and (ContType LIKE '%53%' OR ContType LIKE '%45%' OR ContType LIKE '%40%')
+									group by LTRIM(RTRIM(FileNo)) 	
+										
+								) tc on tc.FileNo = wms.FileNo 
+					group by CustName
+				) cust on cust.CustName = x.Customer
+WHERE Date = @Date 
+
+
+--All
+UPDATE x SET TotalContShippedMTD_CurrYear =    (
+											select ISNULL(SUM(TotalContShippedMTD_CurrYear),0)
+											from AJCDW.dbo.RptCustByContMTD
+											where Customer <> 'zzAll'
+											 
+										)
+FROM AJCDW.dbo.RptCustByContMTD x
+WHERE Customer = 'zzAll'
+AND Date = @Date 
+
+
+/******************************************************************************************************************************************
+
+															TOTAL 53' CONTAINER SHIPPED CURRENT YEAR
+
+******************************************************************************************************************************************/
+
+UPDATE x SET Total53ContShippedMTD_CurrYear = TotalContShipped
+FROM AJCDW.dbo.RptCustByContMTD x
+INNER JOIN 
+				(
+					select ISNULL(SUM(tc.TotalContShipped),0) TotalContShipped, CustName 
+					from (
+							select distinct FileNo, LTRIM(RTRIM(tcm.CustName)) CustName 
+							from AJCDW.dbo.tblWMSLoads wms
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
+							where YEAR(ShpShipDate) = @CurrYear
+							and MONTH(ShpShipDate) = @CurrMonth												
+							) wms
+					inner join (
+									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+									from   AJCDW.dbo.tblContainer 
+									where ContBusLine in ('21','25')
+									and (ContType LIKE '%53%')
+									group by LTRIM(RTRIM(FileNo)) 	
+										
+								) tc on tc.FileNo = wms.FileNo 
+					group by CustName
+				) cust on cust.CustName = x.Customer
+WHERE Date = @Date 
+
+
+--All
+UPDATE x SET Total53ContShippedMTD_CurrYear =    (
+											select ISNULL(SUM(Total53ContShippedMTD_CurrYear),0)
+											from AJCDW.dbo.RptCustByContMTD
+											where Customer <> 'zzAll'
+											 
+										)
+FROM AJCDW.dbo.RptCustByContMTD x
+WHERE Customer = 'zzAll'
+AND Date = @Date 
+
+
+/******************************************************************************************************************************************
+
+															TOTAL 45' CONTAINER SHIPPED CURRENT YEAR
+
+******************************************************************************************************************************************/
+
+
+UPDATE x SET Total45ContShippedMTD_CurrYear = TotalContShipped
+FROM AJCDW.dbo.RptCustByContMTD x
+INNER JOIN 
+				(
+					select ISNULL(SUM(tc.TotalContShipped),0) TotalContShipped, CustName 
+					from (
+							select distinct FileNo, LTRIM(RTRIM(tcm.CustName)) CustName  
+							from AJCDW.dbo.tblWMSLoads wms
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
+							where YEAR(ShpShipDate) = @CurrYear
+							and MONTH(ShpShipDate) = @CurrMonth												
+							) wms
+					inner join (
+									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+									from   AJCDW.dbo.tblContainer 
+									where ContBusLine in ('21','25')
+									and (ContType LIKE '%45%')
+									group by LTRIM(RTRIM(FileNo)) 	
+										
+								) tc on tc.FileNo = wms.FileNo 
+					group by CustName
+				) cust on cust.CustName = x.Customer
+WHERE Date = @Date 
+
+
+--All
+UPDATE x SET Total45ContShippedMTD_CurrYear =    (
+											select ISNULL(SUM(Total45ContShippedMTD_CurrYear),0)
+											from AJCDW.dbo.RptCustByContMTD
+											where Customer <> 'zzAll'
+											 
+										)
+FROM AJCDW.dbo.RptCustByContMTD x
+WHERE Customer = 'zzAll'
+AND Date = @Date 
+
+
+/******************************************************************************************************************************************
+
+															TOTAL 40' CONTAINER SHIPPED CURRENT YEAR
+
+******************************************************************************************************************************************/
+
+
+UPDATE x SET Total40ContShippedMTD_CurrYear = TotalContShipped
+FROM AJCDW.dbo.RptCustByContMTD x
+INNER JOIN 
+				(
+					select ISNULL(SUM(tc.TotalContShipped),0) TotalContShipped, CustName 
+					from (
+							select distinct FileNo, LTRIM(RTRIM(tcm.CustName)) CustName  
+							from AJCDW.dbo.tblWMSLoads wms
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
+							where YEAR(ShpShipDate) = @CurrYear
+							and MONTH(ShpShipDate) = @CurrMonth												
+							) wms
+					inner join (
+									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
+									from   AJCDW.dbo.tblContainer 
+									where ContBusLine in ('21','25')
+									and (ContType LIKE '%40%')
+									group by LTRIM(RTRIM(FileNo)) 	
+										
+								) tc on tc.FileNo = wms.FileNo 
+					group by CustName
+				) cust on cust.CustName = x.Customer
+WHERE Date = @Date 
+
+
+--All
+UPDATE x SET Total40ContShippedMTD_CurrYear =    (
+											select ISNULL(SUM(Total40ContShippedMTD_CurrYear),0)
+											from AJCDW.dbo.RptCustByContMTD
+											where Customer <> 'zzAll'
+											 
+										)
+FROM AJCDW.dbo.RptCustByContMTD x
+WHERE Customer = 'zzAll'
+AND Date = @Date 
+
+
+
+/******************************************************************************************************************************************
+
+									CALCULATE AVERAGE REVENUE PER CONTAINER MTD CURRENT YEAR & PREV YEAR
+
+******************************************************************************************************************************************/
+
+UPDATE AJCDW.dbo.RptCustByContMTD SET AvgRevPerContMTD_CurrYear = CAST(
+																		ISNULL(
+																				(NULLIF(TotalRevMTD_CurrYear,0) / NULLIF(TotalContShippedMTD_CurrYear,0))
+																			,0) as decimal(18,2)
+													) --Average Rev per Cont Curr Year
+WHERE Date = @Date 
+
+
+UPDATE AJCDW.dbo.RptCustByContMTD SET AvgRevPerContMTD_PrevYear = CAST(
+																		ISNULL(
+																				(NULLIF(TotalRevMTD_PrevYear,0) / NULLIF(TotalContShippedMTD_PrevYear,0))
+																			,0) as decimal(18,2)
+													) --Average Rev per Cont Prev Year
+WHERE Date = @Date 
+
+
+END
+
+BEGIN
+UPDATE ##CustByCont SET STATUS = 1 WHERE Date = @Date
+SET @Date = (SELECT MIN(Date) FROM ##CustByCont WHERE STATUS = 0)
+END
+
+END
+
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[LSCCustomerProfitability]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
