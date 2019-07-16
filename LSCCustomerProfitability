@@ -136,17 +136,6 @@ WHERE Date = @Date
 
 
 
---All
-UPDATE x SET TotalRevMTD_PrevYear =    (
-										select ISNULL(SUM(TotalRevMTD_PrevYear),0)
-										from AJCDW.dbo.RptCustByContMTD
-										where Customer <> 'zzAll'
-											 
-									)
-FROM AJCDW.dbo.RptCustByContMTD x
-WHERE Customer = 'zzAll'
-AND Date = @Date 
-
 /******************************************************************************************************************************************
 
 																	CURRENT YEAR REVENUE
@@ -175,18 +164,6 @@ INNER JOIN
 				) cust on cust.CustName = x.Customer
 WHERE Date = @Date 
 
-
-
---All
-UPDATE x SET TotalRevMTD_CurrYear =    (
-											select ISNULL(SUM(TotalRevMTD_CurrYear),0)
-											from AJCDW.dbo.RptCustByContMTD
-											where Customer <> 'zzAll'
-											 
-										)
-FROM AJCDW.dbo.RptCustByContMTD x
-WHERE Customer = 'zzAll'
-AND Date = @Date 
 
 
 /******************************************************************************************************************************************
@@ -220,16 +197,6 @@ INNER JOIN
 				) cust on cust.CustName = x.Customer
 WHERE Date = @Date 
 
---All
-UPDATE x SET TotalContShippedMTD_PrevYear =    (
-											select ISNULL(SUM(TotalContShippedMTD_PrevYear),0)
-											from AJCDW.dbo.RptCustByContMTD
-											where Customer <> 'zzAll'
-											 
-										)
-FROM AJCDW.dbo.RptCustByContMTD x
-WHERE Customer = 'zzAll'
-AND Date = @Date 
 
 
 /******************************************************************************************************************************************
@@ -263,16 +230,6 @@ INNER JOIN
 				) cust on cust.CustName = x.Customer
 WHERE Date = @Date 
 
---All
-UPDATE x SET Total53ContShippedMTD_PrevYear =    (
-											select ISNULL(SUM(Total53ContShippedMTD_PrevYear),0)
-											from AJCDW.dbo.RptCustByContMTD
-											where Customer <> 'zzAll'
-											 
-										)
-FROM AJCDW.dbo.RptCustByContMTD x
-WHERE Customer = 'zzAll'
-AND Date = @Date 
 
 
 /******************************************************************************************************************************************
@@ -306,17 +263,6 @@ INNER JOIN
 WHERE Date = @Date 
 
 
---All
-UPDATE x SET Total45ContShippedMTD_PrevYear =    (
-											select ISNULL(SUM(Total45ContShippedMTD_PrevYear),0)
-											from AJCDW.dbo.RptCustByContMTD
-											where Customer <> 'zzAll'
-											 
-										)
-FROM AJCDW.dbo.RptCustByContMTD x
-WHERE Customer = 'zzAll'
-AND Date = @Date 
-
 
 /******************************************************************************************************************************************
 
@@ -348,17 +294,6 @@ INNER JOIN
 				) cust on cust.CustName = x.Customer
 WHERE Date = @Date 
 
-
---All
-UPDATE x SET Total40ContShippedMTD_PrevYear =    (
-											select ISNULL(SUM(Total40ContShippedMTD_PrevYear),0)
-											from AJCDW.dbo.RptCustByContMTD
-											where Customer <> 'zzAll'
-											 
-										)
-FROM AJCDW.dbo.RptCustByContMTD x
-WHERE Customer = 'zzAll'
-AND Date = @Date 
 
 
 /******************************************************************************************************************************************
@@ -392,17 +327,6 @@ INNER JOIN
 WHERE Date = @Date 
 
 
---All
-UPDATE x SET TotalContShippedMTD_CurrYear =    (
-											select ISNULL(SUM(TotalContShippedMTD_CurrYear),0)
-											from AJCDW.dbo.RptCustByContMTD
-											where Customer <> 'zzAll'
-											 
-										)
-FROM AJCDW.dbo.RptCustByContMTD x
-WHERE Customer = 'zzAll'
-AND Date = @Date 
-
 
 /******************************************************************************************************************************************
 
@@ -434,17 +358,6 @@ INNER JOIN
 				) cust on cust.CustName = x.Customer
 WHERE Date = @Date 
 
-
---All
-UPDATE x SET Total53ContShippedMTD_CurrYear =    (
-											select ISNULL(SUM(Total53ContShippedMTD_CurrYear),0)
-											from AJCDW.dbo.RptCustByContMTD
-											where Customer <> 'zzAll'
-											 
-										)
-FROM AJCDW.dbo.RptCustByContMTD x
-WHERE Customer = 'zzAll'
-AND Date = @Date 
 
 
 /******************************************************************************************************************************************
@@ -479,17 +392,6 @@ INNER JOIN
 WHERE Date = @Date 
 
 
---All
-UPDATE x SET Total45ContShippedMTD_CurrYear =    (
-											select ISNULL(SUM(Total45ContShippedMTD_CurrYear),0)
-											from AJCDW.dbo.RptCustByContMTD
-											where Customer <> 'zzAll'
-											 
-										)
-FROM AJCDW.dbo.RptCustByContMTD x
-WHERE Customer = 'zzAll'
-AND Date = @Date 
-
 
 /******************************************************************************************************************************************
 
@@ -521,18 +423,6 @@ INNER JOIN
 					group by CustName
 				) cust on cust.CustName = x.Customer
 WHERE Date = @Date 
-
-
---All
-UPDATE x SET Total40ContShippedMTD_CurrYear =    (
-											select ISNULL(SUM(Total40ContShippedMTD_CurrYear),0)
-											from AJCDW.dbo.RptCustByContMTD
-											where Customer <> 'zzAll'
-											 
-										)
-FROM AJCDW.dbo.RptCustByContMTD x
-WHERE Customer = 'zzAll'
-AND Date = @Date 
 
 
 
