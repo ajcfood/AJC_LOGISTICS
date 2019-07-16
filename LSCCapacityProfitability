@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[LSCCapacityProfitability]    Script Date: 7/15/2019 4:08:38 PM ******/
+/****** Object:  StoredProcedure [dbo].[LSCCapacityProfitability]    Script Date: 7/16/2019 1:47:04 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -107,8 +107,8 @@ INSERT INTO AJCDW.dbo.RptWHSERevAndVolMTDTempZone (Date, tempzone) VALUES
 (@Date, 'Dry'),
 (@Date, 'Chilled'),
 (@Date, 'Frozen'),
-(@Date, 'Produce'),
-(@Date, 'All')
+(@Date, 'Produce')
+
 
 --select @PrevYear, @CurrYear, @CurrMonth
 --Dry
