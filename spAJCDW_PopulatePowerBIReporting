@@ -115,50 +115,17 @@ ISNULL([Zone 3 Pros],''), ISNULL([Zone 4 Pros],'')
 
  /***********************************************************************************************************************/
 
-  /*****************************************************Begin Logging*******************************************************/
-
- EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 3, @BeginOrEnd = 0, @ProcName = @ProcName
-
- /*************************************************************************************************************************/
-
  --Populate WHSE Capacity Profitability Report
  exec ajcdw..[LSCCapacityProfitability] 
 
- /*****************************************************End Logging*******************************************************/
-
- EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 3, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
-
- /***********************************************************************************************************************/
-
-   /*****************************************************Begin Logging*******************************************************/
-
- EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 4, @BeginOrEnd = 0, @ProcName = @ProcName
-
- /*************************************************************************************************************************/
 
  --Populate WHSE Capacity Profitability Report
  exec ajcdw..[LSCCustomerProfitability] 
 
- /*****************************************************End Logging*******************************************************/
-
- EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 4, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
-
- /***********************************************************************************************************************/
-
-    /*****************************************************Begin Logging*******************************************************/
-
- EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 5, @BeginOrEnd = 0, @ProcName = @ProcName
-
- /*************************************************************************************************************************/
 
  --Populate WHSE Capacity Profitability Report
  exec ajcdw..[LSCCustomerPerPalletProfitability] 
 
- /*****************************************************End Logging*******************************************************/
-
- EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 5, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
-
- /***********************************************************************************************************************/
 
 
 END
