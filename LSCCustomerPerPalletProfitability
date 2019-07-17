@@ -1,0 +1,388 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[LSCCustomerPerPalletProfitability]    Script Date: 7/17/2019 12:03:32 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[LSCCustomerPerPalletProfitability] AS
+
+BEGIN TRY
+BEGIN
+
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+DELETE AJCDW.dbo.RptCustPerPallet WHERE Date >= LEFT(CONVERT(varchar, DATEADD(MM, -15, GetDate()),112),6) --Delete previous 15 months of data and pull in a fresh copy
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+
+IF OBJECT_ID ('TEMPDB..##CustByPallet') IS NOT NULL  DROP TABLE ##CustByPallet
+Select  LEFT(CONVERT(varchar, DATEADD(MM, -15, GetDate()),112),6) Date, 0 Status 
+into ##CustByPallet 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -14, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -13, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -12, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -11, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -10, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -9, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -8, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -7, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -6, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -5, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -4, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -3, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -2, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, DATEADD(MM, -1, GetDate()),112),6) Date, 0 Status 
+UNION Select  LEFT(CONVERT(varchar, GetDate(),112),6) Date, 0 Status 
+
+
+DECLARE		@Date INT = (SELECT MIN(Date) FROM ##CustByPallet)
+		,	@PrevYear INT 
+		,	@CurrYear INT 
+		,	@CurrMonth INT 
+
+WHILE (@Date <= (SELECT MAX(Date) FROM ##CustByPallet))
+BEGIN
+
+BEGIN
+
+SET @CurrYear = LEFT(@Date,4)
+SET @CurrMonth = RIGHT(@Date,2)
+SET @PrevYear = LEFT(@Date,4) - 1
+
+--select @CurrYear curryear, @CurrMonth currmonth, @PrevYear prevyear
+
+
+--Dry = containerType NOT LIKE '%RF' and ContTempMin = '' and TempZone NOT LIKE PROD%
+--Chilled = ContTempMin >= 28
+--Frozen = ContTempMin <= 27
+
+/******************************************************************************************************************************************
+
+															PALLETS SHIPPED PREVIOUS YEAR
+
+******************************************************************************************************************************************/
+
+IF @Date = (SELECT MIN(Date) FROM ##CustByPallet)
+BEGIN 
+
+IF OBJECT_ID ('TEMPDB..#AJC_AP_IES_INBOUND_DATA') IS NOT NULL  DROP TABLE #AJC_AP_IES_INBOUND_DATA
+select *
+into #AJC_AP_IES_INBOUND_DATA
+FROM OPENQUERY (ORACLEPROD, '
+select  CHARGE_TYPE,CHARGE_TYPE_CODE,COMPANY_NUMBER,DIVISION,BUSINESS_LINE,TASK,GL_ACCOUNT,LOCATION,PROJECT,INVOICE_NUMBER,INVOICE_TYPE,FINANCIAL_PARTY,ME_NUMBER,TRANSACTION_TYPE,ACCOUNTING_DATE,DUE_DATE
+,CAST(CHARGE_AMOUNT AS DECIMAL(18,2)) CHARGE_AMOUNT,CURRENCY_CODE,TERMS,REFERENCE_TYPE_1,REFERENCE_VALUE_1,DESTINATION_COUNTRY,ORIGIN_COUNTRY,LAST_UPDATE_DATE,LAST_UPDATED_BY,INBOUND_FILE_NAME,CREATED_BY,CREATION_DATE,INTERFACE_STATUS
+,DESCRIPTION,ORIGINAL_AMOUNT,INVOICE_AMOUNT,ORIG_AP_INTERNAL,CARRIER,TYPE_OF_MOVE,MASTER_BLAWB_NUMBER,HOUSE_BLAWB_NUMBER,SHIPMENT_REFERENCE,FINANCIAL_PARTY_EXTERNAL_ID
+from AJC_AP_IES_INBOUND_DATA 
+Where Financial_Party = ''20'' 
+and Accounting_Date >= ''2018-01-01'''
+)
+
+CREATE NONCLUSTERED INDEX IX_Shipment_Reference ON #AJC_AP_IES_INBOUND_DATA (shipment_reference ASC)
+
+
+END 
+
+INSERT INTO AJCDW.dbo.RptCustPerPallet (Date, Customer) 
+select DISTINCT @Date, LTRIM(RTRIM((CustName)))
+from AJCDW.dbo.tblCustMaster
+INNER JOIN AJCDW.dbo.tblWMSLoads on CustMasterCode = CUSTOMER
+where ISNULL(CustName,'') <> ''
+
+
+--Dry 
+update x set TotalDryPallShippedMTD_PrevYear = OverPackID
+FROM AJCDW.dbo.RptCustPerPallet x
+INNER JOIN 
+				(
+					select ISNULL(SUM(OverPackID),0) OverPackID, CustName 
+					from (
+							select COUNT(DISTINCT OverPackID) OverPackID, LTRIM(RTRIM(tcm.CustName)) CustName  
+							from AJCDW.dbo.tblWMSLoads wms
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
+							where YEAR(ShpShipDate) = @PrevYear
+							and MONTH(ShpShipDate) = @CurrMonth
+							and LTRIM(RTRIM(ContainerType)) NOT LIKE '%RF'
+							and ISNULL(ContTempMin,'') = ''
+							and LTRIM(RTRIM(TempZone)) NOT LIKE 'PROD%'		
+							group by LTRIM(RTRIM(tcm.CustName))									
+							) wms
+					group by CustName
+				) cust on cust.CustName = x.Customer
+WHERE Date = @Date 
+
+
+--Chilled
+update x set TotalChilledPallShippedMTD_PrevYear = OverPackID
+FROM AJCDW.dbo.RptCustPerPallet x
+INNER JOIN 
+				(
+					select ISNULL(SUM(OverPackID),0) OverPackID, CustName 
+					from (
+							select COUNT(DISTINCT OverPackID) OverPackID, LTRIM(RTRIM(tcm.CustName)) CustName  
+							from AJCDW.dbo.tblWMSLoads wms
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
+							where YEAR(ShpShipDate) = @PrevYear
+							and MONTH(ShpShipDate) = @CurrMonth
+							and ContTempMin >= 28
+							group by LTRIM(RTRIM(tcm.CustName))									
+							) wms
+					group by CustName
+				) cust on cust.CustName = x.Customer
+WHERE Date = @Date 
+
+
+--Frozen
+update x set TotalFrozenPallShippedMTD_PrevYear = OverPackID
+FROM AJCDW.dbo.RptCustPerPallet x
+INNER JOIN 
+				(
+					select ISNULL(SUM(OverPackID),0) OverPackID, CustName 
+					from (
+							select COUNT(DISTINCT OverPackID) OverPackID, LTRIM(RTRIM(tcm.CustName)) CustName  
+							from AJCDW.dbo.tblWMSLoads wms
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
+							where YEAR(ShpShipDate) = @PrevYear
+							and MONTH(ShpShipDate) = @CurrMonth
+							and ContTempMin <= 27
+							group by LTRIM(RTRIM(tcm.CustName))									
+							) wms
+					group by CustName
+				) cust on cust.CustName = x.Customer
+WHERE Date = @Date 
+
+
+--Produce
+update x set TotalProducePallShippedMTD_PrevYear = OverPackID
+FROM AJCDW.dbo.RptCustPerPallet x
+INNER JOIN 
+				(
+					select ISNULL(SUM(OverPackID),0) OverPackID, CustName 
+					from (
+							select COUNT(DISTINCT OverPackID) OverPackID, LTRIM(RTRIM(tcm.CustName)) CustName  
+							from AJCDW.dbo.tblWMSLoads wms
+							inner join (
+											select distinct FileNo 
+											from AJCDW.dbo.tblContainerContents 
+											where ContUnitPack LIKE 'PROD%'
+
+										)  tcc on tcc.FileNo = wms.FileNo
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
+							where YEAR(ShpShipDate) = @PrevYear
+							and MONTH(ShpShipDate) = @CurrMonth
+							group by LTRIM(RTRIM(tcm.CustName))									
+							) wms
+					group by CustName
+				) cust on cust.CustName = x.Customer
+WHERE Date = @Date 
+
+
+--All Pallets Shipped
+UPDATE x SET TotalPallShippedMTD_PrevYear = z.TotalPallets
+FROM AJCDW.dbo.RptCustPerPallet x
+cross apply (
+				SELECT Customer, TotalDryPallShippedMTD_PrevYear + TotalChilledPallShippedMTD_PrevYear + TotalFrozenPallShippedMTD_PrevYear + TotalProducePallShippedMTD_PrevYear TotalPallets
+				FROM AJCDW.dbo.RptCustPerPallet y
+				WHERE y.Customer = x.Customer
+				AND Date = @Date
+			 ) z
+WHERE x.Date = @Date
+
+
+--Rev Per Pallet
+UPDATE x SET RevPerPalletMTD_PrevYear = Charge_Amount / TotalPallShippedMTD_PrevYear 
+FROM AJCDW.dbo.RptCustPerPallet x
+INNER JOIN   (
+				select LTRIM(RTRIM(tcm.CustName)) CustName, sum(Charge_Amount) Charge_Amount
+				from #AJC_AP_IES_INBOUND_DATA aaiid
+				inner join (
+								SELECT DISTINCT RefNo, CUSTOMER
+								FROM AJCDW.dbo.tblWMSLoads  
+								WHERE YEAR(ShpShipDate) = @PrevYear
+								and MONTH(ShpShipDate) = @CurrMonth
+							) wms on wms.RefNo = aaiid.shipment_reference 
+				inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
+				group by LTRIM(RTRIM(tcm.CustName))
+			) y ON y.CustName = x.Customer 
+WHERE Date = @Date
+
+
+/******************************************************************************************************************************************
+
+																	PALLETS SHIPPED CURRENT YEAR
+
+******************************************************************************************************************************************/
+
+
+--Dry 
+update x set TotalDryPallShippedMTD_CurrYear = OverPackID
+FROM AJCDW.dbo.RptCustPerPallet x
+INNER JOIN 
+				(
+					select ISNULL(SUM(OverPackID),0) OverPackID, CustName 
+					from (
+							select COUNT(DISTINCT OverPackID) OverPackID, LTRIM(RTRIM(tcm.CustName)) CustName  
+							from AJCDW.dbo.tblWMSLoads wms
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
+							where YEAR(ShpShipDate) = @CurrYear
+							and MONTH(ShpShipDate) = @CurrMonth
+							and LTRIM(RTRIM(ContainerType)) NOT LIKE '%RF'
+							and ISNULL(ContTempMin,'') = ''
+							and LTRIM(RTRIM(TempZone)) NOT LIKE 'PROD%'		
+							group by LTRIM(RTRIM(tcm.CustName))									
+							) wms
+					group by CustName
+				) cust on cust.CustName = x.Customer
+WHERE Date = @Date
+
+
+--Chilled
+update x set TotalChilledPallShippedMTD_CurrYear = OverPackID
+FROM AJCDW.dbo.RptCustPerPallet x
+INNER JOIN 
+				(
+					select ISNULL(SUM(OverPackID),0) OverPackID, CustName 
+					from (
+							select COUNT(DISTINCT OverPackID) OverPackID, LTRIM(RTRIM(tcm.CustName)) CustName  
+							from AJCDW.dbo.tblWMSLoads wms
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
+							where YEAR(ShpShipDate) = @CurrYear
+							and MONTH(ShpShipDate) = @CurrMonth
+							and ContTempMin >= 28
+							group by LTRIM(RTRIM(tcm.CustName))									
+							) wms
+					group by CustName
+				) cust on cust.CustName = x.Customer
+WHERE Date = @Date
+
+
+--Frozen
+update x set TotalFrozenPallShippedMTD_CurrYear = OverPackID
+FROM AJCDW.dbo.RptCustPerPallet x
+INNER JOIN 
+				(
+					select ISNULL(SUM(OverPackID),0) OverPackID, CustName 
+					from (
+							select COUNT(DISTINCT OverPackID) OverPackID, LTRIM(RTRIM(tcm.CustName)) CustName  
+							from AJCDW.dbo.tblWMSLoads wms
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
+							where YEAR(ShpShipDate) = @CurrYear
+							and MONTH(ShpShipDate) = @CurrMonth
+							and ContTempMin <= 27
+							group by LTRIM(RTRIM(tcm.CustName))									
+							) wms
+					group by CustName
+				) cust on cust.CustName = x.Customer
+WHERE Date = @Date
+
+
+--Produce
+update x set TotalProducePallShippedMTD_CurrYear = OverPackID
+FROM AJCDW.dbo.RptCustPerPallet x
+INNER JOIN 
+				(
+					select ISNULL(SUM(OverPackID),0) OverPackID, CustName 
+					from (
+							select COUNT(DISTINCT OverPackID) OverPackID, LTRIM(RTRIM(tcm.CustName)) CustName  
+							from AJCDW.dbo.tblWMSLoads wms
+							inner join (
+											select distinct FileNo 
+											from AJCDW.dbo.tblContainerContents 
+											where ContUnitPack LIKE 'PROD%'
+
+										)  tcc on tcc.FileNo = wms.FileNo
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
+							where YEAR(ShpShipDate) = @CurrYear
+							and MONTH(ShpShipDate) = @CurrMonth
+							group by LTRIM(RTRIM(tcm.CustName))									
+							) wms
+					group by CustName
+				) cust on cust.CustName = x.Customer
+WHERE Date = @Date
+
+
+--All Pallets Shipped
+UPDATE x SET TotalPallShippedMTD_CurrYear = z.TotalPallets
+FROM AJCDW.dbo.RptCustPerPallet x
+cross apply (
+				SELECT Customer, TotalDryPallShippedMTD_CurrYear + TotalChilledPallShippedMTD_CurrYear + TotalFrozenPallShippedMTD_CurrYear + TotalProducePallShippedMTD_CurrYear TotalPallets
+				FROM AJCDW.dbo.RptCustPerPallet y
+				WHERE y.Customer = x.Customer
+				AND Date = @Date
+			 ) z
+WHERE x.Date = @Date
+
+
+
+--Rev Per Pallet
+UPDATE x SET RevPerPalletMTD_CurrYear = Charge_Amount / TotalPallShippedMTD_CurrYear 
+FROM AJCDW.dbo.RptCustPerPallet x
+INNER JOIN   (
+				select LTRIM(RTRIM(tcm.CustName)) CustName, sum(Charge_Amount) Charge_Amount
+				from #AJC_AP_IES_INBOUND_DATA aaiid
+				inner join (
+								SELECT DISTINCT RefNo, CUSTOMER
+								FROM AJCDW.dbo.tblWMSLoads  
+								WHERE YEAR(ShpShipDate) = @CurrYear
+								and MONTH(ShpShipDate) = @CurrMonth
+							) wms on wms.RefNo = aaiid.shipment_reference 
+				inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
+				group by LTRIM(RTRIM(tcm.CustName))
+			) y ON y.CustName = x.Customer 
+WHERE Date = @Date
+
+
+END
+
+BEGIN
+UPDATE ##CustByPallet SET STATUS = 1 WHERE Date = @Date
+SET @Date = (SELECT MIN(Date) FROM ##CustByPallet WHERE STATUS = 0)
+END
+
+END
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[LSCCustomerPerPalletProfitability]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
