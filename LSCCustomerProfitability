@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[LSCCustomerProfitability]    Script Date: 7/16/2019 1:47:16 PM ******/
+/****** Object:  StoredProcedure [dbo].[LSCCustomerProfitability]    Script Date: 7/17/2019 12:03:59 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -23,7 +23,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 
 /*************************************************************************************************************************/
 
-DELETE AJCDW.dbo.RptWHSERevAndVolMTDTempZone WHERE Date >= LEFT(CONVERT(varchar, DATEADD(MM, -15, GetDate()),112),6) --Delete previous 15 months of data and pull in a fresh copy
+DELETE AJCDW.dbo.RptCustByContMTD WHERE Date >= LEFT(CONVERT(varchar, DATEADD(MM, -15, GetDate()),112),6) --Delete previous 15 months of data and pull in a fresh copy
 
 /*****************************************************End Logging*******************************************************/
 
