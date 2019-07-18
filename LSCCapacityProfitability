@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[LSCCapacityProfitability]    Script Date: 7/17/2019 12:03:11 PM ******/
+/****** Object:  StoredProcedure [dbo].[LSCCapacityProfitability]    Script Date: 7/18/2019 11:43:25 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -460,7 +460,7 @@ UPDATE x SET Total53ContShippedMTD_PrevYear =    (
 FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
 WHERE TempZone = 'Dry'
 AND Date = @Date 
-
+OPTION (RECOMPILE)
 
 --Chilled
 UPDATE x SET Total53ContShippedMTD_PrevYear =    (
@@ -493,6 +493,8 @@ UPDATE x SET Total53ContShippedMTD_PrevYear =    (
 FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
 WHERE TempZone = 'Chilled'
 AND Date = @Date 
+OPTION (RECOMPILE)
+
 
 --Frozen
 UPDATE x SET Total53ContShippedMTD_PrevYear =    (
@@ -525,6 +527,7 @@ UPDATE x SET Total53ContShippedMTD_PrevYear =    (
 FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
 WHERE TempZone = 'Frozen'
 AND Date = @Date 
+OPTION (RECOMPILE)
 
 
 --Produce
@@ -553,6 +556,7 @@ UPDATE x SET Total53ContShippedMTD_PrevYear =    (
 FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
 WHERE TempZone = 'Produce'
 AND Date = @Date 
+OPTION (RECOMPILE)
 
 
 /******************************************************************************************************************************************
@@ -977,6 +981,7 @@ UPDATE x SET Total53ContShippedMTD_CurrYear =    (
 FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
 WHERE TempZone = 'Dry'
 AND Date = @Date 
+OPTION (RECOMPILE)
 
 
 --Chilled
@@ -1010,6 +1015,8 @@ UPDATE x SET Total53ContShippedMTD_CurrYear =    (
 FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
 WHERE TempZone = 'Chilled'
 AND Date = @Date 
+OPTION (RECOMPILE)
+
 
 --Frozen
 UPDATE x SET Total53ContShippedMTD_CurrYear =    (
@@ -1042,6 +1049,7 @@ UPDATE x SET Total53ContShippedMTD_CurrYear =    (
 FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
 WHERE TempZone = 'Frozen'
 AND Date = @Date 
+OPTION (RECOMPILE)
 
 
 --Produce
@@ -1070,6 +1078,7 @@ UPDATE x SET Total53ContShippedMTD_CurrYear =    (
 FROM AJCDW.dbo.RptWHSERevAndVolMTDTempZone x
 WHERE TempZone = 'Produce'
 AND Date = @Date 
+OPTION (RECOMPILE)
 
 
 
