@@ -1,6 +1,6 @@
 USE [MGXMLProcessing]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadDWCustMasterRecs]    Script Date: 5/21/2019 2:39:31 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadDWCustMasterRecs]    Script Date: 8/2/2019 12:43:26 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -55,8 +55,18 @@ update [AJCDW].[dbo].[tblCustMaster]
 set [AJCDW].[dbo].[tblCustMaster].Salesman = dcm.Salesman
 --select cm.CustMasterID, cm.CustMasterCode, cm.CustName, cm.Salesman, dcm.Salesman
 from [AJCDW].[dbo].[tblCustMaster] cm
-	inner join [MGXMLProcessing].[dbo].[tblXML_DWCustMaster] dcm
-		on cm.CustMasterCode = dcm.CustMasterCode
+inner join (
+				select dw1.*
+				from [MGXMLProcessing].[dbo].[tblXML_DWCustMaster] dw1
+				inner join  ( 
+								select CustMasterCode, MAX(CustMasterID) CustMasterID
+								from [MGXMLProcessing].[dbo].[tblXML_DWCustMaster] 
+								where CustMasterCode IS NOT NULL 
+								group by CustMasterCode
+
+							) dw2 on dw2.CustMasterID = dw1.CustMasterID
+										
+			) dcm on cm.CustMasterCode = dcm.CustMasterCode
 where  dcm.Processed = 0 
 	and cm.FK_SystemID = 4
 	and dcm.Salesman is not null
