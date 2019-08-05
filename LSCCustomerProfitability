@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[LSCCustomerProfitability]    Script Date: 7/17/2019 12:03:59 PM ******/
+/****** Object:  StoredProcedure [dbo].[LSCCustomerProfitability]    Script Date: 8/5/2019 2:12:34 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -187,8 +187,18 @@ INNER JOIN
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-									from   AJCDW.dbo.tblContainer 
-									where ContBusLine in ('21','25')
+									from   AJCDW.dbo.tblContainer tc
+									inner join AJCDW.dbo.tblShipment ts on ts.ShipmentID = tc.FileNo
+									inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
+									where (
+												(
+														ContBusLine in ('21','25')
+												)
+											OR	(
+														tcm.CustMasterCode = 'BALHER' 
+													AND ContBusLine in ('41')
+												)
+										  )
 									and (ContType LIKE '%53%' OR ContType LIKE '%45%' OR ContType LIKE '%40%')
 									group by LTRIM(RTRIM(FileNo)) 	
 										
@@ -220,8 +230,18 @@ INNER JOIN
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-									from   AJCDW.dbo.tblContainer 
-									where ContBusLine in ('21','25')
+									from   AJCDW.dbo.tblContainer tc
+									inner join AJCDW.dbo.tblShipment ts on ts.ShipmentID = tc.FileNo
+									inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
+									where (
+												(
+														ContBusLine in ('21','25')
+												)
+											OR	(
+														tcm.CustMasterCode = 'BALHER' 
+													AND ContBusLine in ('41')
+												)
+										  )
 									and (ContType LIKE '%53%')
 									group by LTRIM(RTRIM(FileNo)) 	
 										
@@ -252,8 +272,18 @@ INNER JOIN
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-									from   AJCDW.dbo.tblContainer 
-									where ContBusLine in ('21','25')
+									from   AJCDW.dbo.tblContainer tc
+									inner join AJCDW.dbo.tblShipment ts on ts.ShipmentID = tc.FileNo
+									inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
+									where (
+												(
+														ContBusLine in ('21','25')
+												)
+											OR	(
+														tcm.CustMasterCode = 'BALHER' 
+													AND ContBusLine in ('41')
+												)
+										  )
 									and (ContType LIKE '%45%')
 									group by LTRIM(RTRIM(FileNo)) 	
 										
@@ -284,8 +314,18 @@ INNER JOIN
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-									from   AJCDW.dbo.tblContainer 
-									where ContBusLine in ('21','25')
+									from   AJCDW.dbo.tblContainer tc
+									inner join AJCDW.dbo.tblShipment ts on ts.ShipmentID = tc.FileNo
+									inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
+									where (
+												(
+														ContBusLine in ('21','25')
+												)
+											OR	(
+														tcm.CustMasterCode = 'BALHER' 
+													AND ContBusLine in ('41')
+												)
+										  )
 									and (ContType LIKE '%40%')
 									group by LTRIM(RTRIM(FileNo)) 	
 										
@@ -316,8 +356,18 @@ INNER JOIN
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-									from   AJCDW.dbo.tblContainer 
-									where ContBusLine in ('21','25')
+									from   AJCDW.dbo.tblContainer tc
+									inner join AJCDW.dbo.tblShipment ts on ts.ShipmentID = tc.FileNo
+									inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
+									where (
+												(
+														ContBusLine in ('21','25')
+												)
+											OR	(
+														tcm.CustMasterCode = 'BALHER' 
+													AND ContBusLine in ('41')
+												)
+										  )
 									and (ContType LIKE '%53%' OR ContType LIKE '%45%' OR ContType LIKE '%40%')
 									group by LTRIM(RTRIM(FileNo)) 	
 										
@@ -348,8 +398,18 @@ INNER JOIN
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-									from   AJCDW.dbo.tblContainer 
-									where ContBusLine in ('21','25')
+									from   AJCDW.dbo.tblContainer tc
+									inner join AJCDW.dbo.tblShipment ts on ts.ShipmentID = tc.FileNo
+									inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
+									where (
+												(
+														ContBusLine in ('21','25')
+												)
+											OR	(
+														tcm.CustMasterCode = 'BALHER' 
+													AND ContBusLine in ('41')
+												)
+										  )
 									and (ContType LIKE '%53%')
 									group by LTRIM(RTRIM(FileNo)) 	
 										
@@ -381,8 +441,18 @@ INNER JOIN
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-									from   AJCDW.dbo.tblContainer 
-									where ContBusLine in ('21','25')
+									from   AJCDW.dbo.tblContainer tc
+									inner join AJCDW.dbo.tblShipment ts on ts.ShipmentID = tc.FileNo
+									inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
+									where (
+												(
+														ContBusLine in ('21','25')
+												)
+											OR	(
+														tcm.CustMasterCode = 'BALHER' 
+													AND ContBusLine in ('41')
+												)
+										  )
 									and (ContType LIKE '%45%')
 									group by LTRIM(RTRIM(FileNo)) 	
 										
@@ -414,8 +484,18 @@ INNER JOIN
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
-									from   AJCDW.dbo.tblContainer 
-									where ContBusLine in ('21','25')
+									from   AJCDW.dbo.tblContainer tc
+									inner join AJCDW.dbo.tblShipment ts on ts.ShipmentID = tc.FileNo
+									inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
+									where (
+												(
+														ContBusLine in ('21','25')
+												)
+											OR	(
+														tcm.CustMasterCode = 'BALHER' 
+													AND ContBusLine in ('41')
+												)
+										  )
 									and (ContType LIKE '%40%')
 									group by LTRIM(RTRIM(FileNo)) 	
 										
