@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[LSCCustomerProfitability]    Script Date: 8/5/2019 3:33:48 PM ******/
+/****** Object:  StoredProcedure [dbo].[LSCCustomerProfitability]    Script Date: 8/5/2019 4:29:39 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -225,7 +225,18 @@ INNER JOIN
 							from AJCDW.dbo.tblWMSLoads wms
 							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
 							where YEAR(ShpShipDate) = @PrevYear
-							and MONTH(ShpShipDate) = @CurrMonth												
+							and MONTH(ShpShipDate) = @CurrMonth			
+							
+							UNION
+		
+							select distinct ti.ShipmentID, LTRIM(RTRIM(CustName))
+							from tblShipment ts
+							inner join tblInvoice ti on ti.RefNo = ts.RefNo 
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
+							where ShpLOB = '25'	--PRS Calculation
+							and ShpAccnt = 'PRSG'
+							and ti.AcctYr = @PrevYear
+							and ti.ACCTMONTH = @CurrMonth
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -268,7 +279,18 @@ INNER JOIN
 							from AJCDW.dbo.tblWMSLoads wms
 							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
 							where YEAR(ShpShipDate) = @PrevYear
-							and MONTH(ShpShipDate) = @CurrMonth												
+							and MONTH(ShpShipDate) = @CurrMonth			
+							
+							UNION
+		
+							select distinct ti.ShipmentID, LTRIM(RTRIM(CustName))
+							from tblShipment ts
+							inner join tblInvoice ti on ti.RefNo = ts.RefNo 
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
+							where ShpLOB = '25'	--PRS Calculation
+							and ShpAccnt = 'PRSG'
+							and ti.AcctYr = @PrevYear
+							and ti.ACCTMONTH = @CurrMonth									
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -310,7 +332,18 @@ INNER JOIN
 							from AJCDW.dbo.tblWMSLoads wms
 							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
 							where YEAR(ShpShipDate) = @PrevYear
-							and MONTH(ShpShipDate) = @CurrMonth												
+							and MONTH(ShpShipDate) = @CurrMonth			
+							
+							UNION
+		
+							select distinct ti.ShipmentID, LTRIM(RTRIM(CustName))
+							from tblShipment ts
+							inner join tblInvoice ti on ti.RefNo = ts.RefNo 
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
+							where ShpLOB = '25'	--PRS Calculation
+							and ShpAccnt = 'PRSG'
+							and ti.AcctYr = @PrevYear
+							and ti.ACCTMONTH = @CurrMonth									
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -352,7 +385,18 @@ INNER JOIN
 							from AJCDW.dbo.tblWMSLoads wms
 							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
 							where YEAR(ShpShipDate) = @PrevYear
-							and MONTH(ShpShipDate) = @CurrMonth												
+							and MONTH(ShpShipDate) = @CurrMonth	
+							
+							UNION
+		
+							select distinct ti.ShipmentID, LTRIM(RTRIM(CustName))
+							from tblShipment ts
+							inner join tblInvoice ti on ti.RefNo = ts.RefNo 
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
+							where ShpLOB = '25'	--PRS Calculation
+							and ShpAccnt = 'PRSG'
+							and ti.AcctYr = @PrevYear
+							and ti.ACCTMONTH = @CurrMonth											
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -394,7 +438,18 @@ INNER JOIN
 							from AJCDW.dbo.tblWMSLoads wms
 							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
 							where YEAR(ShpShipDate) = @CurrYear
-							and MONTH(ShpShipDate) = @CurrMonth												
+							and MONTH(ShpShipDate) = @CurrMonth	
+							
+							UNION
+		
+							select distinct ti.ShipmentID, LTRIM(RTRIM(CustName))
+							from tblShipment ts
+							inner join tblInvoice ti on ti.RefNo = ts.RefNo 
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
+							where ShpLOB = '25'	--PRS Calculation
+							and ShpAccnt = 'PRSG'
+							and ti.AcctYr = @CurrYear
+							and ti.ACCTMONTH = @CurrMonth											
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -436,7 +491,18 @@ INNER JOIN
 							from AJCDW.dbo.tblWMSLoads wms
 							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
 							where YEAR(ShpShipDate) = @CurrYear
-							and MONTH(ShpShipDate) = @CurrMonth												
+							and MONTH(ShpShipDate) = @CurrMonth			
+							
+							UNION
+		
+							select distinct ti.ShipmentID, LTRIM(RTRIM(CustName))
+							from tblShipment ts
+							inner join tblInvoice ti on ti.RefNo = ts.RefNo 
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
+							where ShpLOB = '25'	--PRS Calculation
+							and ShpAccnt = 'PRSG'
+							and ti.AcctYr = @CurrYear
+							and ti.ACCTMONTH = @CurrMonth										
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -479,7 +545,18 @@ INNER JOIN
 							from AJCDW.dbo.tblWMSLoads wms
 							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
 							where YEAR(ShpShipDate) = @CurrYear
-							and MONTH(ShpShipDate) = @CurrMonth												
+							and MONTH(ShpShipDate) = @CurrMonth		
+							
+							UNION
+		
+							select distinct ti.ShipmentID, LTRIM(RTRIM(CustName))
+							from tblShipment ts
+							inner join tblInvoice ti on ti.RefNo = ts.RefNo 
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
+							where ShpLOB = '25'	--PRS Calculation
+							and ShpAccnt = 'PRSG'
+							and ti.AcctYr = @CurrYear
+							and ti.ACCTMONTH = @CurrMonth											
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -522,7 +599,18 @@ INNER JOIN
 							from AJCDW.dbo.tblWMSLoads wms
 							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
 							where YEAR(ShpShipDate) = @CurrYear
-							and MONTH(ShpShipDate) = @CurrMonth												
+							and MONTH(ShpShipDate) = @CurrMonth		
+							
+							UNION
+		
+							select distinct ti.ShipmentID, LTRIM(RTRIM(CustName))
+							from tblShipment ts
+							inner join tblInvoice ti on ti.RefNo = ts.RefNo 
+							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
+							where ShpLOB = '25'	--PRS Calculation
+							and ShpAccnt = 'PRSG'
+							and ti.AcctYr = @CurrYear
+							and ti.ACCTMONTH = @CurrMonth											
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
