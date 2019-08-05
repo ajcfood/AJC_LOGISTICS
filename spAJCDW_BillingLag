@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_BillingLag]    Script Date: 5/21/2019 11:17:25 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_BillingLag]    Script Date: 8/5/2019 10:24:30 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -51,7 +51,7 @@ from tblShipment s
 JOIN tblfile f on f.ShipmentID = s.ShipmentID
 where s.refno not in (select I.RefNo from tblInvoice i)
 	and s.FK_SystemID = 2
-	and s.ShpLOB IN ('21','31','33','25')
+	and s.ShpLOB IN ('21','22','31','33','25')
 	and ShpStatus NOT IN ('Cancelled','Filed/Closed')  -- added Filed/Closed per Ginger's email on 4/23/19
 	and ShpBkgNum NOT IN ('PICKUP', 'PICK UP')
 	--and ShpShipDate > '01-01-2019'
