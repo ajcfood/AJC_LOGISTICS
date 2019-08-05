@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[LSCCustomerProfitability]    Script Date: 8/5/2019 2:12:34 PM ******/
+/****** Object:  StoredProcedure [dbo].[LSCCustomerProfitability]    Script Date: 8/5/2019 3:33:48 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -116,21 +116,42 @@ UPDATE x SET TotalRevMTD_PrevYear = Charge_Amount
 FROM AJCDW.dbo.RptCustByContMTD x
 INNER JOIN 
 				(
-					select ISNULL(SUM(Charge_Amount),0) Charge_Amount, CustName 
-					from (
-							select distinct RefNo, LTRIM(RTRIM(tcm.CustName)) CustName  
-							from AJCDW.dbo.tblWMSLoads wms
-							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
-							where YEAR(ShpShipDate) = @PrevYear
-							and MONTH(ShpShipDate) = @CurrMonth												
-							) wms
-					inner join (
+					select  ISNULL(SUM(tx.TotalReveue),0) + ISNULL(SUM(Charge_Amount),0) Charge_Amount, wms.CustName 
+					from	   (				
+									select distinct RefNo, LTRIM(RTRIM(tcm.CustName)) CustName  
+									from AJCDW.dbo.tblWMSLoads wms
+									inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
+									where YEAR(ShpShipDate) = @PrevYear
+									and MONTH(ShpShipDate) = @CurrMonth
+
+									UNION
+		
+									select distinct ti.RefNo, LTRIM(RTRIM(CustName))
+									from tblShipment ts
+									inner join tblInvoice ti on ti.RefNo = ts.RefNo 
+									inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
+									where ShpLOB = '25'	--PRS Calculation
+									and ShpAccnt = 'PRSG'
+									and ti.AcctYr = @PrevYear
+									and ti.ACCTMONTH = @CurrMonth											
+								) wms
+					left join (
 									select shipment_reference, SUM(Charge_Amount) Charge_Amount 
 									from   #AJC_AP_IES_INBOUND_DATA  
 									group by shipment_reference 	
 										
-								) ti on ti.Shipment_Reference = wms.RefNo 
-					group by CustName
+							  ) ti on ti.Shipment_Reference = wms.RefNo 
+					left join (
+									select ti.RefNo, SUM(InvRevenue) TotalReveue
+									from tblShipment ts
+									inner join tblInvoice ti on ti.RefNo = ts.RefNo 
+									where ShpLOB = '25'	--PRS Calculation
+									and ShpAccnt = 'PRSG'
+									and ti.AcctYr = @PrevYear
+									and ti.ACCTMONTH = @CurrMonth											
+									group by ti.RefNo
+							  ) tx on tx.RefNo = wms.RefNo 
+					group by wms.CustName
 				) cust on cust.CustName = x.Customer
 WHERE Date = @Date 
 
@@ -146,21 +167,42 @@ UPDATE x SET TotalRevMTD_CurrYear = Charge_Amount
 FROM AJCDW.dbo.RptCustByContMTD x
 INNER JOIN 
 				(
-					select ISNULL(SUM(Charge_Amount),0) Charge_Amount, CustName 
-					from (
-							select distinct RefNo, LTRIM(RTRIM(tcm.CustName)) CustName  
-							from AJCDW.dbo.tblWMSLoads wms
-							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
-							where YEAR(ShpShipDate) = @CurrYear
-							and MONTH(ShpShipDate) = @CurrMonth												
-							) wms
-					inner join (
+					select  ISNULL(SUM(tx.TotalReveue),0) + ISNULL(SUM(Charge_Amount),0) Charge_Amount, wms.CustName 
+					from	   (				
+									select distinct RefNo, LTRIM(RTRIM(tcm.CustName)) CustName  
+									from AJCDW.dbo.tblWMSLoads wms
+									inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = wms.CUSTOMER
+									where YEAR(ShpShipDate) = @CurrYear
+									and MONTH(ShpShipDate) = @CurrMonth
+
+									UNION
+		
+									select distinct ti.RefNo, LTRIM(RTRIM(CustName))
+									from tblShipment ts
+									inner join tblInvoice ti on ti.RefNo = ts.RefNo 
+									inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
+									where ShpLOB = '25'	--PRS Calculation
+									and ShpAccnt = 'PRSG'
+									and ti.AcctYr = @CurrYear
+									and ti.ACCTMONTH = @CurrMonth											
+								) wms
+					left join (
 									select shipment_reference, SUM(Charge_Amount) Charge_Amount 
 									from   #AJC_AP_IES_INBOUND_DATA  
 									group by shipment_reference 	
 										
-								) ti on ti.Shipment_Reference = wms.RefNo 
-					group by CustName
+							  ) ti on ti.Shipment_Reference = wms.RefNo 
+					left join (
+									select ti.RefNo, SUM(InvRevenue) TotalReveue
+									from tblShipment ts
+									inner join tblInvoice ti on ti.RefNo = ts.RefNo 
+									where ShpLOB = '25'	--PRS Calculation
+									and ShpAccnt = 'PRSG'
+									and ti.AcctYr = @CurrYear
+									and ti.ACCTMONTH = @CurrMonth											
+									group by ti.RefNo
+							  ) tx on tx.RefNo = wms.RefNo 
+					group by wms.CustName
 				) cust on cust.CustName = x.Customer
 WHERE Date = @Date 
 
