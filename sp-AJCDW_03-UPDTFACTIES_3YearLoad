@@ -1,15 +1,13 @@
 USE [AJCDW]
 GO
-
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_03-UPDTFACTIES]    Script Date: 8/7/2019 11:18:17 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_03-UPDTFACTIES_3YearLoad]    Script Date: 8/7/2019 11:24:29 AM ******/
 SET ANSI_NULLS ON
 GO
-
 SET QUOTED_IDENTIFIER ON
 GO
 
 
-CREATE PROCEDURE [dbo].[sp-AJCDW_03-UPDTFACTIES_3YearLoad]
+ALTER PROCEDURE [dbo].[sp-AJCDW_03-UPDTFACTIES_3YearLoad]
 
 AS
 BEGIN TRY
@@ -63,7 +61,7 @@ FROM OPENQUERY(IES, '
 		, s.CURRENCY 
 	FROM SHIPMENT_DAT s
 	--WHERE s.SAILDATE >= ''2016-01-01'' --AND STATUS <> ''295''
-	WHERE s.SAILDATE >= CONCAT(CONVERT(YEAR(CURDATE())-1, sql_char), ''-01-01'')
+	WHERE s.SAILDATE >= CONCAT(CONVERT(YEAR(CURDATE())-3, sql_char), ''-01-01'')
 	');
 
 
@@ -486,6 +484,3 @@ BEGIN CATCH
 
 
 END CATCH
-GO
-
-
