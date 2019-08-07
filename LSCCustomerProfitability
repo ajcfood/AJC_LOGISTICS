@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[LSCCustomerProfitability]    Script Date: 8/5/2019 4:29:39 PM ******/
+/****** Object:  StoredProcedure [dbo].[LSCCustomerProfitability]    Script Date: 8/7/2019 10:08:17 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -130,8 +130,8 @@ INNER JOIN
 									from tblShipment ts
 									inner join tblInvoice ti on ti.RefNo = ts.RefNo 
 									inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
-									where ShpLOB = '25'	--PRS Calculation
-									and ShpAccnt = 'PRSG'
+									where ShpLOB = '25'	--PRS/AJCINTL Calculation
+									and ShpAccnt IN ('PRSG','AJCINTL')
 									and ti.AcctYr = @PrevYear
 									and ti.ACCTMONTH = @CurrMonth											
 								) wms
@@ -145,8 +145,8 @@ INNER JOIN
 									select ti.RefNo, SUM(InvRevenue) TotalReveue
 									from tblShipment ts
 									inner join tblInvoice ti on ti.RefNo = ts.RefNo 
-									where ShpLOB = '25'	--PRS Calculation
-									and ShpAccnt = 'PRSG'
+									where ShpLOB = '25'	--PRS/AJCINTL Calculation
+									and ShpAccnt IN ('PRSG','AJCINTL')
 									and ti.AcctYr = @PrevYear
 									and ti.ACCTMONTH = @CurrMonth											
 									group by ti.RefNo
@@ -181,8 +181,8 @@ INNER JOIN
 									from tblShipment ts
 									inner join tblInvoice ti on ti.RefNo = ts.RefNo 
 									inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
-									where ShpLOB = '25'	--PRS Calculation
-									and ShpAccnt = 'PRSG'
+									where ShpLOB = '25'	--PRS/AJCINTL Calculation
+									and ShpAccnt IN ('PRSG','AJCINTL')
 									and ti.AcctYr = @CurrYear
 									and ti.ACCTMONTH = @CurrMonth											
 								) wms
@@ -196,8 +196,8 @@ INNER JOIN
 									select ti.RefNo, SUM(InvRevenue) TotalReveue
 									from tblShipment ts
 									inner join tblInvoice ti on ti.RefNo = ts.RefNo 
-									where ShpLOB = '25'	--PRS Calculation
-									and ShpAccnt = 'PRSG'
+									where ShpLOB = '25'	--PRS/AJCINTL Calculation
+									and ShpAccnt IN ('PRSG','AJCINTL')
 									and ti.AcctYr = @CurrYear
 									and ti.ACCTMONTH = @CurrMonth											
 									group by ti.RefNo
@@ -233,8 +233,8 @@ INNER JOIN
 							from tblShipment ts
 							inner join tblInvoice ti on ti.RefNo = ts.RefNo 
 							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
-							where ShpLOB = '25'	--PRS Calculation
-							and ShpAccnt = 'PRSG'
+							where ShpLOB = '25'	--PRS/AJCINTL Calculation
+							and ShpAccnt IN ('PRSG','AJCINTL')
 							and ti.AcctYr = @PrevYear
 							and ti.ACCTMONTH = @CurrMonth
 							) wms
@@ -287,8 +287,8 @@ INNER JOIN
 							from tblShipment ts
 							inner join tblInvoice ti on ti.RefNo = ts.RefNo 
 							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
-							where ShpLOB = '25'	--PRS Calculation
-							and ShpAccnt = 'PRSG'
+							where ShpLOB = '25'	--PRS/AJCINTL Calculation
+							and ShpAccnt IN ('PRSG','AJCINTL')
 							and ti.AcctYr = @PrevYear
 							and ti.ACCTMONTH = @CurrMonth									
 							) wms
@@ -340,8 +340,8 @@ INNER JOIN
 							from tblShipment ts
 							inner join tblInvoice ti on ti.RefNo = ts.RefNo 
 							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
-							where ShpLOB = '25'	--PRS Calculation
-							and ShpAccnt = 'PRSG'
+							where ShpLOB = '25'	--PRS/AJCINTL Calculation
+							and ShpAccnt IN ('PRSG','AJCINTL')
 							and ti.AcctYr = @PrevYear
 							and ti.ACCTMONTH = @CurrMonth									
 							) wms
@@ -393,8 +393,8 @@ INNER JOIN
 							from tblShipment ts
 							inner join tblInvoice ti on ti.RefNo = ts.RefNo 
 							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
-							where ShpLOB = '25'	--PRS Calculation
-							and ShpAccnt = 'PRSG'
+							where ShpLOB = '25'	--PRS/AJCINTL Calculation
+							and ShpAccnt IN ('PRSG','AJCINTL')
 							and ti.AcctYr = @PrevYear
 							and ti.ACCTMONTH = @CurrMonth											
 							) wms
@@ -446,8 +446,8 @@ INNER JOIN
 							from tblShipment ts
 							inner join tblInvoice ti on ti.RefNo = ts.RefNo 
 							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
-							where ShpLOB = '25'	--PRS Calculation
-							and ShpAccnt = 'PRSG'
+							where ShpLOB = '25'	--PRS/AJCINTL Calculation
+							and ShpAccnt IN ('PRSG','AJCINTL')
 							and ti.AcctYr = @CurrYear
 							and ti.ACCTMONTH = @CurrMonth											
 							) wms
@@ -499,8 +499,8 @@ INNER JOIN
 							from tblShipment ts
 							inner join tblInvoice ti on ti.RefNo = ts.RefNo 
 							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
-							where ShpLOB = '25'	--PRS Calculation
-							and ShpAccnt = 'PRSG'
+							where ShpLOB = '25'	--PRS/AJCINTL Calculation
+							and ShpAccnt IN ('PRSG','AJCINTL')
 							and ti.AcctYr = @CurrYear
 							and ti.ACCTMONTH = @CurrMonth										
 							) wms
@@ -553,8 +553,8 @@ INNER JOIN
 							from tblShipment ts
 							inner join tblInvoice ti on ti.RefNo = ts.RefNo 
 							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
-							where ShpLOB = '25'	--PRS Calculation
-							and ShpAccnt = 'PRSG'
+							where ShpLOB = '25'	--PRS/AJCINTL Calculation
+							and ShpAccnt IN ('PRSG','AJCINTL')
 							and ti.AcctYr = @CurrYear
 							and ti.ACCTMONTH = @CurrMonth											
 							) wms
@@ -607,8 +607,8 @@ INNER JOIN
 							from tblShipment ts
 							inner join tblInvoice ti on ti.RefNo = ts.RefNo 
 							inner join AJCDW.dbo.tblCustMaster tcm on tcm.CustMasterCode = ts.ShpAccnt
-							where ShpLOB = '25'	--PRS Calculation
-							and ShpAccnt = 'PRSG'
+							where ShpLOB = '25'	--PRS/AJCINTL Calculation
+							and ShpAccnt IN ('PRSG','AJCINTL')
 							and ti.AcctYr = @CurrYear
 							and ti.ACCTMONTH = @CurrMonth											
 							) wms
