@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[LSCCapacityProfitability]    Script Date: 8/5/2019 10:27:41 AM ******/
+/****** Object:  StoredProcedure [dbo].[LSCCapacityProfitability]    Script Date: 8/7/2019 9:58:22 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -145,6 +145,7 @@ UPDATE x SET TotalRevMTD_PrevYear =    (
 												where YEAR(ShpShipDate) = @PrevYear
 												and MONTH(ShpShipDate) = @CurrMonth
 												and ContTempMin >= 28
+												and isnull(ContTempMin ,'') <> ''
 													
 											 ) wms
 										inner join (
@@ -168,6 +169,7 @@ UPDATE x SET TotalRevMTD_PrevYear =    (
 												where YEAR(ShpShipDate) = @PrevYear
 												and MONTH(ShpShipDate) = @CurrMonth
 												and ContTempMin <= 27
+												and isnull(ContTempMin ,'') <> ''
 													
 											 ) wms
 										inner join (
@@ -247,6 +249,7 @@ UPDATE x SET TotalRevMTD_CurrYear =    (
 												where YEAR(ShpShipDate) = @CurrYear
 												and MONTH(ShpShipDate) = @CurrMonth
 												and ContTempMin >= 28
+												and isnull(ContTempMin ,'') <> ''
 													
 											 ) wms
 										inner join (
@@ -270,6 +273,7 @@ UPDATE x SET TotalRevMTD_CurrYear =    (
 												where YEAR(ShpShipDate) = @CurrYear
 												and MONTH(ShpShipDate) = @CurrMonth
 												and ContTempMin <= 27
+												and isnull(ContTempMin ,'') <> ''
 													
 											 ) wms
 										inner join (
@@ -351,6 +355,7 @@ UPDATE x SET TotalContShippedMTD_PrevYear =    (
 															where YEAR(ShpShipDate) = @PrevYear
 															and MONTH(ShpShipDate) = @CurrMonth
 															and ContTempMin >= 28
+															and isnull(ContTempMin ,'') <> ''
 													
 														 ) wms
 													inner join (
@@ -375,6 +380,7 @@ UPDATE x SET TotalContShippedMTD_PrevYear =    (
 															where YEAR(ShpShipDate) = @PrevYear
 															and MONTH(ShpShipDate) = @CurrMonth
 															and ContTempMin <= 27
+															and isnull(ContTempMin ,'') <> ''
 													
 														 ) wms
 													inner join (
@@ -471,7 +477,8 @@ UPDATE x SET Total53ContShippedMTD_PrevYear =    (
 															where YEAR(ShpShipDate) = @PrevYear
 															and MONTH(ShpShipDate) = @CurrMonth
 															and ContTempMin >= 28
-													
+															and isnull(ContTempMin ,'') <> ''
+															
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -505,7 +512,8 @@ UPDATE x SET Total53ContShippedMTD_PrevYear =    (
 															where YEAR(ShpShipDate) = @PrevYear
 															and MONTH(ShpShipDate) = @CurrMonth
 															and ContTempMin <= 27
-													
+															and isnull(ContTempMin ,'') <> ''
+															
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -610,7 +618,8 @@ UPDATE x SET Total45ContShippedMTD_PrevYear =    (
 															where YEAR(ShpShipDate) = @PrevYear
 															and MONTH(ShpShipDate) = @CurrMonth
 															and ContTempMin >= 28
-													
+															and isnull(ContTempMin ,'') <> ''
+															
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -642,7 +651,8 @@ UPDATE x SET Total45ContShippedMTD_PrevYear =    (
 															where YEAR(ShpShipDate) = @PrevYear
 															and MONTH(ShpShipDate) = @CurrMonth
 															and ContTempMin <= 27
-													
+															and isnull(ContTempMin ,'') <> ''
+															
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -745,7 +755,8 @@ UPDATE x SET Total40ContShippedMTD_PrevYear =    (
 															where YEAR(ShpShipDate) = @PrevYear
 															and MONTH(ShpShipDate) = @CurrMonth
 															and ContTempMin >= 28
-													
+															and isnull(ContTempMin ,'') <> ''
+															
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -777,7 +788,8 @@ UPDATE x SET Total40ContShippedMTD_PrevYear =    (
 															where YEAR(ShpShipDate) = @PrevYear
 															and MONTH(ShpShipDate) = @CurrMonth
 															and ContTempMin <= 27
-													
+															and isnull(ContTempMin ,'') <> ''
+															
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -872,7 +884,8 @@ UPDATE x SET TotalContShippedMTD_CurrYear =    (
 															where YEAR(ShpShipDate) = @CurrYear
 															and MONTH(ShpShipDate) = @CurrMonth
 															and ContTempMin >= 28
-													
+															and isnull(ContTempMin ,'') <> ''
+															
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -896,7 +909,8 @@ UPDATE x SET TotalContShippedMTD_CurrYear =    (
 															where YEAR(ShpShipDate) = @CurrYear
 															and MONTH(ShpShipDate) = @CurrMonth
 															and ContTempMin <= 27
-													
+															and isnull(ContTempMin ,'') <> ''
+															
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -993,7 +1007,8 @@ UPDATE x SET Total53ContShippedMTD_CurrYear =    (
 															where YEAR(ShpShipDate) = @CurrYear
 															and MONTH(ShpShipDate) = @CurrMonth
 															and ContTempMin >= 28
-													
+															and isnull(ContTempMin ,'') <> ''
+															
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -1027,6 +1042,7 @@ UPDATE x SET Total53ContShippedMTD_CurrYear =    (
 															where YEAR(ShpShipDate) = @CurrYear
 															and MONTH(ShpShipDate) = @CurrMonth
 															and ContTempMin <= 27
+															and isnull(ContTempMin ,'') <> ''
 													
 														 ) wms
 													inner join (
@@ -1133,6 +1149,7 @@ UPDATE x SET Total45ContShippedMTD_CurrYear =    (
 															where YEAR(ShpShipDate) = @CurrYear
 															and MONTH(ShpShipDate) = @CurrMonth
 															and ContTempMin >= 28
+															and isnull(ContTempMin ,'') <> ''
 													
 														 ) wms
 													inner join (
@@ -1165,6 +1182,7 @@ UPDATE x SET Total45ContShippedMTD_CurrYear =    (
 															where YEAR(ShpShipDate) = @CurrYear
 															and MONTH(ShpShipDate) = @CurrMonth
 															and ContTempMin <= 27
+															and isnull(ContTempMin ,'') <> ''
 													
 														 ) wms
 													inner join (
@@ -1269,6 +1287,7 @@ UPDATE x SET Total40ContShippedMTD_CurrYear =    (
 															where YEAR(ShpShipDate) = @CurrYear
 															and MONTH(ShpShipDate) = @CurrMonth
 															and ContTempMin >= 28
+															and isnull(ContTempMin ,'') <> ''
 													
 														 ) wms
 													inner join (
@@ -1301,7 +1320,8 @@ UPDATE x SET Total40ContShippedMTD_CurrYear =    (
 															where YEAR(ShpShipDate) = @CurrYear
 															and MONTH(ShpShipDate) = @CurrMonth
 															and ContTempMin <= 27
-													
+															and isnull(ContTempMin ,'') <> ''
+															
 														 ) wms
 													inner join (
 																	select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
