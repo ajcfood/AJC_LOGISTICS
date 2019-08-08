@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadWMSData]    Script Date: 7/5/2019 11:28:35 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadWMSData]    Script Date: 8/8/2019 11:16:02 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -169,6 +169,21 @@ inner JOIN #tmp7 cd  on c.FileNo = cd.FILE_NO
  EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 7, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
 
 /***********************************************************************************************************************/
+
+--Populate WHSE Capacity Profitability Report
+exec ajcdw.dbo.[LSCCapacityProfitability] 
+
+
+--Populate WHSE Capacity Profitability Report
+exec ajcdw.dbo.[LSCCustomerProfitability] 
+
+
+--Populate WHSE Capacity Profitability Report
+exec ajcdw.dbo.[LSCCustomerPerPalletProfitability] 
+
+--Populate WHSE Space Utilization Report
+exec ajcdw.[dbo].[LSCSpaceReporting]
+
 
 END
 
