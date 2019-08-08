@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[LSCSpaceReporting]    Script Date: 8/8/2019 11:06:09 AM ******/
+/****** Object:  StoredProcedure [dbo].[LSCSpaceReporting]    Script Date: 8/8/2019 1:58:08 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -8,7 +8,7 @@ GO
 
 
 
-create procedure [dbo].[LSCSpaceReporting] as
+ALTER procedure [dbo].[LSCSpaceReporting] as
 BEGIN TRY
 BEGIN
 
@@ -54,6 +54,15 @@ update r set totaloccupied = (
 								where status in ('OnHand','LoadPlan')
 								and LTRIM(RTRIM(PartDescription)) != ('BULKHEAD')
 								and LTRIM(RTRIM(TempZone)) LIKE 'DR%'
+								and NOT     (
+												 (
+													LTRIM(RTRIM(Supplier)) IN ('GOSFOO', 'WHITE', 'SUFOO')
+												 )
+											  OR (
+													Customer IN ('PRSG', 'LIAFOOJAX')
+												 )
+
+											)
 								and WAREHOUSE = 'JAXWHSE'
 							 )
 from #RptLSCCapacity r
@@ -94,15 +103,9 @@ update r set totaloccupied = (
 								from ajcdw..tblWMSInv
 								where status in ('OnHand','LoadPlan')
 								and LTRIM(RTRIM(PartDescription)) != ('BULKHEAD')
-								and (
-										 (
-											LTRIM(RTRIM(Supplier)) IN ('GOSFOO', 'WHITE')
-										 )
-									  OR (
-											Customer = 'PRSG'
-										 )
-
-									)
+								and LTRIM(RTRIM(TempZone)) LIKE 'DR%'
+								and LTRIM(RTRIM(Supplier)) = 'GOSFOO'
+								and Customer IN ('PRSG', 'LIAFOOJAX')
 								and WAREHOUSE = 'JAXWHSE'
 							 )
 from #RptLSCCapacity r
