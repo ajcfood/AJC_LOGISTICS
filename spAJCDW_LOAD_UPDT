@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LOAD_UPDT]    Script Date: 6/4/2019 12:06:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LOAD_UPDT]    Script Date: 8/8/2019 11:11:47 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -35,7 +35,6 @@ EXEC [sp2-AJCDW_11-FactFullLoadAPData];
 EXEC [spAJCDW_CreatePowerBI_Views];
 EXEC [spAJCDW_LoadCommCalctbl];
 EXEC [spAJCDW_LoadSGACleansed]; -- update the date on this at the end of every year
-EXEC [spAJCDW_LoadWMSData]; -- update the data IDs in the queries on this at the end of every year to minimize processing time
 EXEC [spAJCDW_LoadCustPlanCleansed]; -- update customer plan vs actual info/table 
 EXEC [spAJCDW_LoadSalesPlanCleansedFLAT]; -- update sales person plan vs actual info/table with flat/nonseasonal budget
 EXEC [spAJCDW_LoadSalesPlanCleansedADJ]; -- update sales person plan vs actual info/table with adjusted/seasonal budget
@@ -43,4 +42,5 @@ EXEC [spAJCDW_LoadCustPlanCleansedEAGLE]; -- update customer plan vs actual info
 EXEC [spAJCDW_BillingLag]; -- update billing lag table
 EXEC [spAJCDW_YOYReportingUpdate]; --populate YOY data for reporting
 EXEC [spAJCDW_PopulatePowerBIReporting]; --Populate PowerBI Reporting Tables
+
 END
