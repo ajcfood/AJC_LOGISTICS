@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 6/5/2019 2:18:32 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 8/9/2019 11:08:45 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -438,7 +438,7 @@ TRUNCATE TABLE AJCDW.dbo.tblCSARevRecog
 INSERT INTO  AJCDW.dbo.tblCSARevRecog (
 										[PK_OrderNo], [HandlingStation], [Housebill], [ShipmentDateTime], [ScheduledDateTime], [CustName], [APARCode], [ChargeCode], [Descrption], [Total], 
 										[New Shipment Milestone], [Shipment Picked Up Milestone], [Consolidation Milestone], [In Transit Inland Milestone], [Arrvied Origin Port Milestone], 
-										[In Transit Ocean Milestone], [Arrived Destination Port Milestone], [Out For Delivery Milestone], [Delivered Milestone]
+										[In Transit Ocean Milestone], [Arrived Destination Port Milestone], [Out For Delivery Milestone], [Delivered Milestone], InvoiceDate 
 									  )
 SELECT		 x.*
 			,[New shipment] AS [New Shipment Milestone]
@@ -454,11 +454,18 @@ FROM	(
 			SELECT	sh.PK_OrderNo, sh.HandlingStation, sh.Housebill, sh.ShipmentDateTime, sh.ScheduledDateTime, c.CustName, sa.APARCode
 					, CASE WHEN sa.APARCode = 'C' THEN sa.ChargeCode WHEN sa.APARCode = 'V' THEN sa.FK_ServiceId ELSE NULL END AS ChargeCode
 					, CASE WHEN sa.APARCode = 'C' THEN sa.Description WHEN sa.APARCode = 'V' THEN vs.Service ELSE NULL END AS Descrption
-					, sa.Total
+					, sa.Total, x.InvoiceDate
 			from			USDCFCSASQL01.[AirTrak].[dbo].tbl_ShipmentHeader sh
 			inner join		USDCFCSASQL01.[AirTrak].[dbo].tbl_ShipmentAPAR sa on sh.PK_OrderNo = sa.FK_OrderNo
+			cross apply		(
+								SELECT TOP 1 PODDateTime InvoiceDate 
+								FROM USDCFCSASQL01.[AirTrak].[dbo].tbl_InterfaceAPAR ia 
+								WHERE ia.FK_OrderNo = sa.FK_OrderNo
+								AND ISNULL(ia.PODDateTime,'1/1/1900') <> '1/1/1900'
+							) x 
 			inner join		USDCFCSASQL01.[AirTrak].[dbo].tbl_Customers c on c.PK_CustNo = sh.BillNo
 			left outer join USDCFCSASQL01.[AirTrak].[dbo].tbl_VendorServices vs on PK_ServiceId = sa.FK_ServiceId
+		 
 		) X
 INNER JOIN	 (
 						SELECT *
@@ -485,8 +492,6 @@ INNER JOIN	 (
 							) as pvt
 			) Y ON x.PK_OrderNo = y.FK_OrderNo
 ORDER BY	x.PK_OrderNo
-
-
 
 
 END
