@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 6/4/2019 12:09:03 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 8/16/2019 11:41:59 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -26,6 +26,7 @@ SET NOCOUNT ON;
 05/17/2019 - SA - Added Error Logging
 6/1/2019 - SE - Stopped Commission Calculations for Ross, Natalia, and Brett as of April 2019
 6/1/2019 - SE - Added Manuel Yanez Commission Calculation and column to tblCommCalc
+8/19/19 - SE - Add Gerardo Martinez and Andres Izquierdo column to table and commission calculation formula
 
 */
 
@@ -73,6 +74,8 @@ SELECT ACCTYR
 	,Convert(decimal(18,2),0.00) as SFComm -- Suzanne Fairbanks
 	,Convert(decimal(18,2),0.00) as RMontComm -- Ricardo Monteiro
 	,Convert(decimal(18,2),0.00) as MYComm -- Manuel Yanez
+	,Convert(decimal(18,2),0.00) as GMComm -- Gerardo Martinez
+	,Convert(decimal(18,2),0.00) as AIComm -- Andres Izquierdo
 into #tmp1
 from tblInvoice i
 JOIN tblShipment s on i.ShipmentID = s.ShipmentID
@@ -321,15 +324,21 @@ where SalesPName = 'Ricardo Monteiro'
 
 --Manual Yanez Calculation: 5% of all GP where he is Sales Rep for LOB 41 or 43 and 10% of all ST GP where he is the sales rep
 Update tblCommCalc
-set MJComm = GP*.10
+set MYComm = GP*.10
 where SalesPName = 'Manuel Yanez'
 and InvLOB = '11'
 
 Update tblCommCalc
-set MJComm = GP*.05
+set MYComm = GP*.05
 where SalesPName = 'Manuel Yanez'
 	AND InvLOB in ('41','31,33,43')
 
+--GM = .5% of ST GP and AI = .25% ST GP
+update tblCommCalc
+set GMComm = (GP*.005), AIComm = (GP*.0025)
+where InvLOB = '11'
+and ACCTMONTH NOT IN (1,2,3,4,5,6,7)
+and ACCTYR = 2019
 
 --SELECT * from #tmp1
 --drop table #tmp1
