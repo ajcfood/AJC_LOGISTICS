@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 8/16/2019 12:22:52 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 8/19/2019 9:16:17 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -26,7 +26,8 @@ SET NOCOUNT ON;
 05/17/2019 - SA - Added Error Logging
 6/1/2019 - SE - Stopped Commission Calculations for Ross, Natalia, and Brett as of April 2019
 6/1/2019 - SE - Added Manuel Yanez Commission Calculation and column to tblCommCalc
-8/19/19 - SE - Add Gerardo Martinez and Andres Izquierdo column to table and commission calculation formula
+8/16/19 - SE - Add Gerardo Martinez and Andres Izquierdo column to table and commission calculation formula
+8/19/19 - SE - Add Courtney Gray and Ryan Click column to table and commission calculation formula
 
 */
 
@@ -76,6 +77,8 @@ SELECT ACCTYR
 	,Convert(decimal(18,2),0.00) as MYComm -- Manuel Yanez
 	,Convert(decimal(18,2),0.00) as GMComm -- Gerardo Martinez
 	,Convert(decimal(18,2),0.00) as AIComm -- Andres Izquierdo
+	,Convert(decimal(18,2),0.00) as RCComm -- Ryan Click
+	,Convert(decimal(18,2),0.00) as CGComm -- Courtney Gray
 into #tmp1
 from tblInvoice i
 JOIN tblShipment s on i.ShipmentID = s.ShipmentID
@@ -333,7 +336,7 @@ set MYComm = GP*.05
 where SalesPName = 'Manuel Yanez'
 	AND InvLOB in ('41','31,33,43')
 
---GM = .5% of ST GP and AI = .25% ST GP
+--GM = .5% of ST GP and AI = .25% ST GP.  Both Starting in August 2019
 update tblCommCalc
 set GMComm = (GP*.005), AIComm = (GP*.0025)
 where InvLOB = '11'
@@ -364,6 +367,20 @@ AND InvCustName NOT IN (
 'KOCH FOODS OF CHATTANOOGA'
 )
 
+--Courtney Gray Comm: 0.25% of Cargo Live WorldWide loads starting August 1 2019
+Update tblCommCalc
+set CMComm = GP * .0025
+where InvCustName = 'CARGO LIVE WORLDWIDE'
+and InvLOB = '11'
+and ACCTMONTH NOT IN (1,2,3,4,5,6,7)
+and ACCTYR = 2019
+
+--Ryan Click Comm: 0.5% of total team GP effective September 3 2019
+update tblCommCalc
+set RCComm = GP *.005
+where InvLOB = '11'
+and ACCTMONTH NOT IN (1,2,3,4,5,6,7,8)
+and ACCTYR = 2019
 
 --SELECT * from #tmp1
 --drop table #tmp1
