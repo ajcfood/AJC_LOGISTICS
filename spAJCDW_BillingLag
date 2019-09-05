@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_BillingLag]    Script Date: 8/5/2019 10:24:30 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_BillingLag]    Script Date: 9/5/2019 1:06:18 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -24,7 +24,7 @@ SET NOCOUNT ON;
 
 /*
 05/17/2019 - SA - Added Error Logging
-
+9/5/19 - SE  Added logic to include customer name for each record
 */
 
 DECLARE @CYEAR CHAR(2);
@@ -33,10 +33,11 @@ SELECT @CYEAR = RIGHT(DATEPART(YY, GETDATE()), 2);
 
 --- CSA Billing Lag ---
 -----------------------
-select s.RefNo, s.shplob, s.ShpShipDate, s.ShpDelivDate, s.ShpStatus, f.SHPWEEK, f.DELWEEK, f.ACCTYR, s.ShpREVENUE, s.ShpCOST, s.ShpGP 
+select s.RefNo, c.CustName, s.shplob, s.ShpShipDate, s.ShpDelivDate, s.ShpStatus, f.SHPWEEK, f.DELWEEK, f.ACCTYR, s.ShpREVENUE, s.ShpCOST, s.ShpGP 
 INTO #tmp1
 from tblShipment s
 JOIN tblfile f on f.ShipmentID = s.ShipmentID
+JOIN tblCustMaster c on (s.ShpAccnt = c. CustMasterNum and s.FK_SystemID = c.FK_SystemID)
 where s.refno not in (select I.RefNo from tblInvoice i)
 	and s.FK_SystemID = 1
 	--and ShpShipDate > '01-01-2019'
@@ -45,10 +46,11 @@ order by ShpDelivDate
 
 --- Eagle/FXF CBI/Wayne Billing Lag ---
 ---------------------------------------
-select s.RefNo, s.shplob, s.ShpShipDate, s.ShpDelivDate, s.ShpStatus, f.SHPWEEK, f.DELWEEK, f.ACCTYR, s.ShpREVENUE, s.ShpCOST, s.ShpGP 
+select s.RefNo, c.CustName, s.shplob, s.ShpShipDate, s.ShpDelivDate, s.ShpStatus, f.SHPWEEK, f.DELWEEK, f.ACCTYR, s.ShpREVENUE, s.ShpCOST, s.ShpGP 
 INTO #tmp2
 from tblShipment s
 JOIN tblfile f on f.ShipmentID = s.ShipmentID
+JOIN tblCustMaster c on (s.ShpAccnt = c.CustMasterCode and s.FK_SystemID = c.FK_SystemID)
 where s.refno not in (select I.RefNo from tblInvoice i)
 	and s.FK_SystemID = 2
 	and s.ShpLOB IN ('21','22','31','33','25')
@@ -61,10 +63,11 @@ order by ShpShipDate
 
 --- Domestic NVOCC Billing Lag ---
 ----------------------------------
-select s.RefNo, s.shplob, s.ShpShipDate, s.ShpDelivDate, s.ShpStatus, f.SHPWEEK, f.DELWEEK, f.ACCTYR, s.ShpREVENUE, s.ShpCOST, s.ShpGP 
+select s.RefNo, c.CustName, s.shplob, s.ShpShipDate, s.ShpDelivDate, s.ShpStatus, f.SHPWEEK, f.DELWEEK, f.ACCTYR, s.ShpREVENUE, s.ShpCOST, s.ShpGP 
 INTO #tmp3
 from tblShipment s
 JOIN tblfile f on f.ShipmentID = s.ShipmentID
+JOIN tblCustMaster c on (s.ShpAccnt = c.CustMasterCode and s.FK_SystemID = c.FK_SystemID)
 where s.refno not in (select I.RefNo from tblInvoice i)
 	and s.FK_SystemID = 2
 	and s.ShpLOB = '41'
@@ -77,10 +80,11 @@ order by ShpShipDate
 
 --- Intl NVOCC Billing Lag (Imports)---
 ---------------------------------------
-select s.RefNo, s.shplob, s.ShpShipDate, s.ShpDelivDate, s.ShpStatus, f.SHPWEEK, f.DELWEEK, f.ACCTYR, s.ShpREVENUE, s.ShpCOST, s.ShpGP 
+select s.RefNo, c.CustName, s.shplob, s.ShpShipDate, s.ShpDelivDate, s.ShpStatus, f.SHPWEEK, f.DELWEEK, f.ACCTYR, s.ShpREVENUE, s.ShpCOST, s.ShpGP 
 INTO #tmp4
 from tblShipment s
 JOIN tblfile f on f.ShipmentID = s.ShipmentID
+JOIN tblCustMaster c on (s.ShpAccnt = c.CustMasterCode and s.FK_SystemID = c.FK_SystemID)
 where s.refno not in (select I.RefNo from tblInvoice i)
 	and s.FK_SystemID = 2
 	and s.ShpLOB = '43'
@@ -93,10 +97,11 @@ order by ShpDelivDate
 
 --- Intl NVOCC Billing Lag (Exports)---
 ---------------------------------------
-select s.RefNo, s.shplob, s.ShpShipDate, s.ShpDelivDate, s.ShpStatus, f.SHPWEEK, f.DELWEEK, f.ACCTYR, s.ShpREVENUE, s.ShpCOST, s.ShpGP 
+select s.RefNo, c.CustName, s.shplob, s.ShpShipDate, s.ShpDelivDate, s.ShpStatus, f.SHPWEEK, f.DELWEEK, f.ACCTYR, s.ShpREVENUE, s.ShpCOST, s.ShpGP 
 INTO #tmp5
 from tblShipment s
 JOIN tblfile f on f.ShipmentID = s.ShipmentID
+JOIN tblCustMaster c on (s.ShpAccnt = c.CustMasterCode and s.FK_SystemID = c.FK_SystemID)
 where s.refno not in (select I.RefNo from tblInvoice i)
 	and s.FK_SystemID = 2
 	and s.ShpLOB = '43'
@@ -110,10 +115,11 @@ order by ShpDelivDate
 
 --- MG Billing Lag ---
 -----------------------
-select s.RefNo, s.shplob, s.ShpShipDate, ShpDelivDate, s.ShpStatus, f.SHPWEEK, f.DELWEEK, f.ACCTYR, s.ShpREVENUE, s.ShpCOST, s.ShpGP 
+select s.RefNo, c.CustName, s.shplob, s.ShpShipDate, ShpDelivDate, s.ShpStatus, f.SHPWEEK, f.DELWEEK, f.ACCTYR, s.ShpREVENUE, s.ShpCOST, s.ShpGP 
 INTO #tmp6
 from tblShipment s
 JOIN tblfile f on f.ShipmentID = s.ShipmentID
+JOIN tblCustMaster c on (s.ShpAccnt = c.CustMasterCode and s.FK_SystemID = c.FK_SystemID)
 where 'MG'+ s.refno not in (select I.RefNo from tblInvoice i)
 	and s.FK_SystemID = 4
 	--and ShpShipDate > '01-01-2019'
