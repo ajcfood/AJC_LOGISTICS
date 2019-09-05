@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_PopulatePowerBIReporting]    Script Date: 8/8/2019 11:14:01 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_PopulatePowerBIReporting]    Script Date: 9/5/2019 11:22:53 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -57,7 +57,7 @@ cross apply (
 					where shpLOB IN ('62','63')
 					and ts.ShpBkgNum = s.ShpBkgNum
 					and ts.ShpAccnt = s.ShpAccnt
-					and ShpShipDate >= DATEADD(MM,-15,CAST(GETDATE() AS DATE))
+					and ShpShipDate >= DATEADD(MM,-24,CAST(GETDATE() AS DATE))
 					and LTRIM(RTRIM(ShpMoveType)) in ('1','2','3','4')
 					group by ShpBkgNum
 			) NoOfPros 
@@ -67,7 +67,7 @@ outer apply (
 					where shpLOB IN ('62','63')
 					and ts.ShpBkgNum = s.ShpBkgNum
 					and ts.ShpAccnt = s.ShpAccnt
-					and ShpShipDate >= DATEADD(MM,-15,CAST(GETDATE() AS DATE))
+					and ShpShipDate >= DATEADD(MM,-24,CAST(GETDATE() AS DATE))
 					and ShpMoveType = LTRIM(RTRIM('1'))
 					group by ShpBkgNum, LTRIM(RTRIM(ShpMoveType))
 			) Zone1 
@@ -77,7 +77,7 @@ outer apply (
 					where shpLOB IN ('62','63')
 					and ts.ShpBkgNum = s.ShpBkgNum
 					and ts.ShpAccnt = s.ShpAccnt
-					and ShpShipDate >= DATEADD(MM,-15,CAST(GETDATE() AS DATE))
+					and ShpShipDate >= DATEADD(MM,-24,CAST(GETDATE() AS DATE))
 					and ShpMoveType = LTRIM(RTRIM('2')) 
 					group by ShpBkgNum, LTRIM(RTRIM(ShpMoveType))
 			) Zone2
@@ -87,7 +87,7 @@ outer apply (
 					where shpLOB IN ('62','63')
 					and ts.ShpBkgNum = s.ShpBkgNum
 					and ts.ShpAccnt = s.ShpAccnt
-					and ShpShipDate >= DATEADD(MM,-15,CAST(GETDATE() AS DATE))
+					and ShpShipDate >= DATEADD(MM,-24,CAST(GETDATE() AS DATE))
 					and ShpMoveType = LTRIM(RTRIM('3'))
 					group by ShpBkgNum, LTRIM(RTRIM(ShpMoveType))
 			) Zone3
@@ -97,13 +97,13 @@ outer apply (
 					where shpLOB IN ('62','63')
 					and ts.ShpBkgNum = s.ShpBkgNum
 					and ts.ShpAccnt = s.ShpAccnt
-					and ShpShipDate >= DATEADD(MM,-15,CAST(GETDATE() AS DATE))
+					and ShpShipDate >= DATEADD(MM,-24,CAST(GETDATE() AS DATE))
 					and ShpMoveType = LTRIM(RTRIM('4')) 
 					group by ShpBkgNum, LTRIM(RTRIM(ShpMoveType))
 			) Zone4
 where s.shpLOB IN ('62','63')
 and t7.BUS_LINE IN ('62','63')
-and ShpShipDate >= DATEADD(MM,-15,CAST(GETDATE() AS DATE))
+and ShpShipDate >= DATEADD(MM,-24,CAST(GETDATE() AS DATE))
 and isnull(s.ShpBkgNum,'') <> ''
 and ShpMaster <> 'M'
 group by s.ShpBkgNum, ti.InvOutofPeriod, s.ShpAccnt, s.ShpLOB, ti.ACCTYR, ti.ACCTMONTH, ti.InvDate, ISNULL([No. of Pros],0), ISNULL([Zone 1 Pros],''), ISNULL([Zone 2 Pros],''), 
