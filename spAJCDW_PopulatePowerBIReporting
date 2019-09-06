@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_PopulatePowerBIReporting]    Script Date: 9/6/2019 9:13:09 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_PopulatePowerBIReporting]    Script Date: 9/6/2019 10:17:46 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -140,7 +140,7 @@ DELETE FROM RptBillingLagAnalysis WHERE [Invoice Date] >= DATEADD(MM,-13,CAST(GE
  /*************************************************************************************************************************/
 
 INSERT INTO RptBillingLagAnalysis ([Cust Name], [File], LOB, [Sail Date], [Del Date], [Invoice Date], [Posted Date], [Billing Lag], [Invoice Rev], [Invoice Cost], [Invoice GP])
-SELECT		y.InvCustName, ts.RefNo, ts.ShpLOB LOB, [Sail Date], [Del Date], [Invoice Date], 
+SELECT		y.InvCustName, LTRIM(RTRIM(ts.RefNo)), ts.ShpLOB LOB, [Sail Date], [Del Date], [Invoice Date], 
 			[Posted Date], 
 			CASE WHEN ts.ShpLOB NOT IN (11, 43, 76) THEN DATEDIFF(dd,[Sail Date],[Posted Date]) 
 				 ELSE DATEDIFF(dd,[Del Date],[Posted Date]) 
@@ -166,7 +166,6 @@ CROSS APPLY	(
 				GROUP BY PURCHASE_ORDER
 			) x
 WHERE		ISNULL(ts.ShpLOB,'') <> ''
-
 AND			LTRIM(RTRIM(ts.ShpStatus)) <> 'Cancelled'
 
 /*****************************************************End Logging*******************************************************/
