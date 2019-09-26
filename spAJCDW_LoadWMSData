@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadWMSData]    Script Date: 8/8/2019 11:16:02 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadWMSData]    Script Date: 9/26/2019 9:53:45 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -78,9 +78,23 @@ WHERE "WHS:UID" > '210050070131' -- this is 1/1/19 start
 
 /*************************************************************************************************************************/
 
---Load tblWMSInv
-DELETE ajcdw..tblWMSInv
-WHERE RECEIVEDDATE > '01-01-2019'
+--Update Customers that dont match what is in IES/WMS
+
+UPDATE		X 
+SET			BuyerCode = y.BuyerID
+FROM		#PO_INVIT_DAT x
+INNER JOIN  #PO_PALLT_DAT y on x."WHS:UID" = y."WHS:UID" and x."PPL:UID" = y.UID
+WHERE		x."WHS:UID" > '210050070131'
+AND			y."WHS:UID" > '210050070131'
+AND			x.BuyerCode <> y.BuyerID
+
+UPDATE		Y
+SET			Consignee = X.BuyerID 
+FROM		#WAREHOUS_DAT y
+INNER JOIN  #PO_PALLT_DAT x on x."WHS:UID" = y.SHIPMENT_ID 
+WHERE		x."WHS:UID" > '210050070131'
+AND			y.WHSE_RECEIPT_NO > '071970'
+AND			x.BuyerID <> y.Consignee
 
 /*****************************************************End Logging*******************************************************/
 
@@ -91,6 +105,22 @@ WHERE RECEIVEDDATE > '01-01-2019'
 /*****************************************************Begin Logging*******************************************************/
 
  EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 5, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+--Load tblWMSInv
+DELETE ajcdw..tblWMSInv
+WHERE RECEIVEDDATE > '01-01-2019'
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 5, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 6, @BeginOrEnd = 0, @ProcName = @ProcName
 
 /*************************************************************************************************************************/
 insert into ajcdw..tblWMSInv ([PO_InvoiceItem_UID], [PONumber], [PartNumber], [PartDescription], [WHSE_RECEIPT_NO], [Status], [RECEIVEDDATE], [WHSRCPTDATE], [WRLASTCHGDATE], [CUSTOMER], [SUPPLIER], [WAREHOUSE], [CONTROLLER], 
@@ -110,13 +140,13 @@ inner join #PO_INVIT_DAT z on z."WHS:UID" = x."WHS:UID" and z."PPL:UID" = x.UID
 
 /*****************************************************End Logging*******************************************************/
 
- EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 5, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 6, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
 
 /***********************************************************************************************************************/
 
 /*****************************************************Begin Logging*******************************************************/
 
- EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 6, @BeginOrEnd = 0, @ProcName = @ProcName
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 7, @BeginOrEnd = 0, @ProcName = @ProcName
 
 /*************************************************************************************************************************/
 
@@ -126,13 +156,13 @@ WHERE ShpShipDate > '2019-01-01'
 
 /*****************************************************End Logging*******************************************************/
 
- EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 6, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 7, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
 
 /***********************************************************************************************************************/
 
 /*****************************************************Begin Logging*******************************************************/
 
- EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 7, @BeginOrEnd = 0, @ProcName = @ProcName
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 8, @BeginOrEnd = 0, @ProcName = @ProcName
 
 /*************************************************************************************************************************/
 
@@ -166,7 +196,7 @@ inner JOIN #tmp7 cd  on c.FileNo = cd.FILE_NO
 
 /*****************************************************End Logging*******************************************************/
 
- EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 7, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 8, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
 
 /***********************************************************************************************************************/
 
