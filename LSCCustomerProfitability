@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[LSCCustomerProfitability]    Script Date: 8/7/2019 10:08:17 AM ******/
+/****** Object:  StoredProcedure [dbo].[LSCCustomerProfitability]    Script Date: 9/26/2019 11:52:19 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -133,7 +133,12 @@ INNER JOIN
 									where ShpLOB = '25'	--PRS/AJCINTL Calculation
 									and ShpAccnt IN ('PRSG','AJCINTL')
 									and ti.AcctYr = @PrevYear
-									and ti.ACCTMONTH = @CurrMonth											
+									and ti.ACCTMONTH = @CurrMonth		
+									and MONTH(ti.InvDate) = (
+																SELECT MONTH(MIN(InvDate))
+																FROM   tblInvoice ti2
+																WHERE  ti2.RefNo = ti.RefNo
+															)									
 								) wms
 					left join (
 									select shipment_reference, SUM(Charge_Amount) Charge_Amount 
@@ -148,7 +153,12 @@ INNER JOIN
 									where ShpLOB = '25'	--PRS/AJCINTL Calculation
 									and ShpAccnt IN ('PRSG','AJCINTL')
 									and ti.AcctYr = @PrevYear
-									and ti.ACCTMONTH = @CurrMonth											
+									and ti.ACCTMONTH = @CurrMonth		
+									and MONTH(ti.InvDate) = (
+																SELECT MONTH(MIN(InvDate))
+																FROM   tblInvoice ti2
+																WHERE  ti2.RefNo = ti.RefNo
+															)									
 									group by ti.RefNo
 							  ) tx on tx.RefNo = wms.RefNo 
 					group by wms.CustName
@@ -184,7 +194,12 @@ INNER JOIN
 									where ShpLOB = '25'	--PRS/AJCINTL Calculation
 									and ShpAccnt IN ('PRSG','AJCINTL')
 									and ti.AcctYr = @CurrYear
-									and ti.ACCTMONTH = @CurrMonth											
+									and ti.ACCTMONTH = @CurrMonth		
+									and MONTH(ti.InvDate) = (
+																SELECT MONTH(MIN(InvDate))
+																FROM   tblInvoice ti2
+																WHERE  ti2.RefNo = ti.RefNo
+															)									
 								) wms
 					left join (
 									select shipment_reference, SUM(Charge_Amount) Charge_Amount 
@@ -199,7 +214,12 @@ INNER JOIN
 									where ShpLOB = '25'	--PRS/AJCINTL Calculation
 									and ShpAccnt IN ('PRSG','AJCINTL')
 									and ti.AcctYr = @CurrYear
-									and ti.ACCTMONTH = @CurrMonth											
+									and ti.ACCTMONTH = @CurrMonth	
+									and MONTH(ti.InvDate) = (
+																SELECT MONTH(MIN(InvDate))
+																FROM   tblInvoice ti2
+																WHERE  ti2.RefNo = ti.RefNo
+															)										
 									group by ti.RefNo
 							  ) tx on tx.RefNo = wms.RefNo 
 					group by wms.CustName
@@ -237,6 +257,11 @@ INNER JOIN
 							and ShpAccnt IN ('PRSG','AJCINTL')
 							and ti.AcctYr = @PrevYear
 							and ti.ACCTMONTH = @CurrMonth
+							and MONTH(ti.InvDate) = (
+														SELECT MONTH(MIN(InvDate))
+														FROM   tblInvoice ti2
+														WHERE  ti2.RefNo = ti.RefNo
+													)
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -290,7 +315,12 @@ INNER JOIN
 							where ShpLOB = '25'	--PRS/AJCINTL Calculation
 							and ShpAccnt IN ('PRSG','AJCINTL')
 							and ti.AcctYr = @PrevYear
-							and ti.ACCTMONTH = @CurrMonth									
+							and ti.ACCTMONTH = @CurrMonth			
+							and MONTH(ti.InvDate) = (
+														SELECT MONTH(MIN(InvDate))
+														FROM   tblInvoice ti2
+														WHERE  ti2.RefNo = ti.RefNo
+													)						
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -343,7 +373,12 @@ INNER JOIN
 							where ShpLOB = '25'	--PRS/AJCINTL Calculation
 							and ShpAccnt IN ('PRSG','AJCINTL')
 							and ti.AcctYr = @PrevYear
-							and ti.ACCTMONTH = @CurrMonth									
+							and ti.ACCTMONTH = @CurrMonth		
+							and MONTH(ti.InvDate) = (
+														SELECT MONTH(MIN(InvDate))
+														FROM   tblInvoice ti2
+														WHERE  ti2.RefNo = ti.RefNo
+													)							
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -396,7 +431,12 @@ INNER JOIN
 							where ShpLOB = '25'	--PRS/AJCINTL Calculation
 							and ShpAccnt IN ('PRSG','AJCINTL')
 							and ti.AcctYr = @PrevYear
-							and ti.ACCTMONTH = @CurrMonth											
+							and ti.ACCTMONTH = @CurrMonth	
+							and MONTH(ti.InvDate) = (
+														SELECT MONTH(MIN(InvDate))
+														FROM   tblInvoice ti2
+														WHERE  ti2.RefNo = ti.RefNo
+													)										
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -449,7 +489,12 @@ INNER JOIN
 							where ShpLOB = '25'	--PRS/AJCINTL Calculation
 							and ShpAccnt IN ('PRSG','AJCINTL')
 							and ti.AcctYr = @CurrYear
-							and ti.ACCTMONTH = @CurrMonth											
+							and ti.ACCTMONTH = @CurrMonth		
+							and MONTH(ti.InvDate) = (
+														SELECT MONTH(MIN(InvDate))
+														FROM   tblInvoice ti2
+														WHERE  ti2.RefNo = ti.RefNo
+													)									
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -502,7 +547,13 @@ INNER JOIN
 							where ShpLOB = '25'	--PRS/AJCINTL Calculation
 							and ShpAccnt IN ('PRSG','AJCINTL')
 							and ti.AcctYr = @CurrYear
-							and ti.ACCTMONTH = @CurrMonth										
+							and ti.ACCTMONTH = @CurrMonth		
+							and MONTH(ti.InvDate) = (
+														SELECT MONTH(MIN(InvDate))
+														FROM   tblInvoice ti2
+														WHERE  ti2.RefNo = ti.RefNo
+													)
+															
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -556,7 +607,12 @@ INNER JOIN
 							where ShpLOB = '25'	--PRS/AJCINTL Calculation
 							and ShpAccnt IN ('PRSG','AJCINTL')
 							and ti.AcctYr = @CurrYear
-							and ti.ACCTMONTH = @CurrMonth											
+							and ti.ACCTMONTH = @CurrMonth		
+							and MONTH(ti.InvDate) = (
+														SELECT MONTH(MIN(InvDate))
+														FROM   tblInvoice ti2
+														WHERE  ti2.RefNo = ti.RefNo
+													)									
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
@@ -610,7 +666,12 @@ INNER JOIN
 							where ShpLOB = '25'	--PRS/AJCINTL Calculation
 							and ShpAccnt IN ('PRSG','AJCINTL')
 							and ti.AcctYr = @CurrYear
-							and ti.ACCTMONTH = @CurrMonth											
+							and ti.ACCTMONTH = @CurrMonth		
+							and MONTH(ti.InvDate) = (
+														SELECT MONTH(MIN(InvDate))
+														FROM   tblInvoice ti2
+														WHERE  ti2.RefNo = ti.RefNo
+													)									
 							) wms
 					inner join (
 									select LTRIM(RTRIM(FileNo)) FileNo, COUNT(ContainerID) TotalContShipped
