@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadWMSData]    Script Date: 9/26/2019 9:53:45 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadWMSData]    Script Date: 9/26/2019 11:53:54 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
