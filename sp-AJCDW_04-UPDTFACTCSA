@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 8/9/2019 11:08:45 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 10/8/2019 12:37:22 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -53,6 +53,7 @@ FROM OPENQUERY(USDCFCSASQL01, '
 select ''70''+convert(varchar,s.PK_OrderNo) as PK_OrderNo, s.HandlingStation, s.ControllingStation, s.Housebill, s.FK_ControlCustomerNo
 	, 70 as Div, 76 as LOB, s.Carrier, '''' as Exporter, s.FK_ControlCustomerNo as Cons, s.FK_Salesperson, s.PODName as Controller 
 	, CONVERT(VARCHAR(50), '''') as BLNum
+	, s.FK_ModeID as Mode
 	, '''' as Pier, '''' as Cont
 	, CONVERT(VARCHAR(50), NULL) as OriginCity, CONVERT(VARCHAR(5),NULL) as OriginState
 	, CONVERT(VARCHAR(50),NULL) as DelivCity, CONVERT(VARCHAR(5),NULL) as DelivState
@@ -176,7 +177,7 @@ and FK_SystemID = 1;
 
 insert into tblShipment
 select distinct t1.PK_OrderNo, '70-'+convert(varchar,t1.Housebill) as refno, t1.HandlingStation as bookno, t3.invoicenum, t1.FK_ControlCustomerNo as account, t1.Div, t1.LOB, t1.Carrier, t1.Exporter, t1.Cons, t1.FK_Salesperson
-	, t1.Controller, t1.BLNum, t1.HandlingStation + ' ' + cast(t1.Housebill as varchar(10)), NULL
+	, t1.Controller, t1.BLNum, t1.HandlingStation + ' ' + cast(t1.Housebill as varchar(10)), t1.Mode --NULL
 	, t1.Pier, t1.Cont, t1.OriginCity, t1.OriginState, t1.DelivCity, t1.DelivState, t1.PortofDsc, t1.PortofLoad, t1.Vessel, t1.CargoOrig, t1.AESITN, t1.AESStat
 	, 0 as teu
 	, t4.tot_sale, t4.tot_cost, 0, t4.gp, 0
