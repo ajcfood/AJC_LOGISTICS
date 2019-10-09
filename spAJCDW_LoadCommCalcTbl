@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 8/19/2019 9:16:17 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 10/9/2019 10:56:59 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -62,7 +62,7 @@ SELECT ACCTYR
 	,Convert(decimal(18,2),0.00) as NDComm -- Natalia Duenas
 	,Convert(decimal(18,2),0.00) as RMComm -- Ross Mielich
 	,Convert(decimal(18,2),0.00) as IOComm -- Ioann Okolnichy (starts April 2019 and same calc as Ross)
-	,Convert(decimal(18,2),0.00) as JDComm -- Jorge Desiderio
+	,Convert(decimal(18,2),0.00) as QTComm -- Jorge Desiderio
 	,Convert(decimal(18,2),0.00) as BMComm -- Bridgette Maycott
 	,Convert(decimal(18,2),0.00) as JCComm -- Jackson Cerna
 	,Convert(decimal(18,2),0.00) as MRComm -- Max Ritter
@@ -110,8 +110,23 @@ where ACCTYR >= 2019
 
 --HSI Calculations : 2% of settlement (Revenue) = total GP--
 update tblCommCalc
-set JDComm = (Rev*.02)/3, BMComm = (Rev*.02)/3, JCComm = (Rev*.02)/3
+set QTComm = (Rev*.02)/3, BMComm = (Rev*.02)/3, JCComm = (Rev*.02)/3
 where InvLOB = '12'
+	AND ACCTMONTH IN (1,2,3,4,5,6,7,8)
+	AND ACCTYR = 2019
+
+--HSI Calculations 2019 : FLAT $200 per month starting September 2019--
+update tblCommCalc
+set QTComm = '200.00', BMComm = '200.00', JCComm = '200.00'
+where InvLOB = '12'
+	AND ACCTMONTH IN (9,10,11,12)
+	AND ACCTYR >= 2019
+
+--HSI Calculations 2020 and onward : FLAT $200 per month starting September 2019--
+update tblCommCalc
+set QTComm = '200.00', BMComm = '200.00', JCComm = '200.00'
+where InvLOB = '12'
+	AND ACCTYR >= 2020
 
 --Lee Pantesco Calculation: 0.5% of Surface Trans GP
 update tblCommCalc
@@ -336,40 +351,16 @@ set MYComm = GP*.05
 where SalesPName = 'Manuel Yanez'
 	AND InvLOB in ('41','31,33,43')
 
---GM = .5% of ST GP and AI = .25% ST GP.  Both Starting in August 2019
+-- AI = .25% ST GP.  Starting in August 2019
 update tblCommCalc
-set GMComm = (GP*.005), AIComm = (GP*.0025)
+set AIComm = (GP*.0025)
 where InvLOB = '11'
 and ACCTMONTH NOT IN (1,2,3,4,5,6,7)
 and ACCTYR = 2019
-AND InvCustName NOT IN (
-'AQUA ROYALE',
-'B & D',
-'BAMA SEA PRODUCTS INC',
-'CARGO LIVE WORLDWIDE',
-'CAVEFLE',
-'DN FOODS INC',
-'EXPORT PACKERS',
-'FREIGHT LOGISTICS INC',
-'H & N GROUP',
-'KING & PRINCE SEAFOOD CORP',
-'KOCH FOODS',
-'MBM INTERNATIONAL LOGISTICS LLC',
-'NEW YORK BROKER',
-'PLTC INC',
-'POLAR BAY FOODS, INC.',
-'SEATTLE SHRIMP & SEAFOOD COMPANY',
-'SHIPEX',
-'UNIT INTERNATIONAL',
-'UNIVERSAL LOGISTICS',
-'V.ALEXANDER & CO, INC.',
-'UNIVERSAL LOGISTICS SOLUTIONS',
-'KOCH FOODS OF CHATTANOOGA'
-)
 
 --Courtney Gray Comm: 0.25% of Cargo Live WorldWide loads starting August 1 2019
 Update tblCommCalc
-set CMComm = GP * .0025
+set CGComm = GP * .0025
 where InvCustName = 'CARGO LIVE WORLDWIDE'
 and InvLOB = '11'
 and ACCTMONTH NOT IN (1,2,3,4,5,6,7)
