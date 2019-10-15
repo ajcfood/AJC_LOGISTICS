@@ -1,6 +1,6 @@
 USE [MGXMLProcessing]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadDWShipmentRecs2]    Script Date: 5/21/2019 2:41:41 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadDWShipmentRecs2]    Script Date: 10/15/2019 3:42:12 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -42,9 +42,12 @@ update [MGXMLProcessing].[dbo].[tblXML_DWLoadRecs]
 set Status = 'TONU'
 where ShipDate is null and DelivDate is not null and RecType = 'RR';
 
+update [MGXMLProcessing].[dbo].[tblXML_DWLoadRecs]
+set LOB = 10
+where ShippingOrder like '%J'
 
 insert into [AJCDW].[dbo].[tblShipment]
-select CASE WHEN ShippingOrder LIKE '%S' THEN cast('201910'+cast(ShipmentID as varchar(50)) as int) 
+select CASE WHEN ShippingOrder LIKE '%J' THEN cast('201910'+cast(ShipmentID as varchar(50)) as int) 
 	ELSE cast('201807'+cast(ShipmentID as varchar(50)) as int) END as ShipmentID
 	, ShippingOrder, LoadID, PONumber, EnterpriseAccntNum, DivID, LOB, CarrierID
 	, OriginName, DestinationName, ShpSalesP
