@@ -1,0 +1,124 @@
+USE [AJCDW]
+GO
+
+/****** Object:  StoredProcedure [dbo].[CustomerYOYActuals]    Script Date: 10/18/2019 3:44:33 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+CREATE PROCEDURE [dbo].[CustomerYOYActuals] AS
+BEGIN TRY
+BEGIN
+
+
+TRUNCATE TABLE AJCDW.dbo.RptCustomerYOYActuals
+
+IF OBJECT_ID ('TEMPDB..#CustomerName') IS NOT NULL  DROP TABLE #CustomerName
+CREATE TABLE #CustomerName (CustName VARCHAR(200))
+INSERT INTO #CustomerName (CustName)
+SELECT	DISTINCT LTRIM(RTRIM(InvCustName))
+FROM	AJCDW.dbo.tblInvoice 
+WHERE	ACCTYR >= YEAR(GETDATE()) - 2
+AND		InvCustName IS NOT NULL 
+
+IF OBJECT_ID ('TEMPDB..#AccountYear') IS NOT NULL  DROP TABLE #AccountYear
+CREATE TABLE #AccountYear (AcctYR int, AcctMONTH int)
+insert into #AccountYear (AcctYR, AcctMONTH)
+select		 YEAR(GETDATE()), 1
+union select YEAR(GETDATE()), 2
+union select YEAR(GETDATE()), 3
+union select YEAR(GETDATE()), 4
+union select YEAR(GETDATE()), 5
+union select YEAR(GETDATE()), 6
+union select YEAR(GETDATE()), 7
+union select YEAR(GETDATE()), 8
+union select YEAR(GETDATE()), 9
+union select YEAR(GETDATE()), 10
+union select YEAR(GETDATE()), 11
+union select YEAR(GETDATE()), 12
+union select YEAR(GETDATE()) -1, 1
+union select YEAR(GETDATE()) -1, 2
+union select YEAR(GETDATE()) -1, 3
+union select YEAR(GETDATE()) -1, 4
+union select YEAR(GETDATE()) -1, 5
+union select YEAR(GETDATE()) -1, 6
+union select YEAR(GETDATE()) -1, 7
+union select YEAR(GETDATE()) -1, 8
+union select YEAR(GETDATE()) -1, 9
+union select YEAR(GETDATE()) -1, 10
+union select YEAR(GETDATE()) -1, 11
+union select YEAR(GETDATE()) -1, 12
+union select YEAR(GETDATE()) -2, 1
+union select YEAR(GETDATE()) -2, 2
+union select YEAR(GETDATE()) -2, 3
+union select YEAR(GETDATE()) -2, 4
+union select YEAR(GETDATE()) -2, 5
+union select YEAR(GETDATE()) -2, 6
+union select YEAR(GETDATE()) -2, 7
+union select YEAR(GETDATE()) -2, 8
+union select YEAR(GETDATE()) -2, 9
+union select YEAR(GETDATE()) -2, 10
+union select YEAR(GETDATE()) -2, 11
+union select YEAR(GETDATE()) -2, 12
+
+
+IF OBJECT_ID ('TEMPDB..#Customer') IS NOT NULL  DROP TABLE #Customer
+select CustName, AcctYR, AcctMonth 
+into #Customer
+from #CustomerName, #AccountYear
+
+INSERT INTO AJCDW.dbo.RptCustomerYOYActuals ([CustName], [CY Load Count], [CY -1 Load Count], [CY -2 Load Count], [CY GP], [CY -1 GP], [CY -2 GP], [ACCTYR], [ACCTMONTH])
+SELECT c.CustName, ISNULL([CY Load Count],0) [CY Load Count], ISNULL([CY -1 Load Count],0) [CY -1 Load Count], ISNULL([CY -2 Load Count],0) [CY -2 Load Count],
+	   ISNULL([CY GP],0) [CY GP], ISNULL([CY -1 GP],0) [CY -1 GP], ISNULL([CY -2 GP],0) [CY -2 GP], c.ACCTYR, c.ACCTMONTH
+FROM #Customer c 
+LEFT OUTER JOIN (
+					select LTRIM(RTRIM(InvCustName)) CustName,  COUNT(DISTINCT ti.ShipmentID) [CY Load Count], SUM(InvGP) [CY GP], ti.ACCTYR, ti.ACCTMONTH
+					from   AJCDW.dbo.tblInvoice ti
+					inner join AJCDW.dbo.tblFile tf on tf.ShipmentID = ti.ShipmentID
+					where ti.ACCTYR = YEAR(GETDATE()) --CY
+					group by InvCustName, ti.ACCTYR, ti.ACCTMONTH
+				) x on x.CustName = c.CustName and x.ACCTYR = c.ACCTYR and x.ACCTMONTH = c.ACCTMONTH
+LEFT OUTER JOIN (
+					select LTRIM(RTRIM(InvCustName)) CustName,  COUNT(DISTINCT ti.ShipmentID) [CY -1 Load Count], SUM(InvGP) [CY -1 GP], ti.ACCTYR, ti.ACCTMONTH
+					from AJCDW.dbo.tblInvoice ti
+					inner join AJCDW.dbo.tblFile tf on tf.ShipmentID = ti.ShipmentID
+					where ti.ACCTYR = YEAR(GETDATE()) - 1 --LY
+					group by InvCustName, ti.ACCTYR, ti.ACCTMONTH
+				) y on y.CustName = c.CustName and y.ACCTYR = c.ACCTYR and y.ACCTMONTH = c.ACCTMONTH
+LEFT OUTER JOIN (
+					select LTRIM(RTRIM(InvCustName)) CustName,  COUNT(DISTINCT ti.ShipmentID) [CY -2 Load Count], SUM(InvGP) [CY -2 GP], ti.ACCTYR, ti.ACCTMONTH
+					from AJCDW.dbo.tblInvoice ti
+					inner join AJCDW.dbo.tblFile tf on tf.ShipmentID = ti.ShipmentID
+					where ti.ACCTYR = YEAR(GETDATE()) - 2 --LY
+					group by InvCustName, ti.ACCTYR, ti.ACCTMONTH
+				) z on z.CustName = c.CustName and z.ACCTYR = c.ACCTYR and z.ACCTMONTH = c.ACCTMONTH
+order by c.CustName, c.ACCTYR, c.ACCTMONTH
+
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[CustomerYOYActuals]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
+GO
+
+
