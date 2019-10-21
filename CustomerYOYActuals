@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[CustomerYOYActuals]    Script Date: 10/21/2019 9:14:31 AM ******/
+/****** Object:  StoredProcedure [dbo].[CustomerYOYActuals]    Script Date: 10/21/2019 9:42:16 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -24,9 +24,9 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 TRUNCATE TABLE AJCDW.dbo.RptCustomerYOYActuals
 
 IF OBJECT_ID ('TEMPDB..#CustomerName') IS NOT NULL  DROP TABLE #CustomerName
-CREATE TABLE #CustomerName (CustName VARCHAR(200))
-INSERT INTO #CustomerName (CustName)
-SELECT	DISTINCT LTRIM(RTRIM(InvCustName))
+CREATE TABLE #CustomerName (CustName VARCHAR(200), InvLOB VARCHAR(20))
+INSERT INTO #CustomerName (CustName, InvLOB)
+SELECT	DISTINCT LTRIM(RTRIM(InvCustName)), LTRIM(RTRIM(InvLOB))
 FROM	AJCDW.dbo.tblInvoice 
 WHERE	ACCTYR >= YEAR(GETDATE()) - 2
 AND		InvCustName IS NOT NULL 
@@ -73,13 +73,13 @@ union select YEAR(GETDATE()) -2, 12
 
 
 IF OBJECT_ID ('TEMPDB..#Customer') IS NOT NULL  DROP TABLE #Customer
-select CustName, AcctYR, AcctMonth 
+select CustName, InvLOB, AcctYR, AcctMonth 
 into #Customer
 from #CustomerName, #AccountYear
 
-INSERT INTO AJCDW.dbo.RptCustomerYOYActuals ([CustName], [CY Load Count], [CY -1 Load Count], [CY -2 Load Count], [CY GP], [CY -1 GP], [CY -2 GP], [ACCTYR], [ACCTMONTH])
+INSERT INTO AJCDW.dbo.RptCustomerYOYActuals ([CustName], [CY Load Count], [CY -1 Load Count], [CY -2 Load Count], [CY GP], [CY -1 GP], [CY -2 GP], [InvLOB], [ACCTYR], [ACCTMONTH])
 SELECT c.CustName, ISNULL([CY Load Count],0) [CY Load Count], ISNULL([CY -1 Load Count],0) [CY -1 Load Count], ISNULL([CY -2 Load Count],0) [CY -2 Load Count],
-	   ISNULL([CY GP],0) [CY GP], ISNULL([CY -1 GP],0) [CY -1 GP], ISNULL([CY -2 GP],0) [CY -2 GP], c.ACCTYR, c.ACCTMONTH
+	   ISNULL([CY GP],0) [CY GP], ISNULL([CY -1 GP],0) [CY -1 GP], ISNULL([CY -2 GP],0) [CY -2 GP], c.InvLOB, c.ACCTYR, c.ACCTMONTH
 FROM #Customer c 
 LEFT OUTER JOIN (
 					select LTRIM(RTRIM(InvCustName)) CustName,  COUNT(DISTINCT ti.ShipmentID) [CY Load Count], SUM(InvGP) [CY GP], ti.ACCTYR, ti.ACCTMONTH
