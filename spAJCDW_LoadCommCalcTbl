@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 10/9/2019 10:56:59 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 10/22/2019 10:47:23 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -79,6 +79,7 @@ SELECT ACCTYR
 	,Convert(decimal(18,2),0.00) as AIComm -- Andres Izquierdo
 	,Convert(decimal(18,2),0.00) as RCComm -- Ryan Click
 	,Convert(decimal(18,2),0.00) as CGComm -- Courtney Gray
+	,Convert(decimal(18,2),0.00) as AMComm -- Ari Matsumura
 into #tmp1
 from tblInvoice i
 JOIN tblShipment s on i.ShipmentID = s.ShipmentID
@@ -330,10 +331,18 @@ where InvLOB = '76'
 	AND SalesPName = 'Monica Thornton'
 
 --Christine McVay Calculation: 1% GP on ANG & SEA Stations LOB 76
+-- Updated to 2% as of October 2019
+update tblCommCalc
+set CMComm = GP*.02
+where InvLOB = '76'
+	AND CSAStation IN ('ANG','SEA')
+
 update tblCommCalc
 set CMComm = GP*.01
 where InvLOB = '76'
 	AND CSAStation IN ('ANG','SEA')
+	AND ACCTMONTH IN (1,2,3,4,5,6,7,8,9)
+	AND ACCTYR = 2019
 
 --Ricardo Monteiro Calculation: 5% of all GP where he is Sales Rep
 update tblCommCalc
@@ -372,6 +381,12 @@ set RCComm = GP *.005
 where InvLOB = '11'
 and ACCTMONTH NOT IN (1,2,3,4,5,6,7,8)
 and ACCTYR = 2019
+
+-- Ari Matsumura Comm: 7% of GP for his loads for SeaWide
+Update tblCommCalc
+set AMComm = GP * .07
+where SalesPName = 'Ari Matsumura'
+and InvLOB = '76'
 
 --SELECT * from #tmp1
 --drop table #tmp1
