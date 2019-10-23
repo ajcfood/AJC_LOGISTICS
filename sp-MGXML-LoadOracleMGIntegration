@@ -1,6 +1,6 @@
 USE [MGXMLProcessing]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadOracleMGIntegration]    Script Date: 7/10/2019 11:11:59 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadOracleMGIntegration]    Script Date: 10/23/2019 3:39:40 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -136,8 +136,14 @@ insert into MGXMLProcessing..tblOracleCarriers ([LocationCode], [LocationActive]
 [CarrierNum], [CarrierMCNumber], [CarrierName], [filename])
 select LocationCode, LocationActive , CarrierActive, AddressLine1, AddressLine2, City, State, PostalCode, LocationType, CarrierLocationReferences, CarrierNum, CarrierMCNumber, CarrierName, @Filename
 from #Carrier 
-where locationtype like '%Remit To%' -- changed to locationtype LIKE '%Remit To%' to include both location types with Remit to in them: Remit To and Carrier/Remit To
-and locationcode like 'CL%'
+where (
+			locationtype like '%Remit To%' -- changed to locationtype LIKE '%Remit To%' to include both location types with Remit to in them: Remit To and Carrier/Remit To
+		OR  locationtype like '%RemitTo%' --Accounts for RMIS files
+	  )
+and (
+			locationcode like 'CL%'
+		OR  locationcode like '%Remit' --Accounts for RMIS files
+	)
 
 --insert data into oracle staging
 insert into
@@ -145,8 +151,14 @@ openquery(ORACLEPROD, 'select * from AJCL_MG_CARRIER_INTERFACE')
 select [LocationCode], [AddressLine1], ISNULL([AddressLine2],'') [AddressLine2], [City], [State], [PostalCode], [CarrierLocationReferences], [CarrierNum], [CarrierName]
 from [MGXMLProcessing].[dbo].[tblOracleCarriers] 
 where ISNULL([Processed],0) = 0
-and locationtype like '%Remit To%' -- changed to locationtype LIKE '%Remit To%' to include both location types with Remit to in them: Remit To and Carrier/Remit To
-and locationcode like 'CL%'
+and  (
+			locationtype like '%Remit To%' -- changed to locationtype LIKE '%Remit To%' to include both location types with Remit to in them: Remit To and Carrier/Remit To
+		OR  locationtype like '%RemitTo%' --Accounts for RMIS files
+	  )
+and (
+			locationcode like 'CL%'
+		OR  locationcode like '%Remit' --Accounts for RMIS files
+	)
 
 update MGXMLProcessing..[tblOracleCarriers] set processed = 1 where filename = @filename and ISNULL(processed,0) = 0
 
