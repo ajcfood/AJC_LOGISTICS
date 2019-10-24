@@ -1,18 +1,26 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[CustomerYOYActuals]    Script Date: 10/21/2019 9:42:16 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_PopulatePowerBIReporting]    Script Date: 10/24/2019 9:12:52 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 
 
-ALTER PROCEDURE [dbo].[CustomerYOYActuals] AS
+
+ALTER PROCEDURE [dbo].[spAJCDW_PopulatePowerBIReporting] AS
 BEGIN TRY
+
 BEGIN
 
 DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 
+/**************************************************************************************
+
+Workspace: AJCL-FedEx 
+Report Name: Manifest Analysis
+
+***************************************************************************************/
 
 /*****************************************************Begin Logging*******************************************************/
 
@@ -20,90 +28,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 
  /*************************************************************************************************************************/
 
-
-TRUNCATE TABLE AJCDW.dbo.RptCustomerYOYActuals
-
-IF OBJECT_ID ('TEMPDB..#CustomerName') IS NOT NULL  DROP TABLE #CustomerName
-CREATE TABLE #CustomerName (CustName VARCHAR(200), InvLOB VARCHAR(20))
-INSERT INTO #CustomerName (CustName, InvLOB)
-SELECT	DISTINCT LTRIM(RTRIM(InvCustName)), LTRIM(RTRIM(InvLOB))
-FROM	AJCDW.dbo.tblInvoice 
-WHERE	ACCTYR >= YEAR(GETDATE()) - 2
-AND		InvCustName IS NOT NULL 
-
-IF OBJECT_ID ('TEMPDB..#AccountYear') IS NOT NULL  DROP TABLE #AccountYear
-CREATE TABLE #AccountYear (AcctYR int, AcctMONTH int)
-insert into #AccountYear (AcctYR, AcctMONTH)
-select		 YEAR(GETDATE()), 1
-union select YEAR(GETDATE()), 2
-union select YEAR(GETDATE()), 3
-union select YEAR(GETDATE()), 4
-union select YEAR(GETDATE()), 5
-union select YEAR(GETDATE()), 6
-union select YEAR(GETDATE()), 7
-union select YEAR(GETDATE()), 8
-union select YEAR(GETDATE()), 9
-union select YEAR(GETDATE()), 10
-union select YEAR(GETDATE()), 11
-union select YEAR(GETDATE()), 12
-union select YEAR(GETDATE()) -1, 1
-union select YEAR(GETDATE()) -1, 2
-union select YEAR(GETDATE()) -1, 3
-union select YEAR(GETDATE()) -1, 4
-union select YEAR(GETDATE()) -1, 5
-union select YEAR(GETDATE()) -1, 6
-union select YEAR(GETDATE()) -1, 7
-union select YEAR(GETDATE()) -1, 8
-union select YEAR(GETDATE()) -1, 9
-union select YEAR(GETDATE()) -1, 10
-union select YEAR(GETDATE()) -1, 11
-union select YEAR(GETDATE()) -1, 12
-union select YEAR(GETDATE()) -2, 1
-union select YEAR(GETDATE()) -2, 2
-union select YEAR(GETDATE()) -2, 3
-union select YEAR(GETDATE()) -2, 4
-union select YEAR(GETDATE()) -2, 5
-union select YEAR(GETDATE()) -2, 6
-union select YEAR(GETDATE()) -2, 7
-union select YEAR(GETDATE()) -2, 8
-union select YEAR(GETDATE()) -2, 9
-union select YEAR(GETDATE()) -2, 10
-union select YEAR(GETDATE()) -2, 11
-union select YEAR(GETDATE()) -2, 12
-
-
-IF OBJECT_ID ('TEMPDB..#Customer') IS NOT NULL  DROP TABLE #Customer
-select CustName, InvLOB, AcctYR, AcctMonth 
-into #Customer
-from #CustomerName, #AccountYear
-
-INSERT INTO AJCDW.dbo.RptCustomerYOYActuals ([CustName], [CY Load Count], [CY -1 Load Count], [CY -2 Load Count], [CY GP], [CY -1 GP], [CY -2 GP], [InvLOB], [ACCTYR], [ACCTMONTH])
-SELECT c.CustName, ISNULL([CY Load Count],0) [CY Load Count], ISNULL([CY -1 Load Count],0) [CY -1 Load Count], ISNULL([CY -2 Load Count],0) [CY -2 Load Count],
-	   ISNULL([CY GP],0) [CY GP], ISNULL([CY -1 GP],0) [CY -1 GP], ISNULL([CY -2 GP],0) [CY -2 GP], c.InvLOB, c.ACCTYR, c.ACCTMONTH
-FROM #Customer c 
-LEFT OUTER JOIN (
-					select LTRIM(RTRIM(InvCustName)) CustName,  COUNT(DISTINCT ti.ShipmentID) [CY Load Count], SUM(InvGP) [CY GP], ti.ACCTYR, ti.ACCTMONTH
-					from   AJCDW.dbo.tblInvoice ti
-					inner join AJCDW.dbo.tblFile tf on tf.ShipmentID = ti.ShipmentID
-					where ti.ACCTYR = YEAR(GETDATE()) --CY
-					group by InvCustName, ti.ACCTYR, ti.ACCTMONTH
-				) x on x.CustName = c.CustName and x.ACCTYR = c.ACCTYR and x.ACCTMONTH = c.ACCTMONTH
-LEFT OUTER JOIN (
-					select LTRIM(RTRIM(InvCustName)) CustName,  COUNT(DISTINCT ti.ShipmentID) [CY -1 Load Count], SUM(InvGP) [CY -1 GP], ti.ACCTYR, ti.ACCTMONTH
-					from AJCDW.dbo.tblInvoice ti
-					inner join AJCDW.dbo.tblFile tf on tf.ShipmentID = ti.ShipmentID
-					where ti.ACCTYR = YEAR(GETDATE()) - 1 --LY
-					group by InvCustName, ti.ACCTYR, ti.ACCTMONTH
-				) y on y.CustName = c.CustName and y.ACCTYR = c.ACCTYR and y.ACCTMONTH = c.ACCTMONTH
-LEFT OUTER JOIN (
-					select LTRIM(RTRIM(InvCustName)) CustName,  COUNT(DISTINCT ti.ShipmentID) [CY -2 Load Count], SUM(InvGP) [CY -2 GP], ti.ACCTYR, ti.ACCTMONTH
-					from AJCDW.dbo.tblInvoice ti
-					inner join AJCDW.dbo.tblFile tf on tf.ShipmentID = ti.ShipmentID
-					where ti.ACCTYR = YEAR(GETDATE()) - 2 --LY
-					group by InvCustName, ti.ACCTYR, ti.ACCTMONTH
-				) z on z.CustName = c.CustName and z.ACCTYR = c.ACCTYR and z.ACCTMONTH = c.ACCTMONTH
-order by c.CustName, c.ACCTYR, c.ACCTMONTH
-
+TRUNCATE TABLE AJCDW..RptFXFAnalysis
 
 /*****************************************************End Logging*******************************************************/
 
@@ -111,6 +36,157 @@ order by c.CustName, c.ACCTYR, c.ACCTMONTH
 
  /***********************************************************************************************************************/
 
+ /*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+insert into AJCDW..RptFXFAnalysis ([Manifest], [Account], [LOB], [ACCTYR], [ACCTMONTH], [DeliveryDate], [Sum of InvRevenue], [Sum of InvCost], [Sum of InvGP], 
+[No. of Pros], [Zone 1 Pros], [Zone 2 Pros], [Zone 3 Pros], [Zone 4 Pros])
+
+select s.ShpBkgNum Manifest, s.ShpAccnt Account, s.ShpLOB LOB, ti.ACCTYR, ti.ACCTMONTH, MIN(ti.InvDate) DeliveryDate, SUM(ti.InvRevenue) [Sum of InvRevenue],
+SUM(ti.InvCost) [Sum of InvCost], SUM(ti.InvGP) [Sum of InvGP], ISNULL([No. of Pros],0) [No. of Pros], ISNULL([Zone 1 Pros],'') [Zone 1 Pros], ISNULL([Zone 2 Pros],'') [Zone 2 Pros], 
+ISNULL([Zone 3 Pros],'') [Zone 3 Pros], ISNULL([Zone 4 Pros],'') [Zone 4 Pros]
+from AJCDW..tblShipment s
+inner join AJCDW..tblInvoice ti on ti.ShipmentID = s.ShipmentID
+inner join [IES].[IES]..[SHIPMENT_DAT] t7 on s.ShipmentID = t7.shipment_id
+cross apply (
+					select ShpBkgNum, count(*) [No. of Pros]
+					from AJCDW..tblShipment ts
+					where shpLOB IN ('62','63')
+					and ts.ShpBkgNum = s.ShpBkgNum
+					and ts.ShpAccnt = s.ShpAccnt
+					and ShpShipDate >= DATEADD(MM,-24,CAST(GETDATE() AS DATE))
+					and LTRIM(RTRIM(ShpMoveType)) in ('1','2','3','4')
+					group by ShpBkgNum
+			) NoOfPros 
+outer apply (
+					select ShpBkgNum, LTRIM(RTRIM(ShpMoveType)) ShpMoveType, count(*) [Zone 1 Pros]
+					from AJCDW..tblShipment ts
+					where shpLOB IN ('62','63')
+					and ts.ShpBkgNum = s.ShpBkgNum
+					and ts.ShpAccnt = s.ShpAccnt
+					and ShpShipDate >= DATEADD(MM,-24,CAST(GETDATE() AS DATE))
+					and ShpMoveType = LTRIM(RTRIM('1'))
+					group by ShpBkgNum, LTRIM(RTRIM(ShpMoveType))
+			) Zone1 
+outer apply (
+					select ShpBkgNum, LTRIM(RTRIM(ShpMoveType)) ShpMoveType, count(*) [Zone 2 Pros]
+					from AJCDW..tblShipment ts
+					where shpLOB IN ('62','63')
+					and ts.ShpBkgNum = s.ShpBkgNum
+					and ts.ShpAccnt = s.ShpAccnt
+					and ShpShipDate >= DATEADD(MM,-24,CAST(GETDATE() AS DATE))
+					and ShpMoveType = LTRIM(RTRIM('2')) 
+					group by ShpBkgNum, LTRIM(RTRIM(ShpMoveType))
+			) Zone2
+outer apply (
+					select ShpBkgNum, LTRIM(RTRIM(ShpMoveType)) ShpMoveType, count(*) [Zone 3 Pros]
+					from AJCDW..tblShipment ts
+					where shpLOB IN ('62','63')
+					and ts.ShpBkgNum = s.ShpBkgNum
+					and ts.ShpAccnt = s.ShpAccnt
+					and ShpShipDate >= DATEADD(MM,-24,CAST(GETDATE() AS DATE))
+					and ShpMoveType = LTRIM(RTRIM('3'))
+					group by ShpBkgNum, LTRIM(RTRIM(ShpMoveType))
+			) Zone3
+outer apply (
+					select ShpBkgNum, LTRIM(RTRIM(ShpMoveType)) ShpMoveType, count(*) [Zone 4 Pros]
+					from AJCDW..tblShipment ts
+					where shpLOB IN ('62','63')
+					and ts.ShpBkgNum = s.ShpBkgNum
+					and ts.ShpAccnt = s.ShpAccnt
+					and ShpShipDate >= DATEADD(MM,-24,CAST(GETDATE() AS DATE))
+					and ShpMoveType = LTRIM(RTRIM('4')) 
+					group by ShpBkgNum, LTRIM(RTRIM(ShpMoveType))
+			) Zone4
+where s.shpLOB IN ('62','63')
+and t7.BUS_LINE IN ('62','63')
+and ShpShipDate >= DATEADD(MM,-24,CAST(GETDATE() AS DATE))
+and isnull(s.ShpBkgNum,'') <> ''
+and ShpMaster <> 'M'
+group by s.ShpBkgNum, s.ShpAccnt, s.ShpLOB, ti.ACCTYR, ti.ACCTMONTH, ISNULL([No. of Pros],0), ISNULL([Zone 1 Pros],''), ISNULL([Zone 2 Pros],''), 
+ISNULL([Zone 3 Pros],''), ISNULL([Zone 4 Pros],'')
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+
+ /******************BILLING LAG ANALAYSIS REPORT******************/
+
+
+ /*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 3, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+DELETE FROM RptBillingLagAnalysis WHERE [Invoice Date] >= DATEADD(MM,-13,CAST(GETDATE() AS DATE))
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 3, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+ /*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 4, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+INSERT INTO RptBillingLagAnalysis ([Cust Name], [File], LOB, [Sail Date], [Del Date], [Invoice Date], [Posted Date], [Billing Lag], [Invoice Rev], [Invoice Cost], [Invoice GP])
+SELECT		y.InvCustName, LTRIM(RTRIM(ts.RefNo)), ts.ShpLOB LOB, [Sail Date], [Del Date], [Invoice Date], 
+			[Posted Date], 
+			CASE WHEN ts.ShpLOB NOT IN (11, 43, 76) THEN DATEDIFF(dd,[Sail Date],[Posted Date]) 
+				 ELSE DATEDIFF(dd,[Del Date],[Posted Date]) 
+				 END  [Billing Lag], 
+			[Invoice Rev], 
+			[Invoice Cost], 
+			[Invoice GP]
+FROM		tblShipment ts 
+INNER JOIN	tblFile tf ON tf.FileID = ts.FK_FileID
+CROSS APPLY	(
+				SELECT   LTRIM(RTRIM(InvCustName)) InvCustName, CAST(MIN(ti.InvDate) AS DATE) [Sail Date], CAST(ti.DelivDate AS DATE) [Del Date], CAST(MIN(ti.InvDate) AS DATE) [Invoice Date],
+						 SUM(ti.InvRevenue) [Invoice Rev], SUM(ti.InvCost) [Invoice Cost], SUM(ti.InvGP) [Invoice GP]
+				FROM	 tblInvoice ti 
+				WHERE    ti.ShipmentID = ts.ShipmentID
+				AND		 ISNULL(ti.InvCustName, '') <> ''	
+				AND		 CAST(ti.InvDate AS DATE) >= DATEADD(MM,-13,CAST(GETDATE() AS DATE))	
+				GROUP BY LTRIM(RTRIM(InvCustName)), CAST(DelivDate AS DATE)
+			) y
+CROSS APPLY	(
+				SELECT	 PURCHASE_ORDER, CAST(DATEADD(dd,-1,MIN(ARCREATEDATE)) AS DATE) [Posted Date]
+				FROM	 tblOracleARData tx 
+				WHERE	 tx.PURCHASE_ORDER = ts.RefNo
+				GROUP BY PURCHASE_ORDER
+			) x
+WHERE		ISNULL(ts.ShpLOB,'') <> ''
+AND			LTRIM(RTRIM(ts.ShpStatus)) <> 'Cancelled'
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 4, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+  /*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 5, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+EXEC AJCDW.dbo.[CustomerYOYActuals]
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 5, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
 
 END
 
@@ -127,7 +203,7 @@ BEGIN CATCH
               SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
               
               Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
-              Select '[CustomerYOYActuals]', @ErrorMessage, @ErrorLine, @ErrorDate
+              Select '[spAJCDW_PopulatePowerBIReporting]', @ErrorMessage, @ErrorLine, @ErrorDate
 
 
 
