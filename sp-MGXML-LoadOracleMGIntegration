@@ -1,6 +1,6 @@
 USE [MGXMLProcessing]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadOracleMGIntegration]    Script Date: 10/23/2019 3:39:40 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadOracleMGIntegration]    Script Date: 10/24/2019 10:59:07 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -148,7 +148,7 @@ and (
 --insert data into oracle staging
 insert into
 openquery(ORACLEPROD, 'select * from AJCL_MG_CARRIER_INTERFACE')
-select [LocationCode], [AddressLine1], ISNULL([AddressLine2],'') [AddressLine2], [City], [State], [PostalCode], [CarrierLocationReferences], [CarrierNum], [CarrierName]
+select UPPER([LocationCode]), UPPER([AddressLine1]), UPPER(ISNULL([AddressLine2],'')) [AddressLine2], UPPER([City]), UPPER([State]), [PostalCode], UPPER([CarrierLocationReferences]), UPPER([CarrierNum]), UPPER([CarrierName])
 from [MGXMLProcessing].[dbo].[tblOracleCarriers] 
 where ISNULL([Processed],0) = 0
 and  (
