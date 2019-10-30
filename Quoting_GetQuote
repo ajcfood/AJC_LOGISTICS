@@ -1,0 +1,116 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 10/30/2019 11:08:16 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+ALTER PROCEDURE [dbo].[Quoting_GetQuote] 
+@CUSTID INT 
+
+AS
+BEGIN
+
+			DECLARE @DestState VARCHAR(2) = (SELECT TOP 1 DestState FROM Quoting_SWEDetails WHERE CustID = @CustID AND QuoteNo IS NULL)
+			DECLARE @ZipCode INT = (SELECT TOP 1 DestZipCode FROM Quoting_SWEDetails WHERE CustID = @CustID AND QuoteNo IS NULL)
+			DECLARE @QuoteNo TABLE (QuoteNo INT)
+
+			UPDATE		X 
+			SET			QuoteNo = (SELECT IDENT_CURRENT('Quoting_SWESummary') + IDENT_INCR('Quoting_SWESummary'))
+			OUTPUT		INSERTED.QuoteNo
+			INTO		@QuoteNo 
+			FROM		Quoting_SWEDetails X
+			WHERE	CAST(X.DateQuoted AS DATE) = CAST(GETDATE() AS DATE)		
+			AND		X.CustID = @CustID
+			AND		X.QuoteNo IS NULL 
+
+			INSERT INTO Quoting_SWESummary (CustID, Gateway)
+			SELECT	DISTINCT @CustID, CASE @DestState WHEN 'AK' THEN '3400 C INDUSTRY DR EAST FIFE, WA 98424' 
+													WHEN 'HI' THEN '4501 E. WASHINGTON BLVD COMMERCE, CA 90040'
+													ELSE ''
+													END 
+
+
+			/**********************************************************************Calculate Inland Fee**********************************************************************/
+
+			UPDATE			CSAF 
+			SET				TotInlandFee = Y.FlatFee * CSAF.TotPieces
+			FROM			Quoting_SWESummary CSAF
+			CROSS APPLY		(
+								SELECT	TOP 1 PKGType, OrigZipCode
+								FROM	Quoting_SWEDetails SD
+								WHERE	SD.QuoteNo = CSAF.SummaryID 
+								AND		SD.CustID = CSAF.CustID
+								AND		SD.PKGType = 'PALLET'	--Rates are per pallet rate only
+							) X
+			CROSS APPLY		(
+								SELECT TOP 1 ZipCode, FlatFee, Effective, Terminated 
+								FROM	Quoting_InlandLocalPickUp ILP
+								WHERE	ILP.ZipCode = X.OrigZipCode
+								AND		ILP.CustID = CSAF.CustID
+							) Y
+			WHERE	CSAF.CustID = @CustID 
+			AND		CSAF.TotInlandFee = 0.00
+			AND		CAST(GETDATE() AS DATE) >= Y.Effective 
+			AND		CAST(GETDATE() AS DATE) < COALESCE(Y.Terminated, GETDATE())
+
+			/**********************************************************************Calculate Quote for Hawaii**********************************************************************/
+
+			IF @DestState = 'HI'
+					BEGIN
+		
+							EXEC [Quoting_CalcHIQuote] @CustID 
+
+					END 
+			
+			ELSE
+
+			BEGIN
+						DECLARE @CubicFeet TABLE (CuFt DECIMAL(6,2))
+						INSERT INTO @CubicFeet (CuFt) 
+						SELECT		ROUND(
+											(Length * Width * Height) / 1728
+									   ,0) --Calculate cubic feet per pkg type
+						FROM		Quoting_SWEDetails SD
+						INNER JOIN  @QuoteNo X ON X.QuoteNo = SD.QuoteNo
+			
+
+						IF (
+									@DestState = 'AK' 
+								AND @ZipCode IN (SELECT ZipCode FROM Quoting_AKZones)
+								AND NOT EXISTS (
+													--Cannot quote any AK shipments where any one piece is > 750 cu ft
+													SELECT  TOP 1 CuFt 
+													FROM	@CubicFeet 
+													WHERE	CuFt > 750.00 
+												)
+								AND NOT EXISTS (
+													--Cannot quote any AK shipments where any DIMS have L > 120 in. OR W > 92 in. OR H > 100 in.
+													SELECT		TOP 1 *
+													FROM		Quoting_SWEDetails QS 
+													INNER JOIN  @QuoteNo X ON X.QuoteNo = QS.QuoteNo
+													WHERE		   QS.Length > 120.00
+																OR QS.Width > 92.00
+																OR QS.Height > 100.00
+												)
+							)
+								BEGIN
+
+										EXEC [Quoting_CalcAKQuote] @CustID 
+	
+								END
+
+						ELSE	BEGIN
+					
+										DELETE	   QS
+										FROM       Quoting_SWESummary QS
+										INNER JOIN @QuoteNo X ON X.QuoteNo = QS.SummaryID 
+
+								END
+
+			END
+
+END
