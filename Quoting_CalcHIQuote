@@ -1,0 +1,506 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 10/30/2019 11:08:58 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER procedure [dbo].[Quoting_CalcHIQuote] 
+
+@CustID INT
+
+AS
+
+BEGIN
+
+
+/**********************************************************************************OCEAN CHARGE**********************************************************************************/
+			BEGIN
+								DECLARE @OceanFee FLOAT 
+								SET		@OceanFee =	ISNULL(			(
+										
+																				SELECT ISNULL(HORAD.OceanCharge,0.00) * CASE WHEN CONVERT(FLOAT,CONVERT(FLOAT,TotWeight) / CONVERT(FLOAT,CSAF.TotCubicFeet)) > 45.00 THEN CONVERT(FLOAT,TotWeight) / 45.00
+																															 ELSE CSAF.TotCubicFeet 
+																															 END --45LB Rule
+																				FROM		Quoting_SWESummary CSAF
+																				CROSS APPLY (
+																								SELECT	TOP 1 DestZipCode
+																								FROM	Quoting_SWEDetails SD
+																								WHERE	SD.QuoteNo = CSAF.SummaryID 
+																								and		SD.CustID = CSAF.CustID
+																							) x
+																				INNER JOIN  Quoting_HiOceanRatesandDiscounts HORAD ON HORAD.CustID = CSAF.CustID AND HORAD.ZipCode = X.DestZipCode
+																				WHERE	CSAF.custid = @CustID 
+																				AND		CSAF.OceanFee = 0.00
+																				AND		CAST(GETDATE() AS DATE) >= HORAD.Effective 
+																				AND		CAST(GETDATE() AS DATE) < COALESCE(HORAD.Terminated, GETDATE())
+							
+																	)
+													,0.00)
+
+								UPDATE		CSAF 
+								SET			OceanFee = ISNULL(
+																	CASE WHEN @OceanFee <= HORAD.OceanMin AND HORAD.OceanMin IS NOT NULL THEN OceanMin 
+																		 WHEN @OceanFee > HORAD.OceanMin AND HORAD.OceanMin IS NOT NULL AND OceanMax IS NULL THEN @OceanFee
+																		 WHEN @OceanFee > HORAD.OceanMin AND HORAD.OceanMin IS NOT NULL AND OceanMax IS NOT NULL AND @OceanFee >= OceanMax THEN OceanMax 
+																		 ELSE @OceanFee
+																		 END
+														,0.00)
+																									
+								FROM		Quoting_SWESummary CSAF
+								CROSS APPLY (
+												SELECT	TOP 1 DestZipCode
+												FROM	Quoting_SWEDetails SD
+												WHERE	SD.QuoteNo = CSAF.SummaryID 
+												and		SD.CustID = CSAF.CustID
+											) X
+								INNER JOIN  Quoting_HiOceanRatesandDiscounts HORAD on HORAD.CustID = CSAF.CustID AND HORAD.ZipCode = X.DestZipCode
+								WHERE	CSAF.custid = @CustID 
+								AND		CSAF.OceanFee = 0.00
+								AND		CAST(GETDATE() AS DATE) >= HORAD.Effective 
+								AND		CAST(GETDATE() AS DATE) < COALESCE(HORAD.Terminated, GETDATE())
+
+								--Ocean Disc Perc
+								UPDATE		CSAF 
+								SET			OceanDiscPerc = ISNULL(HORAD.OceanDiscount,0.00)
+								FROM		Quoting_SWESummary CSAF
+								CROSS APPLY (
+												SELECT	TOP 1 DestZipCode
+												FROM	Quoting_SWEDetails SD
+												WHERE	SD.QuoteNo = CSAF.SummaryID 
+												AND		SD.CustID = CSAF.CustID
+											) X
+								INNER JOIN  Quoting_HiOceanRatesandDiscounts HORAD ON HORAD.CustID = CSAF.CustID AND HORAD.ZipCode = X.DestZipCode
+								WHERE	CSAF.Custid = @CustID 
+								AND		CSAF.OceanDiscPerc = 0.00
+								AND		CAST(GETDATE() AS DATE) >= HORAD.Effective 
+								AND		CAST(GETDATE() AS DATE) < COALESCE(HORAD.Terminated, GETDATE())
+
+
+								--Ocean FSC Perc
+								UPDATE		CSAF 
+								SET			OceanFSCPerc = ISNULL(Y.FSCPerc,0.00)
+								FROM		Quoting_SWESummary CSAF
+								CROSS APPLY (
+												SELECT	TOP 1 DestState
+												FROM	Quoting_SWEDetails SD
+												WHERE	SD.QuoteNo = CSAF.SummaryID 
+												AND		SD.CustID = CSAF.CustID
+											) X
+								CROSS JOIN  (
+												SELECT	FSCPerc, DestState, Effective, Terminated 
+												FROM	[Quoting_FSC]
+												WHERE	[FeeSubTypeID] = 13
+												AND		DestState = 'HI'
+											) Y
+								WHERE	CSAF.custid = @CustID 
+								AND		CSAF.OceanFSCPerc = 0.00		
+								AND		Y.DestState = X.DestState
+								AND		CAST(GETDATE() AS DATE) >= Y.Effective 
+								AND		CAST(GETDATE() AS DATE) < COALESCE(Y.Terminated, GETDATE())
+
+								--Ocean FSC Fee
+								UPDATE		CSAF 
+								SET			OceanFSCFee = (OceanFee * ( 1-[OceanDiscPerc]) ) * OceanFSCPerc
+								FROM		Quoting_SWESummary CSAF
+								WHERE		CSAF.custid = @CustID 
+								AND			CSAF.TotOceanFee = 0.00
+
+								--Ocean Total
+								UPDATE		CSAF 
+								SET			TotOceanFee = ( [OceanFee] * ( 1 - [OceanDiscPerc]) ) +  OceanFSCFee
+								FROM		Quoting_SWESummary CSAF
+								WHERE		CSAF.custid = @CustID 
+								AND			CSAF.TotOceanFee = 0.00
+
+
+			END
+
+
+/**********************************************************************************DESTINATION DELIVERY CHARGE**********************************************************************************/
+
+			BEGIN
+
+								--Apply rate per cubic feet, spot rate & spot rate PLUS per cubic feet
+
+								IF OBJECT_ID ('TEMPDB..#DeliveryRate') IS NOT NULL  DROP TABLE #DeliveryRate
+								SELECT		CSAF.SummaryID, CSAF.CustID, TotCubicFeet, CASE WHEN TotCubicFeet BETWEEN 0 AND 99 THEN ISNULL([DestDeliv_0-99],0.00)
+																							WHEN TotCubicFeet BETWEEN 100 AND 199 THEN ISNULL([DestDeliv_100-199],0.00)
+																							WHEN TotCubicFeet BETWEEN 200 AND 299 THEN ISNULL([DestDeliv_200-299],0.00)
+																							WHEN TotCubicFeet BETWEEN 300 AND 399 THEN ISNULL([DestDeliv_300-399],0.00)
+																							WHEN TotCubicFeet >= 400 THEN  ISNULL([DestDeliv_400+],0.00)
+																							END * CONVERT(DECIMAL(6,2),TotCubicFeet) DestDelivery, 
+											[DestDelivHZMT], CONVERT(DECIMAL(6,2),TotCubicFeet) * [DestDelivWC] AS [DestDelivWC], [DestDelivWCMin], [DestDelivMin], [DestDelivMax], 
+											ISNULL([ContSpotRate],0.00) + (CONVERT(DECIMAL(6,2),TotCubicFeet) * ISNULL([ContSpotRatePLUSPerCuFt],0.00)) AS [ContSpotRate]
+								INTO		#DeliveryRate
+								FROM		Quoting_SWESummary CSAF
+								CROSS APPLY (
+												SELECT		TOP 1 Island, CASE WillCall WHEN 'N' THEN DestZipCode ELSE '' END DestZipCode, IsHazmat, WillCall 
+												FROM		Quoting_SWEDetails SD
+												INNER JOIN (
+																SELECT	DISTINCT CustID, ZipCode, Island 
+																FROM	Quoting_HiDestDelivRates
+																WHERE	CustID = @CustID 
+															) X		ON X.custid = SD.CustID AND X.ZipCode = SD.DestZipCode
+												WHERE   SD.CustID = CSAF.CustID 
+												AND		SD.QuoteNo = CSAF.SummaryID
+											) X
+								CROSS APPLY (
+													SELECT  [DestDeliv_0-99], [DestDeliv_100-199], [DestDeliv_200-299], [DestDeliv_300-399], [DestDeliv_400+], [DestDelivHZMT], ISNULL([DestDelivWC],0.00) [DestDelivWC], [DestDelivWCMin], [DestDelivMin], [DestDelivMax], [ContSpotRate], 
+															[ContSpotRatePLUSPerCuFt], [Effective], [Terminated] 
+													FROM	Quoting_HiDestDelivRates DD 
+													WHERE  DD.CustID = CSAF.CustID 
+													AND	DD.ZipCode = X.DestZipCode
+													AND	DD.Island = X.Island
+											) Y
+								WHERE	CSAF.CustID = @CustID 
+								AND		CSAF.DestDelivFee = 0.00
+								AND		CSAF.HZMTDestDelivFee = 0.00
+								AND		CAST(GETDATE() AS DATE) >= Y.Effective 
+								AND		CAST(GETDATE() AS DATE) < COALESCE(Y.Terminated, GETDATE())
+
+								--Apply Container Spot Rate (if applicable)
+
+								DECLARE		@TotCubicFeet INT = (SELECT TotCubicFeet FROM #DeliveryRate)
+
+								IF @TotCubicFeet >= 400
+
+								BEGIN
+											UPDATE			CSAF 
+											SET				DestDelivFee = CASE WHEN WillCall = 'N' AND DestDelivery + ContSpotRate <= DestDelivMin AND DestDelivMin IS NOT NULL THEN DestDelivMin
+																				WHEN WillCall = 'N' AND DestDelivery + ContSpotRate > DestDelivMin AND DestDelivMin IS NOT NULL AND DestDelivMax IS NOT NULL AND DestDelivery + ContSpotRate > DestDelivMax THEN DestDelivMax
+																				WHEN WillCall = 'N' AND DestDelivery + ContSpotRate > DestDelivMin AND DestDelivMin IS NOT NULL THEN DestDelivery + ContSpotRate
+																				WHEN WillCall = 'Y' AND DestDelivWC <= ISNULL(DestDelivWCMin,0.00) THEN ISNULL(DestDelivWCMin,0.00)
+																				WHEN WillCall = 'Y' AND DestDelivWC > ISNULL(DestDelivWCMin,0.00) THEN DestDelivWC
+																				END, 
+															HZMTDestDelivFee = CASE IsHazmat WHEN 'Y' THEN DestDelivHZMT ELSE 0.00 END
+											FROM		Quoting_SWESummary CSAF
+											INNER JOIN	#DeliveryRate X ON X.CustID = CSAF.CustID AND X.SummaryID = CSAF.SummaryID 
+											CROSS APPLY (
+															SELECT  TOP 1 IsHazmat, WillCall
+															FROM	Quoting_SWEDetails SD
+															WHERE	SD.QuoteNo = CSAF.SummaryID 
+															AND		SD.CustID = CSAF.CustID
+														) Y
+											WHERE	CSAF.CustID = @CustID 
+											AND		CSAF.HZMTDestDelivFee = 0.00
+											AND		CSAF.DestDelivFee = 0.00
+
+								END
+
+
+								ELSE
+
+											--Apply Dest Delivery Rate OR Minimums (if applicable)
+											UPDATE			csaf 
+											SET				DestDelivFee = CASE WHEN WillCall = 'N' AND DestDelivery <= DestDelivMin AND DestDelivMin IS NOT NULL THEN DestDelivMin
+																				WHEN WillCall = 'N' AND DestDelivery > DestDelivMin AND DestDelivMin IS NOT NULL THEN DestDelivery
+																				WHEN WillCall = 'N' AND DestDelivery > DestDelivMin AND DestDelivMin IS NOT NULL AND DestDelivMax IS NOT NULL AND DestDelivery > DestDelivMax THEN DestDelivMax
+																				WHEN WillCall = 'Y' AND DestDelivWC <= ISNULL(DestDelivWCMin,0.00) THEN ISNULL(DestDelivWCMin,0.00)
+																				WHEN WillCall = 'Y' AND DestDelivWC > ISNULL(DestDelivWCMin,0.00) THEN DestDelivWC
+																				END, 
+															HZMTDestDelivFee = CASE IsHazmat WHEN 'Y' THEN DestDelivHZMT ELSE 0.00 END
+											FROM		Quoting_SWESummary csaf
+											INNER JOIN  #DeliveryRate X ON X.CustID = CSAF.CustID AND X.SummaryID = CSAF.SummaryID 
+											CROSS APPLY (
+															SELECT  TOP 1 IsHazmat, WillCall
+															FROM	Quoting_SWEDetails SD
+															WHERE	SD.QuoteNo = CSAF.SummaryID 
+															and		SD.CustID = CSAF.CustID
+														) Y
+											WHERE	CSAF.CustID = @CustID 
+											AND		CSAF.HZMTDestDelivFee = 0.00
+											AND		CSAF.DestDelivFee = 0.00
+
+			END
+
+
+
+/**********************************************************************************INVASIVE SPECIES CHARGE**********************************************************************************/
+
+			BEGIN
+
+
+								UPDATE		CSAF
+								SET			TotInvasiveSpeciesFee = CEILING((TotWeight + 1000) / 1000) * FlatFee
+								FROM		Quoting_SWESummary CSAF
+								INNER JOIN  Quoting_Fees F ON F.CustID = CSAF.CustID AND State = 'HI'
+								WHERE		CSAF.custid = @CustID 
+								AND			CSAF.TotInvasiveSpeciesFee = 0.00
+								AND			F.FeeTypeID = 3
+								AND			F.FeeSubTypeID = 6
+								AND			CAST(GETDATE() AS DATE) >= F.Effective 
+								AND			CAST(GETDATE() AS DATE) < COALESCE(F.Terminated, GETDATE())
+
+
+			END
+
+
+/**********************************************************************************WHARFAGE CHARGE**********************************************************************************/
+
+			BEGIN
+
+								UPDATE		CSAF
+								SET			TotWharfageFee = FlatFee * CASE WHEN CONVERT(FLOAT,CONVERT(FLOAT,TotWeight) / CONVERT(FLOAT,TotCubicFeet)) > 45.00 THEN CONVERT(FLOAT,TotWeight) / 45.00
+																			ELSE TotCubicFeet 
+																			END --45LB Rule
+								FROM		Quoting_SWESummary CSAF
+								INNER JOIN  Quoting_Fees F on F.CustID = CSAF.CustID AND State = 'HI'
+								WHERE		CSAF.custid = @CustID
+								AND			CSAF.TotWharfageFee = 0.00
+								AND			F.FeeTypeID = 4
+								AND			F.FeeSubTypeID = 5
+								AND			CAST(GETDATE() AS DATE) >= F.Effective 
+								AND			CAST(GETDATE() AS DATE) < COALESCE(F.Terminated, GETDATE())
+
+			END
+
+
+/**********************************************************************************ACCESSORIAL CHARGE**********************************************************************************/
+
+			BEGIN
+
+								--Accessorial: HAZMAT Ocean Fee (Per Cubic Feet)
+								UPDATE			CSAF 
+								SET				HazmatOceanFee = CASE WHEN TotCubicFeet * FlatFee <= FeeMin AND FeeMin IS NOT NULL THEN FeeMin 
+																	  WHEN TotCubicFeet * FlatFee > FeeMin AND FeeMin IS NOT NULL AND FeeMax IS NULL THEN TotCubicFeet * FlatFee 
+																	  WHEN TotCubicFeet * FlatFee > FeeMin AND FeeMin IS NOT NULL AND FeeMax IS NOT NULL AND TotCubicFeet * FlatFee > FeeMax THEN FeeMax 
+																	  --WHEN FeeMin IS NULL AND FeeMax IS NULL THEN FlatFee
+																	  END 
+								FROM			Quoting_SWESummary CSAF
+								CROSS APPLY		(
+													SELECT	TOP 1 IsHazmat
+													FROM	Quoting_SWEDetails SD
+													WHERE	SD.QuoteNo = CSAF.SummaryID 
+													AND		SD.CustID = CSAF.CustID
+												) X
+								INNER JOIN		Quoting_Fees F ON F.CustID = CSAF.CustID AND State = 'HI'
+								WHERE	CSAF.custid = @CustID 
+								AND		CSAF.HazmatOceanFee = 0.00
+								AND		X.IsHazmat = 'Y'
+								AND		F.FeeTypeID = 1
+								AND		F.FeeSubTypeID = 1
+								AND		CAST(GETDATE() AS DATE) >= F.Effective 
+								AND		CAST(GETDATE() AS DATE) < COALESCE(F.Terminated, GETDATE())
+
+								--Accessorial: Lift Gate Fee
+								UPDATE		CSAF 
+								SET			LiftGateFee = CASE WHEN TotCubicFeet <= CuFtThreshold AND CuFtThreshold IS NOT NULL THEN FlatFee 
+															   WHEN CuFtThreshold IS NULL THEN FlatFee 
+															   ELSE FeeMax END 
+								FROM		Quoting_SWESummary CSAF
+								CROSS APPLY (
+												SELECT	TOP 1 LiftGate 
+												FROM	Quoting_SWEDetails SD
+												WHERE	SD.QuoteNo = CSAF.SummaryID 
+												and		SD.CustID = CSAF.CustID
+											) X
+								INNER JOIN  Quoting_Fees F ON F.CustID = CSAF.CustID AND State = 'HI'
+								WHERE	CSAF.custid = @CustID 
+								AND		CSAF.LiftGateFee = 0.00
+								AND		X.LiftGate = 'Y'
+								AND		F.FeeTypeID = 1
+								AND		F.FeeSubTypeID = 2
+								AND		CAST(GETDATE() AS DATE) >= F.Effective 
+								AND		CAST(GETDATE() AS DATE) < COALESCE(F.Terminated, GETDATE())
+
+
+								--Accessorial: Inside Delivery Fee
+								UPDATE		CSAF 
+								SET			InsideDeliveryFee = CASE WHEN TotCubicFeet * FlatFee <= FeeMin AND FeeMin IS NOT NULL THEN FeeMin 
+																	 ELSE TotCubicFeet * FlatFee 
+																	 END 
+								FROM		Quoting_SWESummary CSAF
+								CROSS APPLY (
+												SELECT	TOP 1 InsideDelivery  
+												FROM	Quoting_SWEDetails SD
+												WHERE	SD.QuoteNo = CSAF.SummaryID 
+												and		SD.CustID = CSAF.CustID
+											) X
+								INNER JOIN  Quoting_Fees F ON F.CustID = CSAF.CustID AND State = 'HI'
+								WHERE	CSAF.custid = @CustID 
+								AND		CSAF.InsideDeliveryFee = 0.00
+								AND		X.InsideDelivery = 'Y'
+								AND		F.FeeTypeID = 1
+								AND		F.FeeSubTypeID = 3
+								AND		CAST(GETDATE() AS DATE) >= F.Effective 
+								AND		CAST(GETDATE() AS DATE) < COALESCE(F.Terminated, GETDATE())
+
+
+								--Accessorial: Limited Access Fee
+								UPDATE		CSAF 
+								SET			LimitedAccessFee = CASE WHEN TotCubicFeet * FlatFee <= FeeMin AND FeeMin IS NOT NULL THEN FeeMin 
+																	ELSE TotCubicFeet * FlatFee 
+																	END
+								from		Quoting_SWESummary CSAF
+								CROSS APPLY (
+												SELECT	TOP 1 LimitedAccess  
+												FROM	Quoting_SWEDetails SD
+												WHERE	SD.QuoteNo = CSAF.SummaryID 
+												and		SD.CustID = CSAF.CustID
+											) X
+								INNER JOIN  Quoting_Fees F ON F.CustID = CSAF.CustID AND State = 'HI'
+								WHERE	CSAF.custid = @CustID 
+								AND		CSAF.LimitedAccessFee = 0.00
+								AND		X.LimitedAccess = 'Y'
+								AND		F.FeeTypeID = 1
+								AND		F.FeeSubTypeID = 4
+								AND		CAST(GETDATE() AS DATE) >= F.Effective 
+								AND		CAST(GETDATE() AS DATE) < COALESCE(F.Terminated, GETDATE())
+
+
+								--Accessorial: Hazmat Delivery Fee (Per Island)
+								UPDATE		CSAF 
+								SET			HazmatDeliveryFee = ISNULL(Y.AccHZMTDelivFee ,0.00)
+								FROM		Quoting_SWESummary CSAF
+								CROSS APPLY (
+												SELECT	TOP 1 IsHazmat, WillCall, DestZipCode
+												FROM	Quoting_SWEDetails SD
+												WHERE	SD.QuoteNo = CSAF.SummaryID 
+												AND		SD.CustID = CSAF.CustID
+											) X
+								CROSS APPLY (
+												SELECT	TOP 1 AccHZMTDelivFee, Effective, Terminated
+												FROM	Quoting_HiOceanRatesandDiscounts QH 
+												WHERE	QH.CustID = CSAF.CustID
+												AND		QH.ZipCode =  X.DestZipCode 
+											) Y
+								WHERE	CSAF.CustID = @CustID  
+								AND		CSAF.HazmatDeliveryFee = 0.00
+								AND		X.IsHazmat = 'Y'
+								AND		X.WillCall = 'N'
+								AND		CAST(GETDATE() AS DATE) >= Y.Effective 
+								AND		CAST(GETDATE() AS DATE) < COALESCE(Y.Terminated, GETDATE())
+
+
+								--Accessorial: Residential Delivery Fee
+								UPDATE			CSAF 
+								SET				ResidentialDeliveryFee = CASE WHEN TotCubicFeet * FlatFee <= FeeMin AND FeeMin IS NOT NULL THEN FeeMin 
+																			  ELSE TotCubicFeet * FlatFee 
+																			  END 
+								FROM			Quoting_SWESummary CSAF
+								CROSS APPLY		(
+													SELECT	TOP 1 ResidentialDelivery
+													FROM	Quoting_SWEDetails SD
+													WHERE	SD.QuoteNo = CSAF.SummaryID 
+													AND		SD.CustID = CSAF.CustID
+												) X
+								INNER JOIN		Quoting_Fees F ON F.CustID = CSAF.CustID AND State = 'HI'
+								WHERE	CSAF.CustID = @CustID 
+								AND		CSAF.ResidentialDeliveryFee = 0.00
+								AND		X.ResidentialDelivery = 'Y'
+								AND		F.FeeTypeID = 1
+								AND		F.FeeSubTypeID = 11
+								AND		CAST(GETDATE() AS DATE) >= F.Effective 
+								AND		CAST(GETDATE() AS DATE) < COALESCE(F.Terminated, GETDATE())
+
+
+								--Appointment Fee
+								UPDATE		CSAF 
+								SET			AppointmentFee = F.FlatFee
+								FROM		Quoting_SWESummary CSAF
+								CROSS APPLY		(
+													SELECT	TOP 1 Appointment
+													FROM	Quoting_SWEDetails SD
+													WHERE	SD.QuoteNo = CSAF.SummaryID 
+													AND		SD.CustID = CSAF.CustID
+												) X
+								INNER JOIN  Quoting_Fees F ON F.CustID = CSAF.CustID AND State = 'HI'
+								WHERE	CSAF.custid = @CustID 
+								AND		CSAF.AppointmentFee = 0.00
+								AND		X.Appointment = 'Y'
+								AND		F.FeeTypeID = 1
+								AND		F.FeeSubTypeID = 7
+								AND		CAST(GETDATE() AS DATE) >= F.Effective 
+								AND		CAST(GETDATE() AS DATE) < COALESCE(F.Terminated, GETDATE())
+
+
+								--Excessive Length Fee
+								UPDATE		CSAF 
+								SET			ExcessiveLengthFee = Y.TotPcs * F.FlatFee
+								FROM		Quoting_SWESummary CSAF
+								CROSS APPLY		(
+													SELECT	TOP 1 ExcessiveLength
+													FROM	Quoting_SWEDetails SD
+													WHERE	SD.QuoteNo = CSAF.SummaryID 
+													AND		SD.CustID = CSAF.CustID
+												) X
+								CROSS APPLY		(
+													SELECT	COUNT(*) TotPcs
+													FROM	Quoting_SWEDetails SD
+													WHERE	SD.QuoteNo = CSAF.SummaryID 
+													AND		SD.CustID = CSAF.CustID
+													AND		Length >= 96 --8 feet
+												) Y
+								INNER JOIN  Quoting_Fees F ON F.CustID = CSAF.CustID AND State = 'HI'
+								WHERE	CSAF.custid = @CustID 
+								AND		CSAF.ExcessiveLengthFee = 0.00
+								AND		X.ExcessiveLength = 'Y'
+								AND		F.FeeTypeID = 1
+								AND		F.FeeSubTypeID = 9
+								AND		CAST(GETDATE() AS DATE) >= F.Effective 
+								AND		CAST(GETDATE() AS DATE) < COALESCE(F.Terminated, GETDATE())
+
+
+								--Tradeshow Delivery Fee
+								UPDATE		CSAF 
+								SET			TradeshowDeliveryFee = F.FlatFee
+								FROM		Quoting_SWESummary CSAF
+								CROSS APPLY		(
+													SELECT	TOP 1 TradeshowDelivery
+													FROM	Quoting_SWEDetails SD
+													WHERE	SD.QuoteNo = CSAF.SummaryID 
+													AND		SD.CustID = CSAF.CustID
+												) X
+								INNER JOIN  Quoting_Fees F ON F.CustID = CSAF.CustID AND State = 'HI'
+								WHERE	CSAF.custid = @CustID 
+								AND		CSAF.TradeshowDeliveryFee = 0.00
+								AND		X.TradeshowDelivery = 'Y'
+								AND		F.FeeTypeID = 1
+								AND		F.FeeSubTypeID = 12
+								AND		CAST(GETDATE() AS DATE) >= F.Effective 
+								AND		CAST(GETDATE() AS DATE) < COALESCE(F.Terminated, GETDATE())
+
+
+								--Collect on Delivery Fee
+								UPDATE		CSAF 
+								SET			CollectOnDeliveryFee = CASE WHEN F.Perc * X.CODAmountToCollect <= F.FeeMin THEN F.FeeMin
+																		ELSE F.Perc * X.CODAmountToCollect
+																		END
+								FROM		Quoting_SWESummary CSAF
+								CROSS APPLY		(
+													SELECT	TOP 1 CollectOnDelivery, CODAmountToCollect
+													FROM	Quoting_SWEDetails SD
+													WHERE	SD.QuoteNo = CSAF.SummaryID 
+													AND		SD.CustID = CSAF.CustID
+												) X
+								INNER JOIN  Quoting_Fees F ON F.CustID = CSAF.CustID AND State = 'HI'
+								WHERE	CSAF.custid = @CustID 
+								AND		CSAF.CollectOnDeliveryFee = 0.00
+								AND		X.CollectOnDelivery = 'Y'
+								AND		F.FeeTypeID = 1
+								AND		F.FeeSubTypeID = 8
+								AND		CAST(GETDATE() AS DATE) >= F.Effective 
+								AND		CAST(GETDATE() AS DATE) < COALESCE(F.Terminated, GETDATE())
+
+
+								UPDATE  CSAF 
+								SET		TotAccessorialFee =		ISNULL(HazmatOceanFee,0.00) 
+															+	ISNULL(HazmatDeliveryFee,0.00) 
+															+	ISNULL(LiftGateFee,0.00) 
+															+	ISNULL(InsideDeliveryFee,0.00) 
+															+	ISNULL(ResidentialDeliveryFee,0.00)
+															+	ISNULL(LimitedAccessFee,0.00)
+															+	ISNULL(AppointmentFee,0.00)
+															+	ISNULL(CollectOnDeliveryFee,0.00)
+															+	ISNULL(ExcessiveLengthFee,0.00)
+															+	ISNULL(TradeshowDeliveryFee,0.00)
+
+								FROM	Quoting_SWESummary CSAF
+								WHERE	CSAF.TotAccessorialFee = 0.00
+								AND		CSAF.CustID = @CustID 
+ 
+
+			END
+
+END
