@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[CustomerYOYActuals]    Script Date: 10/24/2019 9:14:40 AM ******/
+/****** Object:  StoredProcedure [dbo].[CustomerYOYActuals]    Script Date: 10/31/2019 3:15:36 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -109,6 +109,10 @@ LEFT OUTER JOIN (
 							inner join tblFile tf on tf.RefNo = ts.RefNo
 							where  tf.ACCTYR = @YEAR --CY
 							and	   tf.ACCTMONTH = @Month 
+							and	   NOT (
+											  ts.ShpLOB = 21 
+										  AND ts.ShpCarrier IN ('DOMEST','PALLET')
+									   )
 							group by shpLOB, LTRIM(RTRIM(CustName)), tf.ACCTYR, tf.ACCTMONTH
 						) y
 					full outer join (
