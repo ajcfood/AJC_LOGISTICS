@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_PopulatePowerBIReporting]    Script Date: 10/18/2019 3:55:40 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_PopulatePowerBIReporting]    Script Date: 11/11/2019 3:06:50 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -187,6 +187,42 @@ EXEC AJCDW.dbo.[CustomerYOYActuals]
  EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 5, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
 
  /***********************************************************************************************************************/
+
+
+ /*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 6, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+--Populate CSA Reversal/Revision Report for Credit
+TRUNCATE TABLE RptCSAInvReversalRevision
+
+INSERT INTO RptCSAInvReversalRevision ([Cust #], [Oracle Txn Number], [Housebill], [PO #], [Delivery Date], [Actual Date Closed], [Original], [Balance Due])
+select DISTINCT  ct.CUSTOMER_NUMBER [Cust #], ard.TRX_Number [Oracle Txn Number], ard.Interface_Header_Attribute1 Housebill, ard.Purchase_Order [PO #], ard.trx_date [Delivery Date], ISNULL(ARD1.ARCreatedate, ARD.ARCreatedate) [Actual Date Closed],
+	   ard.amount_line_items_original Original, ard.AMOUNT_LINE_ITEMS_REMAINING [Balance Due]
+from   [dbo].[tblOracleARData] ARD
+inner join  tbloraclecustterms ct on ct.customer_id = ard.bill_to_customer_ID
+left join [dbo].[tblOracleARData] ARD1 ON ARD1.INTERFACE_HEADER_ATTRIBUTE1 = ARD.INTERFACE_HEADER_ATTRIBUTE1 AND ARD1.BILL_TO_CUSTOMER_ID = ARD.BILL_TO_CUSTOMER_ID AND ARD1.CLASS = 'CM' AND ARD1.INTERFACE_HEADER_ATTRIBUTE2 = ARD.INTERFACE_HEADER_ATTRIBUTE2 
+inner join (
+				select distinct Interface_Header_Attribute1
+				from [dbo].[tblOracleARData] a
+				inner join  tbloraclecustterms ct on ct.customer_id = a.bill_to_customer_ID
+				where ct.CUSTOMER_NUMBER LIKE '460%'
+				and  class = 'CM'
+			) ARD2 ON ARD2.INTERFACE_HEADER_ATTRIBUTE1 = ARD.INTERFACE_HEADER_ATTRIBUTE1 
+where ct.CUSTOMER_NUMBER LIKE '460%'
+--and ard.TRX_NUMBER LIKE '70-131475%'
+and ard.TRX_DATE >= DATEADD(mm,-2,CAST(GETDATE() AS DATE))
+order by ct.CUSTOMER_NUMBER, ard.TRX_Number, ISNULL(ARD1.ARCreatedate, ARD.ARCreatedate)
+
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 6, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
 
 END
 
