@@ -1,0 +1,63 @@
+USE [AirTrak]
+GO
+/****** Object:  StoredProcedure [dbo].[Quoting_CreateCustomer]    Script Date: 11/19/2019 4:13:43 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+
+ALTER procedure [dbo].[Quoting_CreateCustomer]
+
+@Username varchar(10), @CustNo INT, @CustomerToCopy INT
+
+AS
+
+BEGIN
+
+DECLARE @CustName VARCHAR(MAX) = (SELECT CustName FROM AirTrak..tbl_Customers WHERE PK_CustNo = @CustNo)
+
+--Create customer in WebTrak Customer Page
+INSERT INTO [WebAirTrak].dbo.[tbl_Users] ([PK_UserId], [FK_CustNo], [FK_CompanyId], [Password], [PasswordReminder], [UserName], [UserAddress1], [UserAddress2], [UserCity], [FK_UserState], 
+										  [UserZip], [UserPhone], [UserFax], [UserEmail], [FK_BillToCustNo], [FK_HandlingStation], [FK_BookingStation], [FK_ProductCode], [TermCode], [FK_PODCustNo], 
+										  [PODFlag], [FK_AgentCode], [AgentWebEntry], [Admin], [AddShip], [MultiShipper], [MultiBillTo], [ShowCarrier], [SeeRevenue], [QuoteLink], [FK_OrderStatusId], 
+										  [RequestDate], [ShipName], [ShipAddress1], [ShipAddress2], [ShipCity], [FK_ShipState], [ShipZip], [FK_ShipCountry], [ShipPhone], [ShipEmail], [ShipContact], 
+										  [ShipFax], [ShipDefault], [DefaultPort], [FK_BillToPrepaid], [FK_BillToCollect], [FK_BillToThirdParty], [DirectBillto], [AgentPartnerID], [TotalModes], [AccessDocs], 
+										  [SeeCarrier], [AddCarrier], [FK_Salesperson], [FK_BillToDom], [LoadBoard], [FillHOBL], [EncPwd], [LastLoginDate], [PasswordChangeDate], [TradeShow], [DomTermCode], 
+										  [textMsg], [PODEmail], [HAWBEmail], [SeeCharges], [ForwarderFlag], [PrintIntHAWB], [AccessMyShip], [DomQuote], [IntlQuote], [DefaultSpecIns], [ShipNo], [Client], 
+										  [ContactName], [ContactPhone], [DomBizUnit], [DomProductCode], [IntlBizUnit], [IntlProductCode], [GuaranteedRate], [ExclusiveRate], [UpdateSCPOD], [ServiceLevelId], 
+										  [ShowChargeDetail], [FK_VendorNo], [BookQuote], [PalletBreakDown], [Ext], [ShowPLReport], [ShowGP], [InventorySystem], [InventoryAdmin], [SingleTLRating], 
+										  [OverWeightServiceLevelId], [LTLRater], [ReportMSchDtTm], [PrintDomInv], [MobileAccess], [Commodity], [DefaultReadyTime], [VerizonRpt], [CommodityCodeDefault], 
+										  [PrintHAWBLabel], [VendorNo], [RemitNo], [BillToRef], [BillToRefType], [AccessorialAddingAShipment], [ApptDelUser], [BoardSize], [Disabled], [SuperUser], 
+										  [SharedAddressBookID], [FK_ProjectCode], [AgentName], [AgentPhone], [ProjectSummary], [ReqShipperEmail], [ShipperRef], [ShipperRefType], [ReqConsigneeEmail], 
+										  [ConsigneeRef], [ConsigneeRefType], [RequireReasonCode], [RemoveDocs], [ReportManager], [ForceDelDate], [DLSReportM], [FK_DfltIntHandlingStation], [PaySimpleId], 
+										  [StationAdmin], [PaymentOption], [BoardType], [PaymentTabOnly], [DefaultBoard], [DashBoardReportManager], [ImportShipment], [VendorServiceID], [DefaultStatus], 
+										  [InvoicePass])
+
+SELECT									  @Username, [FK_CustNo], [FK_CompanyId], [Password], [PasswordReminder], @CustName, [UserAddress1], [UserAddress2], [UserCity], [FK_UserState], 
+										  [UserZip], [UserPhone], [UserFax], [UserEmail], [FK_BillToCustNo], [FK_HandlingStation], [FK_BookingStation], [FK_ProductCode], [TermCode], [FK_PODCustNo], 
+										  [PODFlag], [FK_AgentCode], [AgentWebEntry], [Admin], [AddShip], [MultiShipper], [MultiBillTo], [ShowCarrier], [SeeRevenue], [QuoteLink], [FK_OrderStatusId], 
+										  [RequestDate], [ShipName], [ShipAddress1], [ShipAddress2], [ShipCity], [FK_ShipState], [ShipZip], [FK_ShipCountry], [ShipPhone], [ShipEmail], [ShipContact], 
+										  [ShipFax], [ShipDefault], [DefaultPort], [FK_BillToPrepaid], [FK_BillToCollect], [FK_BillToThirdParty], [DirectBillto], [AgentPartnerID], [TotalModes], [AccessDocs], 
+										  [SeeCarrier], [AddCarrier], [FK_Salesperson], @CustNo, [LoadBoard], [FillHOBL], [EncPwd], [LastLoginDate], [PasswordChangeDate], [TradeShow], [DomTermCode], 
+										  [textMsg], [PODEmail], [HAWBEmail], [SeeCharges], [ForwarderFlag], [PrintIntHAWB], [AccessMyShip], [DomQuote], [IntlQuote], [DefaultSpecIns], [ShipNo], [Client], 
+										  [ContactName], [ContactPhone], [DomBizUnit], [DomProductCode], [IntlBizUnit], [IntlProductCode], [GuaranteedRate], [ExclusiveRate], [UpdateSCPOD], [ServiceLevelId], 
+										  [ShowChargeDetail], [FK_VendorNo], [BookQuote], [PalletBreakDown], [Ext], [ShowPLReport], [ShowGP], [InventorySystem], [InventoryAdmin], [SingleTLRating], 
+										  [OverWeightServiceLevelId], [LTLRater], [ReportMSchDtTm], [PrintDomInv], [MobileAccess], [Commodity], [DefaultReadyTime], [VerizonRpt], [CommodityCodeDefault], 
+										  [PrintHAWBLabel], [VendorNo], [RemitNo], [BillToRef], [BillToRefType], [AccessorialAddingAShipment], [ApptDelUser], [BoardSize], [Disabled], [SuperUser], 
+										  [SharedAddressBookID], [FK_ProjectCode], [AgentName], [AgentPhone], [ProjectSummary], [ReqShipperEmail], [ShipperRef], [ShipperRefType], [ReqConsigneeEmail], 
+										  [ConsigneeRef], [ConsigneeRefType], [RequireReasonCode], [RemoveDocs], [ReportManager], [ForceDelDate], [DLSReportM], [FK_DfltIntHandlingStation], [PaySimpleId], 
+										  [StationAdmin], [PaymentOption], [BoardType], [PaymentTabOnly], [DefaultBoard], [DashBoardReportManager], [ImportShipment], [VendorServiceID], [DefaultStatus], 
+										  [InvoicePass]
+FROM									  [WebAirTrak].dbo.[tbl_Users]
+WHERE									  [FK_BillToDom] = @CustomerToCopy
+
+--Add customer to WebTrak Admin Page
+INSERT INTO  [WebAirTrak].dbo.tbl_UsersControllingCustomers (FK_UserId, FK_CustNo, SeqNo)
+select PK_UserId, FK_BillToDom, 1
+from [WebAirTrak].dbo.tbl_Users tu
+where tu.FK_BillToDom = @CustNo
+
+END
