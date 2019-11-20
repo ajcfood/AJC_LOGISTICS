@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 10/31/2019 09:40:12 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 11/20/2019 12:09:19 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -28,6 +28,7 @@ SET NOCOUNT ON;
 6/1/2019 - SE - Added Manuel Yanez Commission Calculation and column to tblCommCalc
 8/16/19 - SE - Add Gerardo Martinez and Andres Izquierdo column to table and commission calculation formula
 8/19/19 - SE - Add Courtney Gray and Ryan Click column to table and commission calculation formula
+11/20/19 - SE - Add ST JAX team commissions
 
 */
 
@@ -80,6 +81,13 @@ SELECT ACCTYR
 	,Convert(decimal(18,2),0.00) as RCComm -- Ryan Click
 	,Convert(decimal(18,2),0.00) as CGComm -- Courtney Gray
 	,Convert(decimal(18,2),0.00) as AMComm -- Ari Matsumura
+	,Convert(decimal(18,2),0.00) as BSComm -- Bill Stallings
+	,Convert(decimal(18,2),0.00) as CARSONComm -- Carson Mendez
+	,Convert(decimal(18,2),0.00) as MMComm -- Mike Maroni
+	,Convert(decimal(18,2),0.00) as JHComm -- Jessie Higginbotham
+	,Convert(decimal(18,2),0.00) as NSComm -- Nick Seney
+	,Convert(decimal(18,2),0.00) as DTComm -- Dalton Thomas
+	,Convert(decimal(18,2),0.00) as DBComm -- Dana Beck
 into #tmp1
 from tblInvoice i
 JOIN tblShipment s on i.ShipmentID = s.ShipmentID
@@ -393,6 +401,40 @@ Update tblCommCalc
 set AMComm = GP * .07
 where SalesPName = 'Ari Matsumura'
 and InvLOB = '76'
+
+-- Bill Stallings Comm: 2% of Team GP 
+Update tblCommCalc
+set BSComm = GP * .02
+where InvLOB = '10'
+
+-- Carson Mendez Comm: 2% of Team GP 
+Update tblCommCalc
+set CARSONComm = GP * .02
+where InvLOB = '10'
+
+-- Mike Maroni Comm: 9% of own GP in LOB 10
+Update tblCommCalc
+set MMComm = GP * .09
+where InvLOB = '10'
+and SalesPName = 'Mike Maroni'
+
+-- Jessie Higginbotham Comm: 6.5% of own GP in LOB 10
+Update tblCommCalc
+set JHComm = GP * .065
+where InvLOB = '10'
+and SalesPName = 'Jessie Higginbotham'
+
+-- Nick Seney Comm: 8.5% of own GP in LOB 10
+Update tblCommCalc
+set NSComm = GP * .085
+where InvLOB = '10'
+and SalesPName = 'Nick Seney'
+
+-- Dalton Thomas Comm: 4% of team GP divided by number of CSR's.  As of 11/20/19, he is only CSR
+Update tblCommCalc
+set DTComm = (GP * .04) / 1 -- change divisible amount by number of CSRs when needing to be updated
+where InvLOB = '10'
+
 
 --SELECT * from #tmp1
 --drop table #tmp1
