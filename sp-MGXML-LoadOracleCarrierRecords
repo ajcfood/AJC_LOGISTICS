@@ -1,6 +1,6 @@
 USE [MGXMLProcessing]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadOracleCarrierRecords]    Script Date: 6/21/2019 2:28:30 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadOracleCarrierRecords]    Script Date: 12/5/2019 10:40:09 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -10,29 +10,49 @@ GO
 
 
 
-ALTER PROCEDURE [dbo].[sp-MGXML-LoadOracleCarrierRecords](@ORCLENV CHAR(15), @ORCLTBL CHAR(30))
+ ALTER PROCEDURE [dbo].[sp-MGXML-LoadOracleCarrierRecords](@ORCLENV CHAR(15), @ORCLTBL CHAR(30))
 
-AS
+ AS
 BEGIN TRY
 BEGIN
 
-SET NOCOUNT ON;
-DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+ SET NOCOUNT ON;
 
-/*
+ /*
 05/17/2019 - SA - Added Error Logging
 
-*/
-/*****************************************************Begin Logging*******************************************************/
+ */
 
-EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+--Change ChargeCodes for AJCL Satellite before sending to Oracle so we can define separate LOB from Surf Trans
+--UPDATE	IL
+--SET		ChargesType = 'ACCESSORIAL', ChargesEDICode = 'SITEM'
+--FROM	[MGXMLProcessing].[dbo].[tblCarrierXML_InvoiceLoadRecs] IL
+--WHERE	[SentToOracle] = 0
+--AND		EnterpriseParentName = 'AJC Logistics Satellite'
+--AND		ChargesType = 'ITEM'
+--AND		ChargesEDICode IS NULL
 
-/*************************************************************************************************************************/
+--UPDATE	IL
+--SET		ChargesType = 'ACCESSORIAL', ChargesEDICode = 'SFUE'
+--FROM	[MGXMLProcessing].[dbo].[tblCarrierXML_InvoiceLoadRecs] IL
+--WHERE	[SentToOracle] = 0
+--AND		EnterpriseParentName = 'AJC Logistics Satellite'
+--AND		ChargesType = 'ACCESSORIAL_FUEL'
+--AND		ChargesEDICode = 'FUE'
+
+--UPDATE	IL
+--SET		ChargesEDICode = 'SDSC'
+--FROM	[MGXMLProcessing].[dbo].[tblCarrierXML_InvoiceLoadRecs] IL
+--WHERE	[SentToOracle] = 0
+--AND		EnterpriseParentName = 'AJC Logistics Satellite'
+--AND		ChargesType = 'DISCOUNT'
+--AND		ChargesEDICode = 'DSC'
+
 
 DECLARE @SQL1 NVARCHAR(MAX);
 
 
-SET @SQL1 = '
+ SET @SQL1 = '
 insert into
 openquery(' + @ORCLENV + ', ''select * from ' + @ORCLTBL + ''')
 select [RefShippingOrder]
@@ -58,54 +78,38 @@ select [RefShippingOrder]
       ,[ChargesEDICode]
       ,[ChargesDesc]
       ,[ChargesAmount]
-      ,[InvNum]
+      ,LEFT([InvNum],28) [InvNum]
       ,[InvDate]
       ,[LoadedDateTime]
       ,[FileName]
       ,[FileCreatedDate]
 from [MGXMLProcessing].[dbo].[tblCarrierXML_InvoiceLoadRecs] where [SentToOracle] = 0';
 
-EXEC sp_executesql @SQL1;
+ EXEC sp_executesql @SQL1;
 
-/*****************************************************End Logging*******************************************************/
 
-EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
-
-/***********************************************************************************************************************/
-
-/*****************************************************Begin Logging*******************************************************/
-
-EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 0, @ProcName = @ProcName
-
-/*************************************************************************************************************************/
-
-update [MGXMLProcessing].[dbo].[tblCarrierXML_InvoiceLoadRecs]
+ update [MGXMLProcessing].[dbo].[tblCarrierXML_InvoiceLoadRecs]
 set [SentToOracle] = 1
 where [SentToOracle] = 0;
 
-/*****************************************************End Logging*******************************************************/
 
-EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+ END
 
-/***********************************************************************************************************************/
-
-END
-
-End Try
+ End Try
 
 
 
-BEGIN CATCH
+ BEGIN CATCH
 
 
-              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+               DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
 
-              
-              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
-              
-              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+
+               SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+
+               Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
               Select '[sp-MGXML-LoadOracleCarrierRecords]', @ErrorMessage, @ErrorLine, @ErrorDate
 
 
 
-END CATCH
+ END CATCH
