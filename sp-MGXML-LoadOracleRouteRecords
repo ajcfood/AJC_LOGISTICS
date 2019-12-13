@@ -1,6 +1,6 @@
 USE [MGXMLProcessing]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadOracleRouteRecords]    Script Date: 6/21/2019 2:31:05 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadOracleRouteRecords]    Script Date: 12/13/2019 11:07:31 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -12,96 +12,104 @@ GO
 
 ALTER PROCEDURE [dbo].[sp-MGXML-LoadOracleRouteRecords](@ORCLENV CHAR(15), @ORCLTBL CHAR(30))
 
-AS
+ AS
 BEGIN TRY
 BEGIN
 
-SET NOCOUNT ON;
-DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+ SET NOCOUNT ON;
 
-
-/*
+ /*
 05/17/2019 - SA - Added Error Logging
 
-*/
-/*****************************************************Begin Logging*******************************************************/
+ */
 
-EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+--Change ChargeCodes for AJCL Satellite before sending to Oracle so we can define separate LOB from Surf Trans
+--UPDATE	IL
+--SET		ChargesType = 'ACCESSORIAL', ChargesEDICode = 'SITEM'
+--FROM	[MGXMLProcessing].[dbo].[tblRouteXML_TransportLoadRecs] IL
+--WHERE	[SentToOracle] = 0
+--AND		RefShippingOrder LIKE '%J'
+--AND		ChargesType = 'ITEM'
+--AND		ChargesEDICode IS NULL
 
-/*************************************************************************************************************************/
+--UPDATE	IL
+--SET		ChargesType = 'ACCESSORIAL', ChargesEDICode = 'SFUE'
+--FROM	[MGXMLProcessing].[dbo].[tblRouteXML_TransportLoadRecs] IL
+--WHERE	[SentToOracle] = 0
+--AND		RefShippingOrder LIKE '%J'
+--AND		ChargesType = 'ACCESSORIAL_FUEL'
+--AND		ChargesEDICode = 'FUE'
+
+--UPDATE	IL
+--SET		ChargesEDICode = 'SDSC'
+--FROM	[MGXMLProcessing].[dbo].[tblRouteXML_TransportLoadRecs] IL
+--WHERE	[SentToOracle] = 0
+--AND		RefShippingOrder LIKE '%J'
+--AND		ChargesType = 'DISCOUNT'
+--AND		ChargesEDICode = 'DSC'
 
 DECLARE @SQL1 NVARCHAR(MAX);
 
 
-SET @SQL1 = '
+ SET @SQL1 = '
 insert into
 openquery(' + @ORCLENV + ', ''select * from ' + @ORCLTBL + ''')
-select [RefShippingOrder]
-      ,[RefLoadID]
-      ,[RefReleaseNum]
-      ,[RefPONum]
-      ,[RefSCAC]
-      ,[CarrierID]
-      ,[CarrierName]
-      ,[RefCustomerAcctNum]
-	  ,[EntCustomerName]
-      ,[PriceSheetType]
-      ,[PriceSheetCurrency]
-      ,[PriceSheetCreatedBy]
-      ,[PriceSheetUpdatedBy]
-      ,[PriceSheetDateCategory]
-      ,[PriceSheetPickupDate]
-      ,[PriceSheetDropDate]
-      ,[ChargesType]
-      ,[ChargesSeqNum]
-      ,[ChargesEDICode]
-      ,[ChargesDesc]
-      ,[ChargesAmount]
-      ,[LoadedDateTime]
-      ,[FileName]
-      ,[FileCreatedDate]
-from [MGXMLProcessing].[dbo].[tblRouteXML_TransportLoadRecs] where [SentToOracle] = 0';
+select rt1.[RefShippingOrder]
+      ,rt1.[RefLoadID]
+      ,rt1.[RefReleaseNum]
+      ,rt1.[RefPONum]
+      ,rt1.[RefSCAC]
+      ,rt1.[CarrierID]
+      ,rt1.[CarrierName]
+      ,rt1.[RefCustomerAcctNum]
+	  ,rt1.[EntCustomerName]
+      ,rt1.[PriceSheetType]
+      ,rt1.[PriceSheetCurrency]
+      ,rt1.[PriceSheetCreatedBy]
+      ,rt1.[PriceSheetUpdatedBy]
+      ,rt1.[PriceSheetDateCategory]
+      ,rt1.[PriceSheetPickupDate]
+      ,rt1.[PriceSheetDropDate]
+      ,rt1.[ChargesType]
+      ,rt1.[ChargesSeqNum]
+      ,rt1.[ChargesEDICode]
+      ,rt1.[ChargesDesc]
+      ,rt1.[ChargesAmount]
+      ,rt1.[LoadedDateTime]
+      ,rt1.[FileName]
+      ,rt1.[FileCreatedDate]
+from [MGXMLProcessing].[dbo].[tblRouteXML_TransportLoadRecs] rt1
+INNER JOIN (
+				SELECT [RefShippingOrder], MAX(FileName) [FileName]
+				FROM  [MGXMLProcessing].[dbo].[tblRouteXML_TransportLoadRecs] 
+				GROUP BY [RefShippingOrder]
+		   ) rt2  on rt2.RefShippingOrder = rt1.[RefShippingOrder] and rt2.FileName = rt1.FileName
+where [SentToOracle] = 0';
 
-EXEC sp_executesql @SQL1;
+ EXEC sp_executesql @SQL1;
 
-/*****************************************************End Logging*******************************************************/
 
-EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
-
-/***********************************************************************************************************************/
-
-/*****************************************************Begin Logging*******************************************************/
-
-EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 0, @ProcName = @ProcName
-
-/*************************************************************************************************************************/
-
-update [MGXMLProcessing].[dbo].[tblRouteXML_TransportLoadRecs]
+ update [MGXMLProcessing].[dbo].[tblRouteXML_TransportLoadRecs]
 set [SentToOracle] = 1
 where [SentToOracle] = 0;
 
-/*****************************************************End Logging*******************************************************/
 
-EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
-
-/***********************************************************************************************************************/
-
-END
+ END
 End Try
 
 
 
-BEGIN CATCH
+ BEGIN CATCH
 
 
-              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+               DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
 
-              
-              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
-              
-              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+
+               SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+
+               Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
               Select '[sp-MGXML-LoadOracleRouteRecords]', @ErrorMessage, @ErrorLine, @ErrorDate
 
 
 
-END CATCH
+ END CATCH
