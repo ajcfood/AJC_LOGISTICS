@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 12/13/2019 4:02:50 PM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 12/13/2019 4:23:44 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -118,13 +118,13 @@ BEGIN
 	
 								END
 
-						ELSE	BEGIN
+						--ELSE	BEGIN
 					
-										DELETE	   QS
-										FROM       Quoting_SWESummary QS
-										INNER JOIN @QuoteNo X ON X.QuoteNo = QS.SummaryID 
+						--				DELETE	   QS
+						--				FROM       Quoting_SWESummary QS
+						--				INNER JOIN @QuoteNo X ON X.QuoteNo = QS.SummaryID 
 
-								END
+						--		END
 
 			END
 
