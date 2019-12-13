@@ -1,6 +1,6 @@
 USE [MGXMLProcessing]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadOracleRecs]    Script Date: 5/21/2019 2:42:33 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadOracleRecs]    Script Date: 12/13/2019 9:15:24 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -23,6 +23,31 @@ SET NOCOUNT ON;
 
 */
 
+--Change ChargeCodes for AJCL Satellite before sending to Oracle so we can define separate LOB from Surf Trans
+--UPDATE	IL
+--SET		ChargesType = 'ACCESSORIAL', ChargesEDICode = 'SITEM'
+--FROM	[MGXMLProcessing].[dbo].[tblCarrierXML_InvoiceLoadRecs] IL
+--WHERE	[SentToOracle] = 0
+--AND		EnterpriseParentName = 'AJC Logistics Satellite'
+--AND		ChargesType = 'ITEM'
+--AND		ChargesEDICode IS NULL
+
+--UPDATE	IL
+--SET		ChargesType = 'ACCESSORIAL', ChargesEDICode = 'SFUE'
+--FROM	[MGXMLProcessing].[dbo].[tblCarrierXML_InvoiceLoadRecs] IL
+--WHERE	[SentToOracle] = 0
+--AND		EnterpriseParentName = 'AJC Logistics Satellite'
+--AND		ChargesType = 'ACCESSORIAL_FUEL'
+--AND		ChargesEDICode = 'FUE'
+
+--UPDATE	IL
+--SET		ChargesEDICode = 'SDSC'
+--FROM	[MGXMLProcessing].[dbo].[tblCarrierXML_InvoiceLoadRecs] IL
+--WHERE	[SentToOracle] = 0
+--AND		EnterpriseParentName = 'AJC Logistics Satellite'
+--AND		ChargesType = 'DISCOUNT'
+--AND		ChargesEDICode = 'DSC'
+
 DECLARE @SQL1 NVARCHAR(MAX),
 	  @SQL2 NVARCHAR(MAX),
 	  @SQL3 NVARCHAR(MAX);
@@ -31,35 +56,37 @@ DECLARE @SQL1 NVARCHAR(MAX),
 SET @SQL1 = '
 insert into
 openquery(' + @ORCLENV + ', ''select * from ' + @ORCLTBL + ''')
-select [RefShippingOrder]
-      ,[RefLoadID]
-      ,[RefReleaseNum]
-      ,[RefPONum]
-      ,[RefSCAC]
-      ,[CarrierID]
-      ,[CarrierName]
-      ,[EnterpriseName]
-      ,[EnterpriseParentName]
-      ,[EnterpriseType]
-      ,[EnterpriseAccntNum]
-      ,[PriceSheetType]
-      ,[PriceSheetCurrency]
-      ,[PriceSheetCreatedBy]
-      ,[PriceSheetUpdatedBy]
-      ,[PriceSheetDateCategory]
-      ,[PriceSheetPickupDate]
-      ,[PriceSheetDropDate]
-      ,[ChargesType]
-      ,[ChargesSeqNum]
-      ,[ChargesEDICode]
-      ,[ChargesDesc]
-      ,[ChargesAmount]
-      ,[InvNum]
-      ,[InvDate]
-      ,[LoadedDateTime]
-      ,[FileName]
-      ,[FileCreatedDate]
-from [MGXMLProcessing].[dbo].[tblCarrierXML_InvoiceLoadRecs] where [SentToOracle] = 0';
+select rt1.[RefShippingOrder]
+      ,rt1.[RefLoadID]
+      ,rt1.[RefReleaseNum]
+      ,rt1.[RefPONum]
+      ,rt1.[RefSCAC]
+      ,rt1.[CarrierID]
+      ,rt1.[CarrierName]
+      ,rt1.[RefCustomerAcctNum]
+	  ,rt1.[EntCustomerName]
+      ,rt1.[PriceSheetType]
+      ,rt1.[PriceSheetCurrency]
+      ,rt1.[PriceSheetCreatedBy]
+      ,rt1.[PriceSheetUpdatedBy]
+      ,rt1.[PriceSheetDateCategory]
+      ,rt1.[PriceSheetPickupDate]
+      ,rt1.[PriceSheetDropDate]
+      ,rt1.[ChargesType]
+      ,rt1.[ChargesSeqNum]
+      ,rt1.[ChargesEDICode]
+      ,rt1.[ChargesDesc]
+      ,rt1.[ChargesAmount]
+      ,rt1.[LoadedDateTime]
+      ,rt1.[FileName]
+      ,rt1.[FileCreatedDate]
+from [MGXMLProcessing].[dbo].[tblRouteXML_TransportLoadRecs] rt1
+INNER JOIN (
+				SELECT [RefShippingOrder], MAX(CAST([FileCreatedDate] AS DATETIME)) [FileCreatedDate]
+				FROM  [MGXMLProcessing].[dbo].[tblRouteXML_TransportLoadRecs] 
+				GROUP BY [RefShippingOrder]
+		   ) rt2  on rt2.RefShippingOrder = rt1.[RefShippingOrder] and CAST(rt2.[FileCreatedDate] AS DATETIME) = CAST(rt1.[FileCreatedDate] AS DATETIME)
+where [SentToOracle] = 0';
 
 EXEC sp_executesql @SQL1;
 
