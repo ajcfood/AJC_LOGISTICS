@@ -1,6 +1,6 @@
 USE [MGXMLProcessing]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadOracleRecs]    Script Date: 12/13/2019 9:15:24 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadOracleRecs]    Script Date: 12/13/2019 11:06:32 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -82,10 +82,10 @@ select rt1.[RefShippingOrder]
       ,rt1.[FileCreatedDate]
 from [MGXMLProcessing].[dbo].[tblRouteXML_TransportLoadRecs] rt1
 INNER JOIN (
-				SELECT [RefShippingOrder], MAX(CAST([FileCreatedDate] AS DATETIME)) [FileCreatedDate]
+				SELECT [RefShippingOrder], MAX(FileName) [FileName]
 				FROM  [MGXMLProcessing].[dbo].[tblRouteXML_TransportLoadRecs] 
 				GROUP BY [RefShippingOrder]
-		   ) rt2  on rt2.RefShippingOrder = rt1.[RefShippingOrder] and CAST(rt2.[FileCreatedDate] AS DATETIME) = CAST(rt1.[FileCreatedDate] AS DATETIME)
+		   ) rt2  on rt2.RefShippingOrder = rt1.[RefShippingOrder] and rt2.FileName = rt1.FileName
 where [SentToOracle] = 0';
 
 EXEC sp_executesql @SQL1;
