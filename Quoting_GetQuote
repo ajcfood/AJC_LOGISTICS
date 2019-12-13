@@ -1,10 +1,11 @@
-USE [AJCDW]
+USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 10/30/2019 11:08:16 AM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 12/13/2019 4:02:50 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 
 
@@ -14,9 +15,17 @@ ALTER PROCEDURE [dbo].[Quoting_GetQuote]
 AS
 BEGIN
 
+			IF EXISTS (SELECT TOP 1 1 FROM Quoting_SWESummary WHERE ISNULL(Gateway,'') = '')
+			BEGIN
+
+					DELETE FROM Quoting_SWESummary WHERE ISNULL(Gateway,'') = ''
+			
+			END
+
 			DECLARE @DestState VARCHAR(2) = (SELECT TOP 1 DestState FROM Quoting_SWEDetails WHERE CustID = @CustID AND QuoteNo IS NULL)
 			DECLARE @ZipCode INT = (SELECT TOP 1 DestZipCode FROM Quoting_SWEDetails WHERE CustID = @CustID AND QuoteNo IS NULL)
 			DECLARE @QuoteNo TABLE (QuoteNo INT)
+			DECLARE @SummaryID INT
 
 			UPDATE		X 
 			SET			QuoteNo = (SELECT IDENT_CURRENT('Quoting_SWESummary') + IDENT_INCR('Quoting_SWESummary'))
@@ -29,9 +38,9 @@ BEGIN
 
 			INSERT INTO Quoting_SWESummary (CustID, Gateway)
 			SELECT	DISTINCT @CustID, CASE @DestState WHEN 'AK' THEN '3400 C INDUSTRY DR EAST FIFE, WA 98424' 
-													WHEN 'HI' THEN '4501 E. WASHINGTON BLVD COMMERCE, CA 90040'
-													ELSE ''
-													END 
+													  WHEN 'HI' THEN '900 S. EUCLID ST., UNIT B LA HABRA, CA 90631'
+													  ELSE ''
+													  END 
 
 
 			/**********************************************************************Calculate Inland Fee**********************************************************************/
@@ -54,15 +63,21 @@ BEGIN
 							) Y
 			WHERE	CSAF.CustID = @CustID 
 			AND		CSAF.TotInlandFee = 0.00
+			AND		CSAF.SummaryID = (
+										SELECT TOP 1 QuoteNo 
+										FROM @QuoteNo
+									 )
 			AND		CAST(GETDATE() AS DATE) >= Y.Effective 
 			AND		CAST(GETDATE() AS DATE) < COALESCE(Y.Terminated, GETDATE())
 
 			/**********************************************************************Calculate Quote for Hawaii**********************************************************************/
 
+			SET @SummaryID = (SELECT DISTINCT QuoteNo FROM @QuoteNo)
+
 			IF @DestState = 'HI'
 					BEGIN
 		
-							EXEC [Quoting_CalcHIQuote] @CustID 
+							EXEC [Quoting_CalcHIQuote] @CustID, @SummaryID  
 
 					END 
 			
@@ -99,7 +114,7 @@ BEGIN
 							)
 								BEGIN
 
-										EXEC [Quoting_CalcAKQuote] @CustID 
+										EXEC [Quoting_CalcAKQuote] @CustID, @SummaryID 
 	
 								END
 
