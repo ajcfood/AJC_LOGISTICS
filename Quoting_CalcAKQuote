@@ -1,11 +1,10 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_CalcAKQuote]    Script Date: 12/13/2019 4:05:15 PM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_CalcAKQuote]    Script Date: 12/17/2019 8:59:05 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-
 ALTER procedure [dbo].[Quoting_CalcAKQuote] 
 
 @CustID INT, @SummaryID INT
