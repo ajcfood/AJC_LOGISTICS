@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 12/13/2019 4:23:44 PM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 12/17/2019 8:57:07 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -36,11 +36,23 @@ BEGIN
 			AND		X.CustID = @CustID
 			AND		X.QuoteNo IS NULL 
 
-			INSERT INTO Quoting_SWESummary (CustID, Gateway)
-			SELECT	DISTINCT @CustID, CASE @DestState WHEN 'AK' THEN '3400 C INDUSTRY DR EAST FIFE, WA 98424' 
-													  WHEN 'HI' THEN '900 S. EUCLID ST., UNIT B LA HABRA, CA 90631'
-													  ELSE ''
-													  END 
+			INSERT INTO Quoting_SWESummary (CustID, Gateway, TotCubicFeet)
+			SELECT		CustID, CASE DestState WHEN 'AK' THEN '3400 C INDUSTRY DR EAST FIFE, WA 98424' 
+											   WHEN 'HI' THEN '900 S. EUCLID ST., UNIT B LA HABRA, CA 90631'
+											   ELSE ''
+											   END 
+						, SUM(CubicFeet) TotCubicFeet
+			FROM		Quoting_SWEDetails X
+			WHERE		CustID = @CustID 
+			AND			QuoteNo IN (
+									 SELECT  QuoteNo 
+									 FROM	@QuoteNo
+								   )
+			GROUP BY	CustID, CASE DestState WHEN 'AK' THEN '3400 C INDUSTRY DR EAST FIFE, WA 98424' 
+											   WHEN 'HI' THEN '900 S. EUCLID ST., UNIT B LA HABRA, CA 90631'
+											   ELSE ''
+											   END 
+
 
 
 			/**********************************************************************Calculate Inland Fee**********************************************************************/
