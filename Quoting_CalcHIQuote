@@ -1,11 +1,10 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 12/13/2019 4:04:32 PM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 12/17/2019 8:57:46 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-
 ALTER procedure [dbo].[Quoting_CalcHIQuote] 
 
 @CustID INT, @SummaryID INT
@@ -40,16 +39,30 @@ BEGIN
 							
 																	)
 													,0.00)
+								
 
+								--Apply Minimums. If applicable then discount is 0%
 								UPDATE		CSAF 
-								SET			OceanFee = ISNULL(
-																	CASE WHEN @OceanFee <= HORAD.OceanMin AND HORAD.OceanMin IS NOT NULL THEN OceanMin 
-																		 WHEN @OceanFee > HORAD.OceanMin AND HORAD.OceanMin IS NOT NULL AND OceanMax IS NULL THEN @OceanFee
-																		 WHEN @OceanFee > HORAD.OceanMin AND HORAD.OceanMin IS NOT NULL AND OceanMax IS NOT NULL AND @OceanFee >= OceanMax THEN OceanMax 
-																		 ELSE @OceanFee
-																		 END
-														,0.00)
-																									
+								SET			OceanFee = ISNULL(HORAD.OceanMin,0.00)												
+								FROM		Quoting_SWESummary CSAF
+								CROSS APPLY (
+												SELECT	TOP 1 DestZipCode
+												FROM	Quoting_SWEDetails SD
+												WHERE	SD.QuoteNo = CSAF.SummaryID 
+												and		SD.CustID = CSAF.CustID
+											) X
+								INNER JOIN  Quoting_HiOceanRatesandDiscounts HORAD on HORAD.CustID = CSAF.CustID AND HORAD.ZipCode = X.DestZipCode
+								WHERE	CSAF.custid = @CustID 
+								AND		CSAF.SummaryID = @SummaryID
+								AND		CSAF.OceanFee = 0.00
+								AND		@OceanFee * (1 - ISNULL(HORAD.OceanDiscount,0.00)) <= HORAD.OceanMin
+								AND		HORAD.OceanMin IS NOT NULL
+								AND		CAST(GETDATE() AS DATE) >= HORAD.Effective 
+								AND		CAST(GETDATE() AS DATE) < COALESCE(HORAD.Terminated, GETDATE())
+
+								--Apply Ocean Fee for all shipments beyond minimums
+								UPDATE		CSAF 
+								SET			OceanFee = ISNULL(@OceanFee,0.00)							
 								FROM		Quoting_SWESummary CSAF
 								CROSS APPLY (
 												SELECT	TOP 1 DestZipCode
@@ -77,6 +90,7 @@ BEGIN
 								INNER JOIN  Quoting_HiOceanRatesandDiscounts HORAD ON HORAD.CustID = CSAF.CustID AND HORAD.ZipCode = X.DestZipCode
 								WHERE	CSAF.Custid = @CustID 
 								AND		CSAF.SummaryID = @SummaryID
+								AND		@OceanFee * (1 - ISNULL(HORAD.OceanDiscount,0.00)) > HORAD.OceanMin
 								AND		CSAF.OceanDiscPerc = 0.00
 								AND		CAST(GETDATE() AS DATE) >= HORAD.Effective 
 								AND		CAST(GETDATE() AS DATE) < COALESCE(HORAD.Terminated, GETDATE())
@@ -661,6 +675,28 @@ BEGIN
 								AND		CAST(GETDATE() AS DATE) >= F.Effective 
 								AND		CAST(GETDATE() AS DATE) < COALESCE(F.Terminated, GETDATE())
 
+							    --Update Total Cubic Feet to incorporate 45lb Rule. This is for display reasons only on the quote results
+								UPDATE		CSAF 
+								SET			[TotCubicFeet] = [45lbCuFt] + [CuFt]
+								FROM		Quoting_SWESummary CSAF 
+								CROSS APPLY (
+												SELECT   QuoteNo, SUM(ROUND(CONVERT(FLOAT,WeightPerPKGType) / 45.00,0)) [45lbCuFt]
+												FROM	 Quoting_SWEDetails SD
+												WHERE	 SD.CustID = CSAF.CustID
+												AND		 SD.QuoteNo = CSAF.SummaryID
+												AND		 CONVERT(FLOAT,CONVERT(FLOAT,WeightPerPKGType) / CONVERT(FLOAT,SD.CubicFeet)) > 45.00
+												GROUP BY QuoteNo
+											) SD
+								OUTER APPLY (
+												SELECT  QuoteNo, ISNULL(SUM(CubicFeet),0.00) [CuFt]
+												FROM	Quoting_SWEDetails SD
+												WHERE	SD.CustID = CSAF.CustID
+												AND		SD.QuoteNo = CSAF.SummaryID
+												AND		CONVERT(FLOAT,CONVERT(FLOAT,WeightPerPKGType) / CONVERT(FLOAT,SD.CubicFeet)) <= 45.00
+												GROUP BY QuoteNo
+											) SD1
+								WHERE		CSAF.CustID = @CustID
+								AND			CSAF.SummaryID = @SummaryID
 
 								UPDATE  CSAF 
 								SET		TotAccessorialFee =		ISNULL(HazmatOceanFee,0.00) 
