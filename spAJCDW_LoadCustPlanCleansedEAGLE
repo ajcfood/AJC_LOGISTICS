@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansedEAGLE]    Script Date: 12/4/2019 12:24:04 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansedEAGLE]    Script Date: 12/18/2019 4:10:59 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -36,10 +36,11 @@ INTO #tmp7
 from tblInvoice i
 JOIN tblFile f on i.ShipmentID = f.ShipmentID
 JOIN tblShipment s on f.ShipmentID = s.shipmentID
-where i.ACCTYR LIKE '%19' and InvLOB IN ('21')
+where i.ACCTYR IN (YEAR(GETDATE()), YEAR(DATEADD(YY,-1,GETDATE())))	
+and InvLOB IN ('21')
 and s.ShpAccnt <> 'PRSG'
 and s.ShpCarrier NOT IN ('DOMEST','PALLET')
---and s.ShpMoveType NOT IN ('DLTL','RLTL') -- Comment this out until 2020
+--and s.ShpMoveType NOT IN ('DLTL','RLTL')
 Group By InvCustName, s.shipmentid, i.refno, i.ACCTYR, DELWEEK, DELYEAR, InvLOB
 	,f.SHPWEEK,f.SHPYEAR
 Order by InvCustName
@@ -60,8 +61,9 @@ INTO #tmp4
 from tblInvoice i
 JOIN tblFile f on i.ShipmentID = f.ShipmentID
 JOIN tblShipment s on f.ShipmentID = s.shipmentID
-where i.ACCTYR LIKE '%19' and InvLOB IN ('21')
---and s.ShpMoveType NOT IN ('DLTL','RLTL')-- Comment this out until 2020
+where i.ACCTYR IN (YEAR(GETDATE()), YEAR(DATEADD(YY,-1,GETDATE())))	
+and InvLOB IN ('21')
+--and s.ShpMoveType NOT IN ('DLTL','RLTL')
 Group By InvCustName, i.ACCTYR, InvLOB
 	,f.SHPWEEK,f.SHPYEAR
 Order by InvCustName
@@ -148,6 +150,9 @@ Order by InvCustName
 -- ========================================================================
 DELETE tblCustPlanCleansed
 WHERE InvLOB = '21'
+AND (		ACCTYR IN (YEAR(GETDATE()), YEAR(DATEADD(YY,-1,GETDATE())))
+		OR	TargetYear IN (YEAR(GETDATE()), YEAR(DATEADD(YY,-1,GETDATE())))
+	)
 
 INSERT INTO tblCustPlanCleansed
 SELECT * from #tmp6
