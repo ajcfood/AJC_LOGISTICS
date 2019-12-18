@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansed]    Script Date: 5/21/2019 11:19:37 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansed]    Script Date: 12/18/2019 4:05:39 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -40,7 +40,8 @@ INTO #tmp1
 from tblInvoice i
 JOIN tblFile f on i.ShipmentID = f.ShipmentID
 JOIN tblShipment s on f.ShipmentID = s.shipmentID
-where i.ACCTYR LIKE '%19' and InvLOB = '11'
+where i.ACCTYR IN (YEAR(GETDATE()), YEAR(DATEADD(YY,-1,GETDATE())))	
+and InvLOB = '11'
 Group By InvCustName, i.ACCTYR, InvLOB
 	,f.DELWEEK, f.DELYEAR
 Order by InvCustName
@@ -110,7 +111,8 @@ INTO #tmp4
 from tblInvoice i
 JOIN tblFile f on i.ShipmentID = f.ShipmentID
 JOIN tblShipment s on f.ShipmentID = s.shipmentID
-where i.ACCTYR LIKE '%19' and InvLOB IN ('62','61')
+where i.ACCTYR IN (YEAR(GETDATE()), YEAR(DATEADD(YY,-1,GETDATE())))	
+and InvLOB IN ('62','61')
 Group By InvCustName, i.ACCTYR, InvLOB
 	,f.SHPWEEK,f.SHPYEAR
 Order by InvCustName
@@ -158,7 +160,9 @@ Order by InvCustName
 -- Note #1: Update ACCTYR or TargetYear at the end of each year once accounting confirms no more transactions for current year
 -- ===========================================================================================================================
 DELETE tblCustPlanCleansed
-WHERE ACCTYR >= 2019 OR TargetYear >= 2019
+WHERE ACCTYR IN (YEAR(GETDATE()), YEAR(DATEADD(YY,-1,GETDATE())))
+OR	  TargetYear IN (YEAR(GETDATE()), YEAR(DATEADD(YY,-1,GETDATE())))
+
 
 INSERT INTO tblCustPlanCleansed
 SELECT * from #tmp6
