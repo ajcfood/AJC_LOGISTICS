@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadSalesPlanCleansedFLAT]    Script Date: 5/21/2019 11:21:58 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadSalesPlanCleansedFLAT]    Script Date: 12/18/2019 4:06:27 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -37,7 +37,8 @@ from tblInvoice i
 JOIN tblFile f on i.ShipmentID = f.ShipmentID
 JOIN tblShipment s on f.ShipmentID = s.shipmentID
 JOIN tblSalesP sa on sa.SalesPID = s.FK_SalesPID
-where i.ACCTYR LIKE '%19' and InvLOB = '11' --and SalesPName = 'Randolph Page' and DELWEEK = 5
+where i.ACCTYR IN (YEAR(GETDATE()), YEAR(DATEADD(YY,-1,GETDATE())))	
+and InvLOB = '11' --and SalesPName = 'Randolph Page' and DELWEEK = 5
 Group By sa.SalesPName, i.ACCTYR, InvLOB
 	,f.DELWEEK, f.DELYEAR--,f.SHPWEEK,f.SHPMONTH,f.SHPYEAR
 Order by sa.SalesPName
@@ -82,7 +83,8 @@ Order by SalesPName
 -- Note #1: update i.ACCTYR in where clause at the beginning of each year once accounting team confirms final integration is completed for current year 
 -- ====================================================================================================================================================
 DELETE tblSalesPlanCleansedFLAT
-WHERE ACCTYR >= 2019 OR SPCSalesGoalYear >= 2019
+WHERE ACCTYR IN (YEAR(GETDATE()), YEAR(DATEADD(YY,-1,GETDATE())))	
+OR SPCSalesGoalYear IN (YEAR(GETDATE()), YEAR(DATEADD(YY,-1,GETDATE())))	
 
 INSERT INTO tblSalesPlanCleansedFLAT
 SELECT * from #tmp3
