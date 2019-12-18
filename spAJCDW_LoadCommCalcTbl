@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 11/20/2019 12:09:19 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 12/18/2019 3:26:58 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -92,7 +92,7 @@ into #tmp1
 from tblInvoice i
 JOIN tblShipment s on i.ShipmentID = s.ShipmentID
 join tblSalesP sp on s.FK_SalesPID = sp.SalesPID
-where i.ACCTYR >= 2019 -- needs to be modified to include ACCTMONTH when we start having commission changes.  Do not want to change historical calculations
+where i.ACCTYR >= LEFT(CONVERT(varchar, DATEADD(MM, -24, GetDate()),112),4)  -- needs to be modified to include ACCTMONTH when we start having commission changes.  Do not want to change historical calculations
 group by ACCTYR, ACCTMONTH, ACCTPERIODNAME,InvLOB,i.RefNo,SalesPName,InvCustName, i.ACCTQTR,s.ShpBkgNum, i.ShipmentID, s.ShpController, s.ShpMoveType
 
 
@@ -104,11 +104,11 @@ group by ACCTYR, ACCTMONTH, ACCTPERIODNAME,InvLOB,i.RefNo,SalesPName,InvCustName
 --          Do not want to affect historical calculations
 -- ==================================================================================================================================
 DELETE from tblCommCalc
-where ACCTYR >=2019
+where ACCTYR >= LEFT(CONVERT(varchar, DATEADD(MM, -24, GetDate()),112),4) 
 
 INSERT INTO tblCommCalc
 SELECT * from #tmp1
-where ACCTYR >= 2019
+where ACCTYR >= LEFT(CONVERT(varchar, DATEADD(MM, -24, GetDate()),112),4) 
 
 -- ====================================================================================================================================
 -- Step #3
@@ -173,6 +173,8 @@ set BWComm = GP*.15
 where SalesPName = 'Brawnson Walter'
 
 --Brett Rasmussen Calculation: 16% of Surface Trans GP where he is Sales Rep (stopped commission calculations as of end of April 2019)
+--commented out because they dont work at AJCL anymore
+/*
 update tblCommCalc
 set BRComm = GP*.16
 where SalesPName = 'Brett Rasmussen'
@@ -184,6 +186,7 @@ where SalesPName = 'Brett Rasmussen'
 update tblCommCalc
 set MRComm = GP*.15
 where SalesPName = 'Max Ritter'
+
 
 --Natalia Duenas Calculation: 0.125% of Surface Trans GP for SUKARNE only.  Not SUKARNE EXPORT (stopped commission calculations as of end of April 2019)
 update tblCommCalc
@@ -203,6 +206,7 @@ where InvLOB = '11'
 	AND InvCustName NOT LIKE 'DYCINSA'
 	AND ACCTMONTH IN (1,2,3,4)
 	AND ACCTYR = 2019
+*/
 	
 --Andres Alonso Calculation: 7% of his own GP, 0.5% of Surf Trans GP--
 update tblCommCalc
@@ -219,7 +223,8 @@ and InvCustName NOT LIKE 'SUK-EXPORT'
 	--7% of ST GP assigned to LS
 	--1% of SUKARNE and DYCINSA
 	--4% of SUK - EXPORT
-
+/*
+--Does not work here anymore
 Update tblCommCalc
 set LSComm = GP*.07
 where SalesPName = 'Leo Serna'
@@ -231,7 +236,7 @@ where InvCustName = 'SUK - EXPORT'
 update tblCommCalc
 set LSComm = GP*.01
 where InvCustName IN ('DYCINSA','SUKARNE', 'SUK - NORTH BOUND', 'SUKARNE SA DE CV', 'SUKARNE...')
-
+*/
 --Missy Jensen Calculation:
 	--5% of ST GP assigned to MJ
 	--2.75% of General Works Products GP
@@ -356,7 +361,7 @@ set CMComm = GP*.01
 where InvLOB = '76'
 	AND CSAStation IN ('ANG','SEA')
 	AND ACCTMONTH IN (1,2,3,4,5,6,7,8,9)
-	AND ACCTYR = 2019
+	AND ACCTYR = 2019 --Kept hardcoded date due to commission increase in October onwards
 
 --Ricardo Monteiro Calculation: 5% of all GP where he is Sales Rep
 update tblCommCalc
@@ -433,6 +438,11 @@ and SalesPName = 'Nick Seney'
 -- Dalton Thomas Comm: 4% of team GP divided by number of CSR's.  As of 11/20/19, he is only CSR
 Update tblCommCalc
 set DTComm = (GP * .04) / 1 -- change divisible amount by number of CSRs when needing to be updated
+where InvLOB = '10'
+
+-- Dana Beck Comm: 1% of team GP
+Update tblCommCalc
+set DBComm = GP * .01
 where InvLOB = '10'
 
 
