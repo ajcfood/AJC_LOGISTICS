@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_05.5-UPDTFACTMG]    Script Date: 5/21/2019 11:16:25 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_05.5-UPDTFACTMG]    Script Date: 12/19/2019 11:19:01 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -35,6 +35,10 @@ EXEC [MGXMLProcessing].[dbo].[sp-MGXML-LoadDWShipmentRecs2];
 
 EXEC [MGXMLProcessing].[dbo].[sp-MGXML-LoadDWContContents2];
 
+--Purge duplicate ShipmentIDs so PowerBI Refreshes dont fail--
+-----------------------------
+
+EXEC AJCDW.dbo.[PurgeDuplicateShipmentIDs]; 
 
 
 -- LOAD INVOICE DATA --
