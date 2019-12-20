@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendCommissionEmails]    Script Date: 12/11/2019 3:42:55 PM ******/
+/****** Object:  StoredProcedure [dbo].[SendCommissionEmails]    Script Date: 12/20/2019 9:33:37 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1198,7 +1198,7 @@ BEGIN
 			DECLARE @today as date
 			SET @today = DATEADD(dd,-25,getdate())
 			set nocount on;
-			select SalesPName ' + @column1name + ', RefNo, CSAStation as LD_No, GP, SFComm, ACCTYR, ACCTMONTH, ACCTPERIODNAME --update with correct sales person commission column
+			select SalesPName ' + @column1name + ', RefNo, CSAStation as LD_No, GP, JHComm, ACCTYR, ACCTMONTH, ACCTPERIODNAME --update with correct sales person commission column
 			, REPLACE(InvLOB,'','','''') as InvLOB
 			, REPLACE(InvCustName,'','','''') as Customer
 			, ShipType, Dispatcher
@@ -1263,7 +1263,7 @@ BEGIN
 			DECLARE @today as date
 			SET @today = DATEADD(dd,-25,getdate())
 			set nocount on;
-			select SalesPName ' + @column1name + ', RefNo, CSAStation as LD_No, GP, SFComm, ACCTYR, ACCTMONTH, ACCTPERIODNAME --update with correct sales person commission column
+			select SalesPName ' + @column1name + ', RefNo, CSAStation as LD_No, GP, NSComm, ACCTYR, ACCTMONTH, ACCTPERIODNAME --update with correct sales person commission column
 			, REPLACE(InvLOB,'','','''') as InvLOB
 			, REPLACE(InvCustName,'','','''') as Customer
 			, ShipType, Dispatcher
@@ -1327,7 +1327,7 @@ BEGIN
 			DECLARE @today as date
 			SET @today = DATEADD(dd,-25,getdate())
 			set nocount on;
-			select SalesPName ' + @column1name + ', RefNo, CSAStation as LD_No, GP, SFComm, ACCTYR, ACCTMONTH, ACCTPERIODNAME --update with correct sales person commission column
+			select SalesPName ' + @column1name + ', RefNo, CSAStation as LD_No, GP, MMComm, ACCTYR, ACCTMONTH, ACCTPERIODNAME --update with correct sales person commission column
 			, REPLACE(InvLOB,'','','''') as InvLOB
 			, REPLACE(InvCustName,'','','''') as Customer
 			, ShipType, Dispatcher
