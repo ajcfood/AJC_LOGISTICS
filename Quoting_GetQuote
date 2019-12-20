@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 12/17/2019 8:57:07 AM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 12/20/2019 10:30:17 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -18,7 +18,7 @@ BEGIN
 			IF EXISTS (SELECT TOP 1 1 FROM Quoting_SWESummary WHERE ISNULL(Gateway,'') = '')
 			BEGIN
 
-					DELETE FROM Quoting_SWESummary WHERE ISNULL(Gateway,'') = ''
+					DELETE FROM Quoting_SWESummary WHERE ISNULL(Gateway,'') = '' OR TotCubicFeet IS NULL
 			
 			END
 
