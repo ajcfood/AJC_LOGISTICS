@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 12/17/2019 8:57:46 AM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 12/20/2019 12:04:21 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -10,7 +10,7 @@ ALTER procedure [dbo].[Quoting_CalcHIQuote]
 @CustID INT, @SummaryID INT
 
 AS
-
+BEGIN TRY
 BEGIN
 
 
@@ -677,7 +677,7 @@ BEGIN
 
 							    --Update Total Cubic Feet to incorporate 45lb Rule. This is for display reasons only on the quote results
 								UPDATE		CSAF 
-								SET			[TotCubicFeet] = [45lbCuFt] + [CuFt]
+								SET			[TotCubicFeet] = [45lbCuFt] + ISNULL([CuFt],0)
 								FROM		Quoting_SWESummary CSAF 
 								CROSS APPLY (
 												SELECT   QuoteNo, SUM(ROUND(CONVERT(FLOAT,WeightPerPKGType) / 45.00,0)) [45lbCuFt]
@@ -721,3 +721,21 @@ BEGIN
 			END
 
 END
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[Quoting_CalcHIQuote]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
