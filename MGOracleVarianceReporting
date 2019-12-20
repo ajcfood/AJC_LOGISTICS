@@ -1,0 +1,147 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 12/20/2019 3:38:45 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+
+
+ALTER procedure [dbo].[MGOracleVarianceReporting] as
+
+BEGIN TRY
+BEGIN
+
+					DECLARE @Message VARCHAR(MAX)
+
+					IF OBJECT_ID ('TEMPDB..#TMP') IS NOT NULL  DROP TABLE #TMP
+
+					select	COALESCE(v.RefShippingOrder, w.RefShippingOrder, x.RefShippingOrder, y.RefShippingOrder, z.OracleRefShippingOrder) SO_Number, v.FileName RouteCostFilename, v.LoadedDateTime RouteCostLoadedDateTime, 
+							w.FileName RouteRevFilename, w.LoadedDateTime RouteRevLoadedDateTime, y.Filename CarrierInvFilename, y.LoadedDateTime CarrierInvLoadedDateTime, x.FileName CustInvFilename, x.LoadedDateTime CustInvLoadedDateTime, 
+							RouteFileCost, CarrierInvTotal, OracleCost, RouteFileRev, CustomerInvTotal, OracleRev
+					INTO #TMP
+					from 		(
+												SELECT x.RefShippingOrder, sum(ChargesAmount) RouteFileRev, x.Filename, CAST(LoadedDateTime AS DATETIME) LoadedDateTime
+												FROM   MGXMLProcessing.[dbo].[tblRouteXML_TransportLoadRecs] x
+												INNER JOIN (
+																SELECT RefShippingOrder, MAX(Filename) Filename
+																FROM MGXMLProcessing.[dbo].[tblRouteXML_TransportLoadRecs]
+																GROUP BY RefShippingOrder
+															) y on y.RefShippingOrder = x.RefShippingOrder AND y.Filename = x.FileName
+												WHERE PriceSheetType = 'Cost'
+												GROUP BY x.RefShippingOrder, x.Filename, CAST(LoadedDateTime AS DATETIME) 
+										) V
+					FULL OUTER JOIN		(
+												SELECT x.RefShippingOrder, sum(ChargesAmount) RouteFileCost, x.Filename, CAST(LoadedDateTime AS DATETIME) LoadedDateTime
+												FROM   MGXMLProcessing.[dbo].[tblRouteXML_TransportLoadRecs] x
+												INNER JOIN (
+																SELECT RefShippingOrder, MAX(Filename) Filename
+																FROM MGXMLProcessing.[dbo].[tblRouteXML_TransportLoadRecs]
+																GROUP BY RefShippingOrder
+															) y on y.RefShippingOrder = x.RefShippingOrder AND y.Filename = x.FileName
+												WHERE PriceSheetType = 'Charge'
+												GROUP BY x.RefShippingOrder, x.Filename, CAST(LoadedDateTime AS DATETIME) 
+										) W ON W.RefShippingOrder = V.RefShippingOrder						
+					FULL OUTER JOIN		(
+												SELECT x.RefShippingOrder, sum(ChargesAmount) CustomerInvTotal, x.Filename, CAST(LoadedDateTime AS DATETIME) LoadedDateTime
+												FROM   MGXMLProcessing.[dbo].[tblCustomerXML_InvoiceLoadRecs] x
+												INNER JOIN (
+																SELECT RefShippingOrder, MAX(Filename) Filename
+																FROM MGXMLProcessing.[dbo].[tblCustomerXML_InvoiceLoadRecs]
+																GROUP BY RefShippingOrder
+														   ) y on y.RefShippingOrder = x.RefShippingOrder AND y.Filename = x.FileName
+												GROUP BY x.RefShippingOrder, x.Filename, CAST(LoadedDateTime AS DATETIME) 
+										) X ON X.RefShippingOrder = COALESCE(v.RefShippingOrder, w.RefShippingOrder)
+					FULL OUTER JOIN		(
+												SELECT x.RefShippingOrder, sum(ChargesAmount) CarrierInvTotal, x.Filename, CAST(LoadedDateTime AS DATETIME) LoadedDateTime
+												FROM   MGXMLProcessing.[dbo].[tblCarrierXML_InvoiceLoadRecs] x
+												INNER JOIN (
+																SELECT RefShippingOrder, MAX(Filename) Filename
+																FROM MGXMLProcessing.[dbo].[tblCarrierXML_InvoiceLoadRecs]
+																GROUP BY RefShippingOrder
+														   ) y on y.RefShippingOrder = x.RefShippingOrder AND y.Filename = x.FileName
+												GROUP BY x.RefShippingOrder, x.Filename, CAST(LoadedDateTime AS DATETIME) 
+										) Y ON y.RefShippingOrder = COALESCE(v.RefShippingOrder, w.RefShippingOrder)
+					FULL OUTER JOIN		(
+																
+											SELECT  REPLACE(LINE_ATTRIBUTE11,'MG','') OracleRefShippingOrder, SUM(OREVENUE) OracleRev, SUM(OCOST) OracleCost
+											FROM	ajcdw.[dbo].[tblOracleGLCleansed]
+											WHERE   LOB IN ('10','11')
+											GROUP BY REPLACE(LINE_ATTRIBUTE11,'MG',''), LOB 
+										) Z ON Z.OracleRefShippingOrder = COALESCE(v.RefShippingOrder, w.RefShippingOrder)
+					WHERE		(
+									RouteFileCost <> CarrierInvTotal 
+								OR  RouteFileCost <> OracleCost
+								OR  RouteFileRev <> CustomerInvTotal
+								OR  RouteFileRev <> OracleRev
+								)
+					AND v.LoadedDateTime >= DATEADD(dd,-1,GETDATE())
+					AND w.LoadedDateTime >= DATEADD(dd,-1,GETDATE())
+					AND x.LoadedDateTime >= DATEADD(dd,-1,GETDATE())
+					AND y.LoadedDateTime >= DATEADD(dd,-1,GETDATE())
+
+					IF EXISTS (SELECT TOP 1 1 FROM #TMP)
+					BEGIN
+
+								SET @Message =  
+								N'Hello, Below are the settings for the PIDs requested:' + char(10)+  
+								N'<table border="1"><br /> <br />' +  
+								N'<tr><th>Patient Charges PID</th><th>NDCA PID</th><th>Notes</th><th>HID</th><th>Hospital</th><th>837 Import Specs Active?</th><th>Inbox</th><th>outbox</th><th>VisitNumOnMatch</th><th>MrNumOnMatch</th><th>NdcOnMatch</th><th>ServiceDateOnMatch</th><th>CdmOnMatch</th></tr>' +  
+											CAST ( ( SELECT td = SO_Number, '',
+															td = RouteCostFilename, '',  
+															td = RouteCostLoadedDateTime, '', 
+															td = RouteRevFilename, '', 
+															td = RouteRevLoadedDateTime, '',  
+															td = CarrierInvFilename, '',  
+															td = CarrierInvLoadedDateTime, '', 
+															td = CustInvFilename, '', 
+															td = CustInvLoadedDateTime, '', 
+															td = RouteFileCost, '',
+															td = CarrierInvTotal, '',
+															td = OracleCost, '',
+															td = RouteFileRev, '',
+															td = CustomerInvTotal, '',
+															td = OracleRev, ''
+														FROM #TMP  
+														FOR XML PATH('tr'), TYPE   
+											) AS NVARCHAR(MAX) ) +  
+											N'</table>' + 
+											'<br /><br /><font color="#000080" face="segoe ui" size="2"><b>MacroHelix IT, Operations</font></b><br />
+											<font face="segoe ui" size="2">2 National Data Plaza NE, Atlanta, GA 30329</font><br />
+											<font face="segoe ui" size="2">Support: 888-462-4526</font><br />
+											<font face="segoe ui" size="2">Website: www.macrohelix.com</font>';  
+
+
+									EXEC msdb.dbo.sp_send_dbmail 
+										@profile_name = 'APTEST01SQLMail'  
+									,@recipients = 'sali@ajclogistics.com' 
+									,@body = @Message
+									,@body_format = 'HTML'
+									,@subject = 'Daily MG-BI-Oracle Variance Report'
+									,@Importance = 'HIGH';  
+
+					END
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[MGOracleVarianceReporting]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
