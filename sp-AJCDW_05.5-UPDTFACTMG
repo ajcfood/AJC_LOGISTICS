@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_05.5-UPDTFACTMG]    Script Date: 12/19/2019 11:19:01 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_05.5-UPDTFACTMG]    Script Date: 12/26/2019 10:07:52 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -13,6 +13,13 @@ BEGIN TRY
 BEGIN
 
 SET NOCOUNT ON;
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
 
 /*
 05/17/2019 - SA - Added Error Logging
@@ -120,6 +127,11 @@ FROM tblShipment sh
 WHERE LTRIM(RTRIM(sh.ShpCarrier)) <> '' AND sh.FK_SystemID = 4;
 
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
 
 END
 
