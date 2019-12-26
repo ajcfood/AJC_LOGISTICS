@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 10/8/2019 12:37:22 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 12/26/2019 10:07:02 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -13,6 +13,14 @@ BEGIN TRY
 BEGIN
 
 SET NOCOUNT ON;
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
 
 /*
 
@@ -494,6 +502,11 @@ INNER JOIN	 (
 			) Y ON x.PK_OrderNo = y.FK_OrderNo
 ORDER BY	x.PK_OrderNo
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
 
 END
 
