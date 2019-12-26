@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 12/26/2019 2:31:48 PM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 12/26/2019 2:36:53 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -78,10 +78,12 @@ BEGIN
 								OR  RouteFileRev <> ISNULL(CustomerInvTotal,0.00)
 								OR  RouteFileRev <> ISNULL(OracleRev,0.00)
 								)
-					AND v.LoadedDateTime >= DATEADD(dd,-1,CAST(GETDATE() AS DATE))
-					AND w.LoadedDateTime >= DATEADD(dd,-1,CAST(GETDATE() AS DATE))
-					AND x.LoadedDateTime >= DATEADD(dd,-1,CAST(GETDATE() AS DATE))
-					AND y.LoadedDateTime >= DATEADD(dd,-1,CAST(GETDATE() AS DATE))
+					AND			(
+										v.LoadedDateTime >= DATEADD(dd,-1,CAST(GETDATE() AS DATE))
+									 OR w.LoadedDateTime >= DATEADD(dd,-1,CAST(GETDATE() AS DATE))
+									 OR x.LoadedDateTime >= DATEADD(dd,-1,CAST(GETDATE() AS DATE))
+									 OR y.LoadedDateTime >= DATEADD(dd,-1,CAST(GETDATE() AS DATE))
+								)
 
 					IF EXISTS (SELECT TOP 1 1 FROM #TMP)
 					BEGIN
