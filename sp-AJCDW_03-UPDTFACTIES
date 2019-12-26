@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_03-UPDTFACTIES]    Script Date: 5/21/2019 11:15:17 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_03-UPDTFACTIES]    Script Date: 12/26/2019 10:06:07 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -13,11 +13,17 @@ BEGIN TRY
 BEGIN
 
 SET NOCOUNT ON;
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 
 /*
 05/17/2019 - SA - Added Error Logging
 
 */
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
 
 DECLARE @CYEAR CHAR(4);
 DECLARE @FYEAR CHAR(4);
@@ -462,6 +468,11 @@ and t7.BUS_LINE IN ('62','63')
 and LTRIM(RTRIM(t7.FORWARDERSRE)) IN ('1','2','3','4')
 and ShpShipDate >= DATEADD(MM,-15,CAST(GETDATE() AS DATE))
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
 
 END
 
