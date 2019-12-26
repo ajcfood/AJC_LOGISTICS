@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadSalesPlanCleansedADJ]    Script Date: 5/21/2019 11:21:42 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadSalesPlanCleansedADJ]    Script Date: 12/26/2019 10:21:24 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -18,6 +18,14 @@ BEGIN TRY
 begin
 
 SET NOCOUNT ON;
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
 
 /*
 05/17/2019 - SA - Added Error Logging
@@ -37,7 +45,8 @@ from tblInvoice i
 JOIN tblFile f on i.ShipmentID = f.ShipmentID
 JOIN tblShipment s on f.ShipmentID = s.shipmentID
 JOIN tblSalesP sa on sa.SalesPID = s.FK_SalesPID
-where i.ACCTYR LIKE '%19' and InvLOB = '11'
+where i.ACCTYR IN (YEAR(GETDATE()), YEAR(DATEADD(YY,-1,GETDATE())))	
+and InvLOB = '11'
 Group By sa.SalesPName, i.ACCTYR, InvLOB
 	,f.DELWEEK, f.DELYEAR
 Order by sa.SalesPName
@@ -80,7 +89,8 @@ Order by SalesPName
 -- Note #1: update i.ACCTYR in where clause at the beginning of each year once accounting team confirms final integration is completed for current year 
 -- ====================================================================================================================================================
 DELETE tblSalesPlanCleansedADJ
-WHERE ACCTYR >= 2019 OR SPCSalesGoalYear >= 2019
+WHERE ACCTYR IN (YEAR(GETDATE()), YEAR(DATEADD(YY,-1,GETDATE())))	
+OR SPCSalesGoalYear IN (YEAR(GETDATE()), YEAR(DATEADD(YY,-1,GETDATE())))	
 
 INSERT INTO tblSalesPlanCleansedADJ
 SELECT * from #tmp3
@@ -111,6 +121,11 @@ SELECT * from #tmp2
 SELECT * from #tmp3
 */
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
 
 end
 
