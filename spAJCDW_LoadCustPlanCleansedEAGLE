@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansedEAGLE]    Script Date: 12/18/2019 4:10:59 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansedEAGLE]    Script Date: 12/26/2019 10:22:44 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -20,6 +20,14 @@ BEGIN TRY
 begin
 
 SET NOCOUNT ON;
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
 
 /*
 05/17/2019 - SA - Added Error Logging
@@ -221,6 +229,11 @@ SELECT * from #tmp8
 SELECT * from #tmp9
 SELECT * from #tmp10
 */
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
 
 end
 
