@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp2-AJCDW_05-FactFullAcctPeriod]    Script Date: 5/21/2019 11:10:16 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp2-AJCDW_05-FactFullAcctPeriod]    Script Date: 12/26/2019 10:08:59 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -13,6 +13,14 @@ BEGIN TRY
 BEGIN
 
 SET NOCOUNT ON;
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
 
 /*
 05/17/2019 - SA - Added Error Logging
@@ -38,6 +46,11 @@ from tblInvoice i
 		on i.ShipmentID = s.ShipmentID 
 where i.DelivDate is null;
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
 
 END
 
