@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadSGACleansed]    Script Date: 12/18/2019 3:55:28 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadSGACleansed]    Script Date: 12/26/2019 10:18:46 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -12,6 +12,14 @@ BEGIN TRY
 begin
 
 SET NOCOUNT ON;
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
 
 /*
 05/17/2019 - SA - Added Error Logging
@@ -147,6 +155,13 @@ where SEGMENT2 = '6283' and PERIOD_NAME = 'CALJAN-19' order by LINE_ACCT_COMBO
 select * from tblOracleNonFileTrans
 where SEGMENT2 = '6283' and LINE_PERIOD_NAME = 'CALJAN-19'
 */
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
 end
 
 End Try
