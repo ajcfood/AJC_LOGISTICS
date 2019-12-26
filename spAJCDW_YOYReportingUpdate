@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_YOYReportingUpdate]    Script Date: 5/23/2019 2:33:45 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_YOYReportingUpdate]    Script Date: 12/26/2019 10:24:23 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -10,6 +10,14 @@ ALTER procedure [dbo].[spAJCDW_YOYReportingUpdate] as
 
 BEGIN TRY
 BEGIN
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
 
 
 TRUNCATE TABLE AJCDW.DBO.tblYOYReporting
@@ -33,6 +41,11 @@ from  (
 	  ) annual
 order by InvCustName ASC, invLOB, month, year  
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
 
 END
 END TRY
