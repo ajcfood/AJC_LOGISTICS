@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_03-UPDTFACTIES]    Script Date: 12/26/2019 10:06:07 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_03-UPDTFACTIES]    Script Date: 12/26/2019 3:46:29 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -23,7 +23,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 
  EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
 
- /*************************************************************************************************************************/
+/*************************************************************************************************************************/
 
 DECLARE @CYEAR CHAR(4);
 DECLARE @FYEAR CHAR(4);
@@ -69,6 +69,17 @@ FROM OPENQUERY(IES, '
 	WHERE s.SAILDATE >= CONCAT(CONVERT(YEAR(CURDATE())-1, sql_char), ''-01-01'')
 	');
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
 
 -- Delete Double Entry CSA Records --
 -------------------------------------
@@ -77,6 +88,17 @@ FROM #tmp1
 WHERE REFERENCE_NO IN (
 	SELECT [INTERFACE_HEADER_ATTRIBUTE4] FROM [dbo].[tblOracleCSAFileRef]);
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 3, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
 
 SELECT * 
 INTO #tmp2
@@ -85,6 +107,17 @@ FROM OPENQUERY(IES, '
 	FROM CONTAINE_DAT
 	');
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 3, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 4, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
 
 SELECT * 
 INTO #tmp3
@@ -93,7 +126,17 @@ FROM OPENQUERY(IES, '
 	FROM AES_LOG_DAT
 	');
 
+/*****************************************************End Logging*******************************************************/
 
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 4, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 5, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
 -- Generate Comma Delimited Container List --
 SELECT DISTINCT
 	FILE_NO
@@ -108,6 +151,17 @@ FROM #tmp2 f
 WHERE FILE_NO IS NOT NULL AND FILE_NO <> '-999999999999999'
 ORDER BY FILE_NO;
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 5, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 6, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
 
 /* --COMMENTED OUT BECAUSE AFTER IES UPDATE ON 2/2/19, there is no DELIVERY_ETA field in STATSF_DAT table
 SELECT * 
@@ -132,7 +186,18 @@ FROM OPENQUERY(IES, '
 	WHERE st.SHIPMENT_ID <> 0 AND EXPORT_DATE >= CONCAT(CONVERT(YEAR(CURDATE())-1, sql_char), ''-01-01'')
 	ORDER BY st.SHIPMENT_ID
 	');	
-	
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 6, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/	
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 7, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
 
 -- LOAD INVOICE DATA --
 -----------------------
@@ -141,6 +206,18 @@ FROM tblInvoice
 WHERE ShipmentID IN (
 	SELECT DISTINCT t1.SHIPMENT_ID FROM #tmp1 t1)
 AND FK_SystemID = 2;
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 7, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/	
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 8, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
 
 INSERT INTO tblInvoice
 SELECT t1.SHIPMENT_ID, t1.REFERENCE_NO, t11.LINE_REFERENCE_4, t11.LINE_EFFECTIVE_DATE, NULL, NULL
@@ -152,6 +229,17 @@ FROM #tmp1 t1
 		ON t1.REFERENCE_NO = t11.LINE_ATTRIBUTE11
 ORDER BY SHIPMENT_ID;
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 8, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 9, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 -- LOAD SHIPMENT DATA --
 ------------------------
@@ -160,6 +248,18 @@ FROM tblShipment
 WHERE ShipmentID IN (
 	SELECT DISTINCT t1.SHIPMENT_ID FROM #tmp1 t1)
 AND FK_SystemID = 2;
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 9, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 10, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 INSERT INTO tblShipment
 SELECT DISTINCT t1.SHIPMENT_ID, t1.REFERENCE_NO
@@ -196,6 +296,17 @@ FROM #tmp1 t1
 		ON t1.SHIPMENT_ID = t3.[FILE_ID]
 ORDER BY t1.SHIPMENT_ID;
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 10, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 11, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 -- Update TEU For Master BL Records with No Invoice --
 ------------------------------------------------------
@@ -209,6 +320,17 @@ where s.ShpDivID = '40'
 	and s.ShipmentID not in (select ShipmentID from tblInvoice)
 	and s.FK_SystemID = 2;
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 11, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 12, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 -- Update Origin and Delivery Records --
 ----------------------------------------
@@ -219,6 +341,17 @@ from tblShipment s
 		on s.ShipmentID = t5.shipment_id
 where s.FK_SystemID = 2;
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 12, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 13, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 -- Update Div 0 Records --
 --------------------------
@@ -226,7 +359,17 @@ UPDATE tblShipment
 SET ShpDivID = LEFT(RefNo, 2)
 WHERE ShpDivID = 0;
 
+/*****************************************************End Logging*******************************************************/
 
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 13, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 14, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 --------------------------
 -- FOREIGN KEY UPDATES --
@@ -244,6 +387,17 @@ FROM tblShipment sh
 			AND sh.ShpLOB = di.LOBNum)
 WHERE LTRIM(RTRIM(sh.ShpDivID)) <> '' AND LTRIM(RTRIM(sh.ShpLOB)) <> '' AND sh.FK_SystemID = 2; 
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 14, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 15, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
     
  -- Customer --
 ---------------
@@ -256,6 +410,17 @@ FROM tblShipment sh
 		ON sh.ShpAccnt = cm.CustMasterCode AND sh.FK_SystemID = cm.FK_SystemID
 WHERE LTRIM(RTRIM(sh.ShpAccnt)) <> '' AND sh.FK_SystemID = 2; 
     
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 15, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 16, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 -- Sales Person --
 ------------------
@@ -270,6 +435,17 @@ FROM tblShipment sh
 		ON cm.salesman = sp.salespcode
 WHERE LTRIM(RTRIM(sh.ShpAccnt)) <> '' AND sh.FK_SystemID = 2;  
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 16, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 17, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 -- Shipment Type (Import vs Export) --
 --------------------------------------
@@ -281,6 +457,17 @@ FROM tblshipment sh
 	INNER JOIN tblShipmentType st
 		ON left(ltrim(rtrim(sh.RefNo)), 3) = st.ShpTypeFilePrefix or right(ltrim(rtrim(sh.RefNo)), 3) = st.ShpTypeFileSuffix;
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 17, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 18, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 -- Update Import Records Delivery Date --
 -----------------------------------------
@@ -291,6 +478,17 @@ from tblShipment s
 		on s.ShipmentID = t5.shipment_id
 where s.FK_SystemID = 2 and s.FK_ShipmentTypeID = 2;
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 18, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 19, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 -- Update remaining IES NULL Delivery Dates --
 -----------------------------------------------
@@ -304,11 +502,35 @@ and s.FK_SystemID = 2
 group by s.ShipmentID, s.RefNo, s.ShpShipDate
 order by s.ShpShipDate;
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 19, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 20, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
+
 update tblShipment
 set ShpDelivDate = t6.mininvdate
 from tblShipment s
 inner join #tmp6 t6
 on s.ShipmentID = t6.ShipmentID;
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 20, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 21, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 update tblShipment
 set ShpDelivDate = ShpShipDate
@@ -317,6 +539,17 @@ where ShpDelivDate is null
 and datepart(yy,ShpShipDate) < datepart(yy, getdate())
 and FK_SystemID = 2;
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 21, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 22, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 -- Clean up IES garbage files --
 --------------------------------
@@ -324,14 +557,49 @@ update tblShipment
 set ShpShipDate = '9/27/10', ShpDelivDate = '9/27/10'
 where RefNo in ('10-014256', '10-014257');
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 22, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 23, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
+
 update tblShipment
 set ShpShipDate = '2016-12-30 00:00:00.000', ShpDelivDate = '2016-12-30 00:00:00.000'
 where RefNo in ('40-010022-01', '40-010023-01');
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 23, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 24, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 delete
 from tblShipment
 where refno in  ('10-014256', '10-014257');
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 24, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 25, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 -- Update bogus Delivery dates
 Update tblShipment
@@ -339,10 +607,34 @@ Set ShpDelivDate = ShpShipDate
 Where ShpDelivDate = '1899-12-30 00:00:00.000'
 	and FK_SystemID = 2;
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 25, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 26, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
+
 Update tblShipment
 Set ShpDelivDate = convert(datetime, replace(ShpDelivDate, datepart(YYYY, ShpDelivDate), datepart(YYYY, ShpShipDate)), 104)
 Where ShpDelivDate > '1899-12-30 00:00:00.000' and ShpDelivDate < '2012-11-01'
 	and FK_SystemID = 2;
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 26, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 27, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 Update tblInvoice
 Set InvDate = ShpDelivDate
@@ -352,6 +644,17 @@ From tblInvoice i
 Where i.InvDate = '1899-12-30 00:00:00.000'
 	and s.FK_SystemID = 2;
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 27, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 28, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 -- Change Delivery Date for dates set too much in the future
 Update tblShipment
@@ -359,6 +662,17 @@ Set ShpDelivDate = convert(datetime, replace(ShpDelivDate, datepart(YYYY, ShpDel
 Where ShpDelivDate > '12/31/' + @FYEAR
 	and FK_SystemID = 2;
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 28, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 29, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 --------------------
 -- Load File Data --
@@ -369,6 +683,18 @@ FROM tblFile
 WHERE ShipmentID IN (
 	SELECT DISTINCT t1.SHIPMENT_ID FROM #tmp1 t1)
 AND FK_SystemID = 2;
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 29, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 30, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
  -- Shipment --
 ---------------
@@ -402,6 +728,17 @@ FROM tblShipment
 WHERE ShipmentID NOT IN (SELECT ShipmentID FROM tblFile)
 	AND FK_SystemID = 2;	
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 30, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 31, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 -- LOAD CONTAINER DATA  --
 --------------------------
@@ -411,6 +748,17 @@ delete
 from tblContainer
 where FK_SystemID = 2;
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 31, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 32, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 insert into tblContainer
 select distinct t1.container, t1.[type], s.ShpDivID, s.ShpLOB, s.ShpCarrier, '' as cont_desc
@@ -423,15 +771,49 @@ from tblShipment s
 		on t1.file_no = s.ShipmentID
 where ltrim(rtrim(t1.container)) <> '' and s.FK_SystemID = 2;
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 32, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 33, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 update tblContainer
 set ContDesc = 'Reefer'
 where ContType like '%RF%' and ContDesc = '';
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 33, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 34, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
+
 update tblContainer
 set ContDesc = 'Dry'
 where ContType not like '%RF%' and ltrim(rtrim(ContType)) <> '' and ContDesc = '';
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 34, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 35, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 insert into tblContainerContents
 select distinct t2.ContentId, t2.WTLBS, t2.PIECES, t2.PIECE_TYPE, t2.VALUE, t2.UNITS, t2.UNIT_TYPE, t2.DESC_TEXT, t2.FILE_NO
@@ -446,10 +828,34 @@ from tblShipment s
 where t2.ContentID not in (select ContentsNum from tblContainerContents)
 	and s.FK_SystemID = 2;
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 35, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 36, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
+
 --ADDED BY SALAH on 3/6/19 because 31 and 33 files were showing as NULL for InvLOB
 UPDATE tblInvoice
 set InvLOB = '31,33,43'
 where INVLob IS NULL and RefNo LIKE '30-%' and FK_SystemID = 2
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 36, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 37, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 DROP TABLE #tmp1;
 DROP TABLE #tmp2;
@@ -457,6 +863,18 @@ DROP TABLE #tmp3;
 DROP TABLE #tmp4;
 DROP TABLE #tmp5;
 DROP TABLE #tmp6;
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 37, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 38, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/	
 
 --Set ShpMoveType to Zone Number for FedEx Deliveries-- added by Salah on 6/21/19
 -------------------------------------------------------
@@ -470,9 +888,9 @@ and ShpShipDate >= DATEADD(MM,-15,CAST(GETDATE() AS DATE))
 
 /*****************************************************End Logging*******************************************************/
 
- EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 38, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
 
- /***********************************************************************************************************************/
+/***********************************************************************************************************************/
 
 END
 
