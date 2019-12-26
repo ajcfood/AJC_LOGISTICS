@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[PurgeDuplicateShipmentIDs]    Script Date: 12/4/2019 12:44:40 PM ******/
+/****** Object:  StoredProcedure [dbo].[PurgeDuplicateShipmentIDs]    Script Date: 12/26/2019 10:25:23 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -12,6 +12,14 @@ ALTER procedure [dbo].[PurgeDuplicateShipmentIDs] as
 BEGIN TRY
 BEGIN
 
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
 
 
 					--Find Dup ShipmentIDs
@@ -155,6 +163,11 @@ BEGIN
 					INNER JOIN	#PurgeMG p on p.ShpRecID = ts.ShpRecID
 					WHERE		p.Row > 1
 
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
 
 END
 
