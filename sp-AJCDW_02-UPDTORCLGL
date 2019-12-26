@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_02-UPDTORCLGL]    Script Date: 5/21/2019 11:14:58 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_02-UPDTORCLGL]    Script Date: 12/26/2019 10:05:40 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -13,11 +13,17 @@ BEGIN TRY
 BEGIN
 
 SET NOCOUNT ON;
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 
 /*
 05/17/2019 - SA - Added Error Logging
 
 */
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
 
 DECLARE @CYEAR CHAR(2);
 DECLARE @PYEAR CHAR(2);
@@ -42,6 +48,12 @@ exec [dbo].[spAJCDW_LoadOracleGLCleansed] @CYEAR;
 ----------------------------------
 exec [dbo].[spAJCDW_LoadOracleNonFileTrans] @PYEAR;
 exec [dbo].[spAJCDW_LoadOracleNonFileTrans] @CYEAR;
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
 
 
 END
