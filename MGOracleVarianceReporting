@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 12/26/2019 2:36:53 PM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 12/27/2019 1:07:30 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -14,6 +14,14 @@ ALTER procedure [dbo].[MGOracleVarianceReporting] as
 
 BEGIN TRY
 BEGIN
+
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
 
 					DECLARE @Message VARCHAR(MAX)
 
@@ -73,9 +81,9 @@ BEGIN
 											GROUP BY REPLACE(LINE_ATTRIBUTE11,'MG',''), LOB 
 										) Z ON Z.OracleRefShippingOrder = COALESCE(v.RefShippingOrder, w.RefShippingOrder)
 					WHERE		(
-									RouteFileCost <> ISNULL(CarrierInvTotal,0.00) 
+									RouteFileCost <> ISNULL(CarrierInvTotal,RouteFileCost) 
 								OR  RouteFileCost <> ISNULL(OracleCost,0.00)
-								OR  RouteFileRev <> ISNULL(CustomerInvTotal,0.00)
+								OR  RouteFileRev <> ISNULL(CustomerInvTotal,RouteFileRev)
 								OR  RouteFileRev <> ISNULL(OracleRev,0.00)
 								)
 					AND			(
@@ -143,6 +151,13 @@ BEGIN
 									,@Importance = 'HIGH';  
 
 					END
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
 
 END
 
