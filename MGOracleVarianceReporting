@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 1/2/2020 3:00:30 PM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 1/2/2020 3:27:32 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -118,15 +118,15 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 												<th>CustomerInvTotal</th>
 												<th>OracleRev</th>
 												</tr>' +  
-															CAST ( ( SELECT td = ISNULL(SO_Number,''), '',
+															CAST ( ( SELECT top 2 td = ISNULL(SO_Number,''), '',
 																			td = ISNULL(RouteCostFilename,''), '',  
-																			td = ISNULL(FORMAT(RouteCostLoadedDateTime, 'MM/dd/yyyy HH:mm:ss'),''), '', 
+																			td = ISNULL(convert(varchar,RouteCostLoadedDateTime,0),''), '', 
 																			td = ISNULL(RouteRevFilename,''), '', 
-																			td = ISNULL(FORMAT(RouteRevLoadedDateTime, 'MM/dd/yyyy HH:mm:ss'),''), '',  
+																			td = ISNULL(convert(varchar,RouteRevLoadedDateTime, 0),''), '',  
 																			td = ISNULL(CarrierInvFilename,''), '',  
-																			td = ISNULL(FORMAT(CarrierInvLoadedDateTime, 'MM/dd/yyyy HH:mm:ss'),''), '', 
+																			td = ISNULL(convert(varchar,CarrierInvLoadedDateTime, 0),''), '', 
 																			td = ISNULL(CustInvFilename,''), '', 
-																			td = ISNULL(FORMAT(CustInvLoadedDateTime, 'MM/dd/yyyy HH:mm:ss'),''), '', 
+																			td = ISNULL(convert(varchar,CustInvLoadedDateTime, 0),''), '', 
 																			td = ISNULL(RouteFileCost,0.00), '',
 																			td = ISNULL(CarrierInvTotal,0.00), '',
 																			td = ISNULL(OracleCost,0.00), '',
@@ -134,6 +134,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 																			td = ISNULL(CustomerInvTotal,0.00), '',
 																			td = ISNULL(OracleRev,0.00), ''
 																		FROM #TMP  
+																		where RouteCostLoadedDateTime is not null 
 																		FOR XML PATH('tr'), TYPE   
 															) AS NVARCHAR(MAX) ) + 
 			
