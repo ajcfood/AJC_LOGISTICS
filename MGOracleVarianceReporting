@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 12/27/2019 1:07:30 PM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 1/2/2020 3:00:30 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -118,21 +118,21 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 												<th>CustomerInvTotal</th>
 												<th>OracleRev</th>
 												</tr>' +  
-															CAST ( ( SELECT td = SO_Number, '',
-																			td = RouteCostFilename, '',  
-																			td = RouteCostLoadedDateTime, '', 
-																			td = RouteRevFilename, '', 
-																			td = RouteRevLoadedDateTime, '',  
-																			td = CarrierInvFilename, '',  
-																			td = CarrierInvLoadedDateTime, '', 
-																			td = CustInvFilename, '', 
-																			td = CustInvLoadedDateTime, '', 
-																			td = RouteFileCost, '',
-																			td = CarrierInvTotal, '',
-																			td = OracleCost, '',
-																			td = RouteFileRev, '',
-																			td = CustomerInvTotal, '',
-																			td = OracleRev, ''
+															CAST ( ( SELECT td = ISNULL(SO_Number,''), '',
+																			td = ISNULL(RouteCostFilename,''), '',  
+																			td = ISNULL(FORMAT(RouteCostLoadedDateTime, 'MM/dd/yyyy HH:mm:ss'),''), '', 
+																			td = ISNULL(RouteRevFilename,''), '', 
+																			td = ISNULL(FORMAT(RouteRevLoadedDateTime, 'MM/dd/yyyy HH:mm:ss'),''), '',  
+																			td = ISNULL(CarrierInvFilename,''), '',  
+																			td = ISNULL(FORMAT(CarrierInvLoadedDateTime, 'MM/dd/yyyy HH:mm:ss'),''), '', 
+																			td = ISNULL(CustInvFilename,''), '', 
+																			td = ISNULL(FORMAT(CustInvLoadedDateTime, 'MM/dd/yyyy HH:mm:ss'),''), '', 
+																			td = ISNULL(RouteFileCost,0.00), '',
+																			td = ISNULL(CarrierInvTotal,0.00), '',
+																			td = ISNULL(OracleCost,0.00), '',
+																			td = ISNULL(RouteFileRev,0.00), '',
+																			td = ISNULL(CustomerInvTotal,0.00), '',
+																			td = ISNULL(OracleRev,0.00), ''
 																		FROM #TMP  
 																		FOR XML PATH('tr'), TYPE   
 															) AS NVARCHAR(MAX) ) + 
