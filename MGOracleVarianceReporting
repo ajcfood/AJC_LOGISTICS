@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 1/2/2020 3:27:32 PM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 1/2/2020 3:33:03 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -118,7 +118,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 												<th>CustomerInvTotal</th>
 												<th>OracleRev</th>
 												</tr>' +  
-															CAST ( ( SELECT top 2 td = ISNULL(SO_Number,''), '',
+															CAST ( ( SELECT td = ISNULL(SO_Number,''), '',
 																			td = ISNULL(RouteCostFilename,''), '',  
 																			td = ISNULL(convert(varchar,RouteCostLoadedDateTime,0),''), '', 
 																			td = ISNULL(RouteRevFilename,''), '', 
