@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 1/2/2020 4:16:03 PM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 1/2/2020 4:37:45 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -27,50 +27,50 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 
 					IF OBJECT_ID ('TEMPDB..#TMP') IS NOT NULL  DROP TABLE #TMP
 
-					select	COALESCE(v.RefShippingOrder, w.RefShippingOrder, x.RefShippingOrder, y.RefShippingOrder, z.OracleRefShippingOrder) SO_Number, v.FileName RouteCostFilename, v.LoadedDateTime RouteCostLoadedDateTime, 
+					SELECT	COALESCE(v.RefShippingOrder, w.RefShippingOrder, x.RefShippingOrder, y.RefShippingOrder, z.OracleRefShippingOrder) SO_Number, v.FileName RouteCostFilename, v.LoadedDateTime RouteCostLoadedDateTime, 
 							w.FileName RouteRevFilename, w.LoadedDateTime RouteRevLoadedDateTime, y.Filename CarrierInvFilename, y.LoadedDateTime CarrierInvLoadedDateTime, x.FileName CustInvFilename, x.LoadedDateTime CustInvLoadedDateTime, 
 							RouteFileCost, CarrierInvTotal, OracleCost, RouteFileRev, CustomerInvTotal, OracleRev
 					INTO #TMP
-					from 				(
-												SELECT x.RefShippingOrder, sum(ChargesAmount) RouteFileRev, x.Filename, CAST(LoadedDateTime AS DATETIME) LoadedDateTime
+					FROM 				(
+												SELECT x.RefShippingOrder, SUM(ChargesAmount) RouteFileRev, x.Filename, CAST(LoadedDateTime AS DATETIME) LoadedDateTime
 												FROM   MGXMLProcessing.[dbo].[tblRouteXML_TransportLoadRecs] x
 												INNER JOIN (
 																SELECT RefShippingOrder, MAX(Filename) Filename
 																FROM MGXMLProcessing.[dbo].[tblRouteXML_TransportLoadRecs]
 																GROUP BY RefShippingOrder
-															) y on y.RefShippingOrder = x.RefShippingOrder AND y.Filename = x.FileName
+															) y ON y.RefShippingOrder = x.RefShippingOrder AND y.Filename = x.FileName
 												WHERE PriceSheetType = 'Cost'
 												GROUP BY x.RefShippingOrder, x.Filename, CAST(LoadedDateTime AS DATETIME) 
 										) V
 					FULL OUTER JOIN		(
-												SELECT x.RefShippingOrder, sum(ChargesAmount) RouteFileCost, x.Filename, CAST(LoadedDateTime AS DATETIME) LoadedDateTime
+												SELECT x.RefShippingOrder, SUM(ChargesAmount) RouteFileCost, x.Filename, CAST(LoadedDateTime AS DATETIME) LoadedDateTime
 												FROM   MGXMLProcessing.[dbo].[tblRouteXML_TransportLoadRecs] x
 												INNER JOIN (
 																SELECT RefShippingOrder, MAX(Filename) Filename
 																FROM MGXMLProcessing.[dbo].[tblRouteXML_TransportLoadRecs]
 																GROUP BY RefShippingOrder
-															) y on y.RefShippingOrder = x.RefShippingOrder AND y.Filename = x.FileName
+															) y ON y.RefShippingOrder = x.RefShippingOrder AND y.Filename = x.FileName
 												WHERE PriceSheetType = 'Charge'
 												GROUP BY x.RefShippingOrder, x.Filename, CAST(LoadedDateTime AS DATETIME) 
 										) W ON W.RefShippingOrder = V.RefShippingOrder						
 					FULL OUTER JOIN		(
-												SELECT x.RefShippingOrder, sum(ChargesAmount) CustomerInvTotal, x.Filename, CAST(LoadedDateTime AS DATETIME) LoadedDateTime
+												SELECT x.RefShippingOrder, SUM(ChargesAmount) CustomerInvTotal, x.Filename, CAST(LoadedDateTime AS DATETIME) LoadedDateTime
 												FROM   MGXMLProcessing.[dbo].[tblCustomerXML_InvoiceLoadRecs] x
 												INNER JOIN (
 																SELECT RefShippingOrder, MAX(Filename) Filename
 																FROM MGXMLProcessing.[dbo].[tblCustomerXML_InvoiceLoadRecs]
 																GROUP BY RefShippingOrder
-														   ) y on y.RefShippingOrder = x.RefShippingOrder AND y.Filename = x.FileName
+														   ) y ON y.RefShippingOrder = x.RefShippingOrder AND y.Filename = x.FileName
 												GROUP BY x.RefShippingOrder, x.Filename, CAST(LoadedDateTime AS DATETIME) 
 										) X ON X.RefShippingOrder = COALESCE(v.RefShippingOrder, w.RefShippingOrder)
 					FULL OUTER JOIN		(
-												SELECT x.RefShippingOrder, sum(ChargesAmount) CarrierInvTotal, x.Filename, CAST(LoadedDateTime AS DATETIME) LoadedDateTime
+												SELECT x.RefShippingOrder, SUM(ChargesAmount) CarrierInvTotal, x.Filename, CAST(LoadedDateTime AS DATETIME) LoadedDateTime
 												FROM   MGXMLProcessing.[dbo].[tblCarrierXML_InvoiceLoadRecs] x
 												INNER JOIN (
 																SELECT RefShippingOrder, MAX(Filename) Filename
 																FROM MGXMLProcessing.[dbo].[tblCarrierXML_InvoiceLoadRecs]
 																GROUP BY RefShippingOrder
-														   ) y on y.RefShippingOrder = x.RefShippingOrder AND y.Filename = x.FileName
+														   ) y ON y.RefShippingOrder = x.RefShippingOrder AND y.Filename = x.FileName
 												GROUP BY x.RefShippingOrder, x.Filename, CAST(LoadedDateTime AS DATETIME) 
 										) Y ON y.RefShippingOrder = COALESCE(v.RefShippingOrder, w.RefShippingOrder)
 					FULL OUTER JOIN		(
@@ -120,13 +120,13 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 												</tr>' +  
 															CAST ( ( SELECT td = ISNULL(SO_Number,''), '',
 																			td = ISNULL(RouteCostFilename,''), '',  
-																			td = ISNULL(convert(varchar,RouteCostLoadedDateTime,0),''), '', 
+																			td = ISNULL(CONVERT(VARCHAR,RouteCostLoadedDateTime,0),''), '', 
 																			td = ISNULL(RouteRevFilename,''), '', 
-																			td = ISNULL(convert(varchar,RouteRevLoadedDateTime, 0),''), '',  
+																			td = ISNULL(CONVERT(VARCHAR,RouteRevLoadedDateTime, 0),''), '',  
 																			td = ISNULL(CarrierInvFilename,''), '',  
-																			td = ISNULL(convert(varchar,CarrierInvLoadedDateTime, 0),''), '', 
+																			td = ISNULL(CONVERT(VARCHAR,CarrierInvLoadedDateTime, 0),''), '', 
 																			td = ISNULL(CustInvFilename,''), '', 
-																			td = ISNULL(convert(varchar,CustInvLoadedDateTime, 0),''), '', 
+																			td = ISNULL(CONVERT(VARCHAR,CustInvLoadedDateTime, 0),''), '', 
 																			td = ISNULL(RouteFileCost,0.00), '',
 																			td = ISNULL(CarrierInvTotal,0.00), '',
 																			td = ISNULL(OracleCost,0.00), '',
@@ -161,7 +161,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 
 END
 
-End Try
+END TRY
 
 
 
@@ -173,8 +173,8 @@ BEGIN CATCH
               
               SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
               
-              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
-              Select '[MGOracleVarianceReporting]', @ErrorMessage, @ErrorLine, @ErrorDate
+              INSERT INTO AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              SELECT '[MGOracleVarianceReporting]', @ErrorMessage, @ErrorLine, @ErrorDate
 
 
 
