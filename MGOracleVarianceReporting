@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 1/2/2020 3:33:03 PM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 1/2/2020 4:14:16 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -134,7 +134,6 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 																			td = ISNULL(CustomerInvTotal,0.00), '',
 																			td = ISNULL(OracleRev,0.00), ''
 																		FROM #TMP  
-																		where RouteCostLoadedDateTime is not null 
 																		FOR XML PATH('tr'), TYPE   
 															) AS NVARCHAR(MAX) ) + 
 			
