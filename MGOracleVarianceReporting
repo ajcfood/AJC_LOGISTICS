@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 1/2/2020 4:14:16 PM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 1/2/2020 4:16:03 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -31,7 +31,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 							w.FileName RouteRevFilename, w.LoadedDateTime RouteRevLoadedDateTime, y.Filename CarrierInvFilename, y.LoadedDateTime CarrierInvLoadedDateTime, x.FileName CustInvFilename, x.LoadedDateTime CustInvLoadedDateTime, 
 							RouteFileCost, CarrierInvTotal, OracleCost, RouteFileRev, CustomerInvTotal, OracleRev
 					INTO #TMP
-					from 		(
+					from 				(
 												SELECT x.RefShippingOrder, sum(ChargesAmount) RouteFileRev, x.Filename, CAST(LoadedDateTime AS DATETIME) LoadedDateTime
 												FROM   MGXMLProcessing.[dbo].[tblRouteXML_TransportLoadRecs] x
 												INNER JOIN (
@@ -83,8 +83,8 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 					WHERE		(
 									RouteFileCost <> ISNULL(CarrierInvTotal,RouteFileCost) 
 								OR  RouteFileCost <> ISNULL(OracleCost,0.00)
-								OR  RouteFileRev <> ISNULL(CustomerInvTotal,RouteFileRev)
-								OR  RouteFileRev <> ISNULL(OracleRev,0.00)
+								OR  RouteFileRev  <> ISNULL(CustomerInvTotal,RouteFileRev)
+								OR  RouteFileRev  <> ISNULL(OracleRev,0.00)
 								)
 					AND			(
 										v.LoadedDateTime >= DATEADD(dd,-1,CAST(GETDATE() AS DATE))
