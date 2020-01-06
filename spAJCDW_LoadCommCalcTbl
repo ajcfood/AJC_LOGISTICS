@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 12/26/2019 10:17:29 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 1/6/2020 10:35:05 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -435,7 +435,7 @@ and SalesPName = 'Mike Maroni'
 Update tblCommCalc
 set JHComm = GP * .065
 where InvLOB = '10'
-and SalesPName = 'Jessie Higginbotham'
+and SalesPName = 'Jesse Higginbotham'
 
 -- Nick Seney Comm: 8.5% of own GP in LOB 10
 Update tblCommCalc
