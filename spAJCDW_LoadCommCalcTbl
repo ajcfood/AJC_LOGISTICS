@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 1/6/2020 10:35:05 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 1/9/2020 10:20:42 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -408,6 +408,12 @@ set RCComm = GP *.005
 where InvLOB = '11'
 and ACCTMONTH NOT IN (1,2,3,4,5,6,7,8)
 and ACCTYR = 2019
+
+--Ryan Click Comm: 1.0% of total team GP effective January 1,2020
+update tblCommCalc
+set RCComm = GP *.01
+where InvLOB = '11'
+and ACCTYR >= 2020
 
 -- Ari Matsumura Comm: 7% of GP for his loads for SeaWide
 Update tblCommCalc
