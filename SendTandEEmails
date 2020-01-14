@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendTandEEmails]    Script Date: 1/14/2020 9:49:31 AM ******/
+/****** Object:  StoredProcedure [dbo].[SendTandEEmails]    Script Date: 1/14/2020 2:25:03 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -30,8 +30,8 @@ BEGIN
 			UNION SELECT 700, 'GENERAL & ADMIN-CORPORATE','gberger@ajclogistics.com','igayle@ajclogistics.com'
 
 
-			IF OBJECT_ID ('TEMPDB..##Loop') IS NOT NULL  DROP TABLE ##Loop
-			Select  DPT, 0 Status into ##Loop from #DeptCode
+			IF OBJECT_ID ('TEMPDB..##TandE') IS NOT NULL  DROP TABLE ##TandE
+			Select  DPT, 0 Status into ##TandE from #DeptCode
 			DECLARE @YEAR VARCHAR(4) = CASE WHEN MONTH(GETDATE()) = 1 THEN YEAR(DATEADD(YYYY,-1,GETDATE())) --When current month is Jan, we take the previous year
 											ELSE YEAR(GETDATE())
 											END ;
@@ -39,10 +39,10 @@ BEGIN
 			DECLARE @tableB_HTML  NVARCHAR(MAX) ;
 			DECLARE @PERIOD VARCHAR(MAX) = 'CAL' + UPPER(FORMAT(DATEADD(MM,-1,GETDATE()), 'MMM', 'en-US')) + '-' + RIGHT(@YEAR, 2);
 			DECLARE @HTML  NVARCHAR(MAX) ;
-			DECLARE @DPT INT = (SELECT MIN(DPT) FROM ##Loop);
+			DECLARE @DPT INT = (SELECT MIN(DPT) FROM ##TandE);
 			DECLARE @DPTDesc VARCHAR(150), @Recipient varchar(150), @CarbonCopyRecipient varchar(max);
 
-			WHILE (@DPT <= (SELECT MAX(DPT) FROM ##Loop))
+			WHILE (@DPT <= (SELECT MAX(DPT) FROM ##TandE))
 			BEGIN
 
 			BEGIN
@@ -166,8 +166,8 @@ BEGIN
 			END
 
 			BEGIN
-			UPDATE ##Loop SET STATUS = 1 WHERE DPT = @DPT
-			SET @DPT = (SELECT MIN(DPT) FROM ##Loop WHERE STATUS = 0)
+			UPDATE ##TandE SET STATUS = 1 WHERE DPT = @DPT
+			SET @DPT = (SELECT MIN(DPT) FROM ##TandE WHERE STATUS = 0)
 			SET @PERIOD = 'CAL' + UPPER(FORMAT(DATEADD(MM,-1,GETDATE()), 'MMM', 'en-US')) + '-' + RIGHT(@YEAR, 2)
 			END
 
@@ -200,8 +200,8 @@ BEGIN
 
 
 
-			IF OBJECT_ID ('TEMPDB..##Loop2') IS NOT NULL  DROP TABLE ##Loop2
-			Select  DPT, 0 Status into ##Loop2 from #ProdGrouping
+			IF OBJECT_ID ('TEMPDB..##TandE2') IS NOT NULL  DROP TABLE ##TandE2
+			Select  DPT, 0 Status into ##TandE2 from #ProdGrouping
 			DECLARE @YEAR2 VARCHAR(4) = CASE WHEN MONTH(GETDATE()) = 1 THEN YEAR(DATEADD(YYYY,-1,GETDATE())) --When current month is Jan, we take the previous year
 											ELSE YEAR(GETDATE())
 											END ;
@@ -209,10 +209,10 @@ BEGIN
 			DECLARE @tableB_HTML2  NVARCHAR(MAX) ;
 			DECLARE @PERIOD2 VARCHAR(MAX) = 'CAL' + UPPER(FORMAT(DATEADD(MM,-1,GETDATE()), 'MMM', 'en-US')) + '-' + RIGHT(@YEAR2, 2);
 			DECLARE @HTML2  NVARCHAR(MAX) ;
-			DECLARE @DPT2 INT = (SELECT MIN(DPT) FROM ##Loop2);
+			DECLARE @DPT2 INT = (SELECT MIN(DPT) FROM ##TandE2);
 			DECLARE @DPTDesc2 VARCHAR(150), @Recipient2 varchar(150), @CarbonCopyRecipient2 varchar(max);
 
-			WHILE (@DPT2 <= (SELECT MAX(DPT) FROM ##Loop2))
+			WHILE (@DPT2 <= (SELECT MAX(DPT) FROM ##TandE2))
 			BEGIN
 
 			BEGIN
@@ -332,8 +332,8 @@ BEGIN
 			END
 
 			BEGIN
-			UPDATE ##Loop2 SET STATUS = 1 WHERE DPT = @DPT2
-			SET @DPT2 = (SELECT MIN(DPT) FROM ##Loop2 WHERE STATUS = 0)
+			UPDATE ##TandE2 SET STATUS = 1 WHERE DPT = @DPT2
+			SET @DPT2 = (SELECT MIN(DPT) FROM ##TandE2 WHERE STATUS = 0)
 			SET @PERIOD2 = 'CAL' + UPPER(FORMAT(DATEADD(MM,-1,GETDATE()), 'MMM', 'en-US')) + '-' + RIGHT(@YEAR2, 2)
 			END
 
