@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[CustomerYOYActuals]    Script Date: 10/31/2019 3:15:36 PM ******/
+/****** Object:  StoredProcedure [dbo].[CustomerYOYActuals]    Script Date: 1/14/2020 2:23:46 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -79,24 +79,24 @@ from #CustomerName, #AccountYear
 
 alter table #Customer add [CY Load Count] int, [CY -1 Load Count] int, [CY -2 Load Count] int, [CY GP] decimal(38,2), [CY -1 GP] decimal(38,2), [CY -2 GP] decimal(38,2)
 
-IF OBJECT_ID ('TEMPDB..##Loop') IS NOT NULL  DROP TABLE ##Loop
+IF OBJECT_ID ('TEMPDB..#CustYOY') IS NOT NULL  DROP TABLE #CustYOY
 select *, 0 Status, row_number() over (order by Year) ID
-into ##Loop
+into #CustYOY
 from #AccountYear 
 
 
-DECLARE @ID INT = (SELECT MIN(ID) FROM ##Loop)
-DECLARE @YEAR INT = (SELECT YEAR FROM ##Loop WHERE ID = @ID)
-DECLARE @MONTH INT = (SELECT MONTH FROM ##Loop WHERE ID = @ID)
+DECLARE @ID INT = (SELECT MIN(ID) FROM #CustYOY)
+DECLARE @YEAR INT = (SELECT YEAR FROM #CustYOY WHERE ID = @ID)
+DECLARE @MONTH INT = (SELECT MONTH FROM #CustYOY WHERE ID = @ID)
 
 
-WHILE (@ID <= (SELECT MAX(ID) FROM ##Loop))
+WHILE (@ID <= (SELECT MAX(ID) FROM #CustYOY))
 BEGIN
 
 BEGIN
 
-SET @YEAR = (SELECT YEAR FROM ##Loop WHERE ID = @ID)
-SET @MONTH = (SELECT MONTH FROM ##Loop WHERE ID = @ID)
+SET @YEAR = (SELECT YEAR FROM #CustYOY WHERE ID = @ID)
+SET @MONTH = (SELECT MONTH FROM #CustYOY WHERE ID = @ID)
 
 UPDATE C SET [CY Load Count] = ISNULL(x.[CY Load Count],0), [CY GP] = ISNULL(x.[CY GP],0)
 FROM #Customer c
@@ -133,8 +133,8 @@ and	  c.Month = @Month
 END
 
 BEGIN
-UPDATE ##Loop SET STATUS = 1 WHERE ID = @ID
-SET @ID = (SELECT MIN(ID) FROM ##Loop WHERE STATUS = 0)
+UPDATE #CustYOY SET STATUS = 1 WHERE ID = @ID
+SET @ID = (SELECT MIN(ID) FROM #CustYOY WHERE STATUS = 0)
 END
 
 END
