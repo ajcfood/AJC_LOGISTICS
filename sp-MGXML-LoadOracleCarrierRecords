@@ -1,6 +1,6 @@
 USE [MGXMLProcessing]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadOracleCarrierRecords]    Script Date: 12/5/2019 10:40:09 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadOracleCarrierRecords]    Script Date: 1/15/2020 10:56:07 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -78,7 +78,7 @@ select [RefShippingOrder]
       ,[ChargesEDICode]
       ,[ChargesDesc]
       ,[ChargesAmount]
-      ,LEFT([InvNum],28) [InvNum]
+      ,LEFT([InvNum],19) [InvNum]
       ,[InvDate]
       ,[LoadedDateTime]
       ,[FileName]
