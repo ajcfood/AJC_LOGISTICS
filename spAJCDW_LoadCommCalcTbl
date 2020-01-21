@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 1/9/2020 10:20:42 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 1/21/2020 10:05:04 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -96,6 +96,7 @@ SELECT ACCTYR
 	,Convert(decimal(18,2),0.00) as NSComm -- Nick Seney
 	,Convert(decimal(18,2),0.00) as DTComm -- Dalton Thomas
 	,Convert(decimal(18,2),0.00) as DBComm -- Dana Beck
+	,Convert(decimal(18,2),0.00) as AUSTINComm -- Austin Miller
 into #tmp1
 from tblInvoice i
 JOIN tblShipment s on i.ShipmentID = s.ShipmentID
@@ -449,9 +450,24 @@ set NSComm = GP * .085
 where InvLOB = '10'
 and SalesPName = 'Nick Seney'
 
--- Dalton Thomas Comm: 4% of team GP divided by number of CSR's.  As of 11/20/19, he is only CSR
+-- Dalton Thomas Comm: 4% of team GP divided by number of CSR's.  As of 11/20/19, he is only CSR.  Austin Added in 2020
+-- Per Rachel email on 1/21/20 - set to 2.5% for Jan - Mar 2020, put him to 2% in April
 Update tblCommCalc
-set DTComm = (GP * .04) / 1 -- change divisible amount by number of CSRs when needing to be updated
+set DTComm = (GP * .04) / 2 -- change divisible amount by number of CSRs when needing to be updated
+where InvLOB = '10'
+and ACCTYR <> 2020
+and ACCTMONTH NOT IN (1,2,3)
+
+Update tblCommCalc
+set DTComm = GP * .025
+where InvLOB = '10'
+and ACCTYR = 2020
+and ACCTMONTH IN (1,2,3)
+
+
+-- Austin Miller Comm: 4% of team GP divided by number of CSR's.  As of 11/20/19, he is only CSR.  Austin Added in 2020
+Update tblCommCalc
+set AUSTINComm = (GP * .04) / 2 -- change divisible amount by number of CSRs when needing to be updated
 where InvLOB = '10'
 
 -- Dana Beck Comm: 1% of team GP
