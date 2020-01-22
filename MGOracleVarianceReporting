@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 1/2/2020 4:37:45 PM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 1/22/2020 9:24:15 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -50,7 +50,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 																FROM MGXMLProcessing.[dbo].[tblRouteXML_TransportLoadRecs]
 																GROUP BY RefShippingOrder
 															) y ON y.RefShippingOrder = x.RefShippingOrder AND y.Filename = x.FileName
-												WHERE PriceSheetType = 'Charge'
+												WHERE PriceSheetType in ('Charge','VendorRate')
 												GROUP BY x.RefShippingOrder, x.Filename, CAST(LoadedDateTime AS DATETIME) 
 										) W ON W.RefShippingOrder = V.RefShippingOrder						
 					FULL OUTER JOIN		(
