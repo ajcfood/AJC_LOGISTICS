@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp2-AJCDW_11-FactFullLoadAPData]    Script Date: 12/26/2019 10:15:44 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp2-AJCDW_11-FactFullLoadAPData]    Script Date: 1/28/2020 2:56:34 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -36,7 +36,7 @@ TRUNCATE TABLE tblOracleVendTerms;
 INSERT INTO tblOracleVendTerms
 SELECT *
 FROM OPENQUERY(ORACLEPROD, '
-SELECT V.VENDOR_ID, V.VENDOR_NAME
+SELECT V.VENDOR_ID, SUBSTR(V.VENDOR_NAME, 1, 100)
 	, T.NAME AS TERMS, T.DESCRIPTION
 FROM PO_VENDORS V
 	LEFT OUTER JOIN AP_TERMS_TL T
