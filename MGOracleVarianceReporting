@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 1/22/2020 9:24:15 AM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 1/28/2020 4:51:25 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -25,12 +25,13 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 
 					DECLARE @Message VARCHAR(MAX)
 
-					IF OBJECT_ID ('TEMPDB..#TMP') IS NOT NULL  DROP TABLE #TMP
-
+					INSERT INTO AJCDW.dbo.MGToOracleVariance (
+																SO_Number, RouteCostFilename, RouteCostLoadedDateTime, RouteRevFilename, RouteRevLoadedDateTime, CarrierInvFilename, CarrierInvLoadedDateTime, CustInvFilename, 
+																CustInvLoadedDateTime, RouteFileCost, CarrierInvTotal, OracleCost, RouteFileRev, CustomerInvTotal, OracleRev 
+															 )
 					SELECT	COALESCE(v.RefShippingOrder, w.RefShippingOrder, x.RefShippingOrder, y.RefShippingOrder, z.OracleRefShippingOrder) SO_Number, v.FileName RouteCostFilename, v.LoadedDateTime RouteCostLoadedDateTime, 
 							w.FileName RouteRevFilename, w.LoadedDateTime RouteRevLoadedDateTime, y.Filename CarrierInvFilename, y.LoadedDateTime CarrierInvLoadedDateTime, x.FileName CustInvFilename, x.LoadedDateTime CustInvLoadedDateTime, 
 							RouteFileCost, CarrierInvTotal, OracleCost, RouteFileRev, CustomerInvTotal, OracleRev
-					INTO #TMP
 					FROM 				(
 												SELECT x.RefShippingOrder, SUM(ChargesAmount) RouteFileRev, x.Filename, CAST(LoadedDateTime AS DATETIME) LoadedDateTime
 												FROM   MGXMLProcessing.[dbo].[tblRouteXML_TransportLoadRecs] x
@@ -93,7 +94,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 									 OR y.LoadedDateTime >= DATEADD(dd,-1,CAST(GETDATE() AS DATE))
 								)
 
-					IF EXISTS (SELECT TOP 1 1 FROM #TMP)
+					IF EXISTS (SELECT TOP 1 1 FROM AJCDW.dbo.MGToOracleVariance)
 					BEGIN
 
 								SET @Message =  
@@ -133,7 +134,8 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 																			td = ISNULL(RouteFileRev,0.00), '',
 																			td = ISNULL(CustomerInvTotal,0.00), '',
 																			td = ISNULL(OracleRev,0.00), ''
-																		FROM #TMP  
+																		FROM AJCDW.dbo.MGToOracleVariance
+																		WHERE CAST(DateAdded AS DATE) = CAST(GETDATE() AS DATE)  
 																		FOR XML PATH('tr'), TYPE   
 															) AS NVARCHAR(MAX) ) + 
 			
