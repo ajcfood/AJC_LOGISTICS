@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 1/29/2020 3:53:25 PM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 1/29/2020 4:13:18 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -368,24 +368,24 @@ END
  /*************************************************************************************************************************/
 
 --Move loads that no longer have variances
-DELETE  x
+DELETE		AJCDW.dbo.MGToOracleVariance
 OUTPUT		deleted.[SO_Number]
-	      , [LD#]
-		  , [RouteCostFilename]
-		  , [RouteCostLoadedDateTime]
-		  , [RouteRevFilename]
-		  , [RouteRevLoadedDateTime]
-		  , [CarrierInvFilename]
-		  , [CarrierInvLoadedDateTime]
-		  , [CustInvFilename]
-		  , [CustInvLoadedDateTime]
-		  , [RouteFileCost]
-		  , [CarrierInvTotal]
-		  , [OracleCost]
-		  , [RouteFileRev]
-		  , [CustomerInvTotal]
-		  , [OracleRev]
-		  , [DateAdded]
+	      , deleted.[LD#]
+		  , deleted.[RouteCostFilename]
+		  , deleted.[RouteCostLoadedDateTime]
+		  , deleted.[RouteRevFilename]
+		  , deleted.[RouteRevLoadedDateTime]
+		  , deleted.[CarrierInvFilename]
+		  , deleted.[CarrierInvLoadedDateTime]
+		  , deleted.[CustInvFilename]
+		  , deleted.[CustInvLoadedDateTime]
+		  , deleted.[RouteFileCost]
+		  , deleted.[CarrierInvTotal]
+		  , deleted.[OracleCost]
+		  , deleted.[RouteFileRev]
+		  , deleted.[CustomerInvTotal]
+		  , deleted.[OracleRev]
+		  , deleted.[DateAdded]
 		  , GETDATE() 
 INTO	AJCDW.dbo.MGToOracleVarianceDeleted
 FROM	AJCDW.dbo.MGToOracleVariance x
