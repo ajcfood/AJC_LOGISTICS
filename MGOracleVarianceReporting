@@ -162,7 +162,6 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 												<html>
 												<body>
 												<h3>There were no loads with variances in the MercuryGate integration today.</h3>
-												<table border="1">
 												</body>
 												</html>'
 
