@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 1/29/2020 3:49:58 PM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 1/29/2020 3:53:25 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -329,7 +329,7 @@ BEGIN
 				,@recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
 				,@body = @Message
 				,@body_format = 'HTML'
-				,@subject = 'Daily MG-BI-Oracle Variance Report'
+				,@subject = 'MG-BI-Oracle Variance for 7 Days or More'
 				,@Importance = 'HIGH';  
 
 END
@@ -351,7 +351,7 @@ SET @Message =
 				,@recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
 				,@body = @Message
 				,@body_format = 'HTML'
-				,@subject = 'Daily MG-BI-Oracle Variance Report'
+				,@subject = 'MG-BI-Oracle Variance for 7 Days or More'
 				,@Importance = 'HIGH';  
 					
 END
