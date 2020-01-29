@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 1/28/2020 4:51:25 PM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 1/29/2020 9:38:12 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -24,7 +24,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 
 
 					DECLARE @Message VARCHAR(MAX)
-
+					
 					INSERT INTO AJCDW.dbo.MGToOracleVariance (
 																SO_Number, RouteCostFilename, RouteCostLoadedDateTime, RouteRevFilename, RouteRevLoadedDateTime, CarrierInvFilename, CarrierInvLoadedDateTime, CustInvFilename, 
 																CustInvLoadedDateTime, RouteFileCost, CarrierInvTotal, OracleCost, RouteFileRev, CustomerInvTotal, OracleRev 
@@ -93,8 +93,8 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 									 OR x.LoadedDateTime >= DATEADD(dd,-1,CAST(GETDATE() AS DATE))
 									 OR y.LoadedDateTime >= DATEADD(dd,-1,CAST(GETDATE() AS DATE))
 								)
-
-					IF EXISTS (SELECT TOP 1 1 FROM AJCDW.dbo.MGToOracleVariance)
+					
+					IF EXISTS (SELECT TOP 1 1 FROM AJCDW.dbo.MGToOracleVariance WHERE CAST(DateAdded AS DATE) = CAST(GETDATE() AS DATE))
 					BEGIN
 
 								SET @Message =  
@@ -153,6 +153,30 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 									,@Importance = 'HIGH';  
 
 					END
+
+					ELSE
+					BEGIN
+
+					SET @Message =  
+												N'
+												<html>
+												<body>
+												<h3>There were no loads with variances in the MercuryGate integration today.</h3>
+												<table border="1">
+												</body>
+												</html>'
+
+
+									EXEC msdb.dbo.sp_send_dbmail 
+										@profile_name = 'APTEST01SQLMail'  
+									,@recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
+									,@body = @Message
+									,@body_format = 'HTML'
+									,@subject = 'Daily MG-BI-Oracle Variance Report'
+									,@Importance = 'HIGH';  
+					
+					END
+
 
 /*****************************************************End Logging*******************************************************/
 
