@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 1/31/2020 4:25:21 PM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 2/4/2020 4:27:39 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -483,7 +483,7 @@ SET @Message =
 END
 
 --Move loads that no longer have variances
-DELETE		AJCDW.dbo.MGToOracleVariance
+DELETE		x
 OUTPUT		deleted.[SO_Number]
 	      , deleted.[LD#]
 		  , deleted.[RouteCostFilename]
@@ -656,7 +656,7 @@ SET @Message =
 END
 
 --Move loads that no longer have variances
-DELETE		AJCDW.dbo.MGToOracleVariance
+DELETE		x
 OUTPUT		deleted.[SO_Number]
 	      , deleted.[LD#]
 		  , deleted.[RouteCostFilename]
