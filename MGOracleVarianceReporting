@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 2/4/2020 4:27:39 PM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 2/5/2020 4:32:59 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -502,6 +502,7 @@ OUTPUT		deleted.[SO_Number]
 		  , deleted.[OracleRev]
 		  , deleted.[DateAdded]
 		  , GETDATE() 
+		  , deleted.[Notes] 
 INTO	AJCDW.dbo.MGToOracleVarianceDeleted
 FROM	AJCDW.dbo.MGToOracleVariance x
 LEFT JOIN #TMP T on T.SO_Number = x.SO_Number AND x.[LD#] NOT LIKE '%J'
@@ -675,6 +676,7 @@ OUTPUT		deleted.[SO_Number]
 		  , deleted.[OracleRev]
 		  , deleted.[DateAdded]
 		  , GETDATE() 
+		  , deleted.[Notes] 
 INTO	AJCDW.dbo.MGToOracleVarianceDeleted
 FROM	AJCDW.dbo.MGToOracleVariance x
 LEFT JOIN #TMP2 T on T.SO_Number = x.SO_Number AND x.[LD#] LIKE '%J'
