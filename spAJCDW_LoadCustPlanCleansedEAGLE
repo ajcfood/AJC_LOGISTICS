@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansedEAGLE]    Script Date: 12/26/2019 10:22:44 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansedEAGLE]    Script Date: 2/5/2020 09:43:24 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -48,7 +48,7 @@ where i.ACCTYR IN (YEAR(GETDATE()), YEAR(DATEADD(YY,-1,GETDATE())))
 and InvLOB IN ('21')
 and s.ShpAccnt <> 'PRSG'
 and s.ShpCarrier NOT IN ('DOMEST','PALLET')
---and s.ShpMoveType NOT IN ('DLTL','RLTL')
+and s.ShpMoveType NOT IN ('DLTL','RLTL')
 Group By InvCustName, s.shipmentid, i.refno, i.ACCTYR, DELWEEK, DELYEAR, InvLOB
 	,f.SHPWEEK,f.SHPYEAR
 Order by InvCustName
@@ -71,7 +71,7 @@ JOIN tblFile f on i.ShipmentID = f.ShipmentID
 JOIN tblShipment s on f.ShipmentID = s.shipmentID
 where i.ACCTYR IN (YEAR(GETDATE()), YEAR(DATEADD(YY,-1,GETDATE())))	
 and InvLOB IN ('21')
---and s.ShpMoveType NOT IN ('DLTL','RLTL')
+and s.ShpMoveType NOT IN ('DLTL','RLTL')
 Group By InvCustName, i.ACCTYR, InvLOB
 	,f.SHPWEEK,f.SHPYEAR
 Order by InvCustName
