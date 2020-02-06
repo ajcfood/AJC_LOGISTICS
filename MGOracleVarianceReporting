@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 2/5/2020 4:32:59 PM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 2/6/2020 10:29:15 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -421,7 +421,7 @@ BEGIN
 							N'
 							<html>
 							<body>
-							<h3>Below LDs have previously been reported with a variance. The variances have existed now for 7 days or more. Please review and correct these variance immediately.</h3>
+							<h3>Below LDs have previously been reported with a variance. The variances have existed now for 7 days or more. Please review and correct these variances immediately.</h3>
 							<table border="1">
 							<tr><th>SO_Number</th>
 							<th>LD#</th>
@@ -431,16 +431,20 @@ BEGIN
 							<th>RouteFileRev</th>
 							<th>CustomerInvTotal</th>
 							<th>OracleRev</th>
+							<th>Notes</th>
 							</tr>' +  
-										CAST ( ( SELECT td = ISNULL(SO_Number,''), '',
-														td = ISNULL(LD#,''), '',
-														td = ISNULL(RouteFileCost,0.00), '',
-														td = ISNULL(CarrierInvTotal,0.00), '',
-														td = ISNULL(OracleCost,0.00), '',
-														td = ISNULL(RouteFileRev,0.00), '',
-														td = ISNULL(CustomerInvTotal,0.00), '',
-														td = ISNULL(OracleRev,0.00), ''
-													FROM #TMP
+										CAST ( ( SELECT td = ISNULL(t.SO_Number,''), '',
+														td = ISNULL(t.LD#,''), '',
+														td = ISNULL(t.RouteFileCost,0.00), '',
+														td = ISNULL(t.CarrierInvTotal,0.00), '',
+														td = ISNULL(t.OracleCost,0.00), '',
+														td = ISNULL(t.RouteFileRev,0.00), '',
+														td = ISNULL(t.CustomerInvTotal,0.00), '',
+														td = ISNULL(t.OracleRev,0.00), '',
+														td = ISNULL(v.Notes,''),''
+													FROM #TMP t
+													INNER JOIN @PrevVariancesATL x on x.SO_Number = t.SO_Number
+													INNER JOIN AJCDW.dbo.MGToOracleVariance v on v.SO_Number = x.SO_Number
 													FOR XML PATH('tr'), TYPE   
 										) AS NVARCHAR(MAX) ) + 
 			
@@ -510,7 +514,7 @@ WHERE	CAST(x.DateAdded AS DATE) <= DATEADD(dd,-7,CAST(GETDATE() AS DATE))
 AND		T.SO_Number IS NULL 
 
 
---Pull all loads with variances from 7 days ago for ST ATL
+--Pull all loads with variances from 7 days ago for ST JAX
 DECLARE @PrevVariancesJAX TABLE (LD# VARCHAR(10), SO_Number VARCHAR(10))
 
 INSERT INTO @PrevVariancesJAX (SO_Number)
@@ -594,7 +598,7 @@ BEGIN
 							N'
 							<html>
 							<body>
-							<h3>Below LDs have previously been reported with a variance. The variances have existed now for 7 days or more. Please review and correct these variance immediately.</h3>
+							<h3>Below LDs have previously been reported with a variance. The variances have existed now for 7 days or more. Please review and correct these variances immediately.</h3>
 							<table border="1">
 							<tr><th>SO_Number</th>
 							<th>LD#</th>
@@ -604,6 +608,7 @@ BEGIN
 							<th>RouteFileRev</th>
 							<th>CustomerInvTotal</th>
 							<th>OracleRev</th>
+							<th>Notes</th>
 							</tr>' +  
 										CAST ( ( SELECT td = ISNULL(SO_Number,''), '',
 														td = ISNULL(LD#,''), '',
@@ -612,8 +617,11 @@ BEGIN
 														td = ISNULL(OracleCost,0.00), '',
 														td = ISNULL(RouteFileRev,0.00), '',
 														td = ISNULL(CustomerInvTotal,0.00), '',
-														td = ISNULL(OracleRev,0.00), ''
-													FROM #TMP2
+														td = ISNULL(OracleRev,0.00), '',
+														td = ISNULL(v.Notes,''),''
+													FROM #TMP2 t
+													INNER JOIN @PrevVariancesJAX x on x.SO_Number = t.SO_Number
+													INNER JOIN AJCDW.dbo.MGToOracleVariance v on v.SO_Number = x.SO_Number
 													FOR XML PATH('tr'), TYPE   
 										) AS NVARCHAR(MAX) ) + 
 			
