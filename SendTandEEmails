@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendTandEEmails]    Script Date: 1/14/2020 2:25:03 PM ******/
+/****** Object:  StoredProcedure [dbo].[SendTandEEmails]    Script Date: 2/11/2020 3:15:10 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -18,48 +18,48 @@ BEGIN
 
 			--Dept Code Table
 			IF OBJECT_ID ('TEMPDB..#DeptCode') IS NOT NULL  DROP TABLE #DeptCode
-			CREATE TABLE #DeptCode (DPT INT, DPTDesc VARCHAR(150), Recipient varchar(150), CarbonCopyRecipient varchar(max))
-			INSERT INTO #DeptCode (DPT, DPTDesc, Recipient, CarbonCopyRecipient) 
+			CREATE TABLE #DeptCode (DPT INT, DPTDesc VARCHAR(150), [LOB Desc] VARCHAR(100), Recipient varchar(150), CarbonCopyRecipient varchar(max))
+			INSERT INTO #DeptCode (DPT, DPTDesc, [LOB Desc], Recipient, CarbonCopyRecipient) 
 			/* Got these Codes from Oracle - They do not exist in SSMS in a table */
-			SELECT		 500, 'ACCOUNTING-GENERAL'		 ,'gberger@ajclogistics.com','cswartz@ajclogistics.com;igayle@ajclogistics.com'
-			UNION SELECT 505, 'CREDIT'					 ,'JennyKing@ajcfood.com','cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'
-			UNION SELECT 510, 'CLAIMS'					 ,'ploveland@ajcfood.com','cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'
-			UNION SELECT 515, 'ICT'						 ,'sali@ajclogistics.com;bduckett@ajcfood.com','cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'
-			UNION SELECT 525, 'GENERAL OFFICE'			 ,'gberger@ajclogistics.com','igayle@ajclogistics.com'
-			UNION SELECT 535, 'HUMAN RESOURCES'			 ,'tvanderlaan@ajcfood.com','cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'
-			UNION SELECT 700, 'GENERAL & ADMIN-CORPORATE','gberger@ajclogistics.com','igayle@ajclogistics.com'
+			SELECT		 500, 'ACCOUNTING-GENERAL'		 ,'ACCOUNTING','gberger@ajclogistics.com','cswartz@ajclogistics.com;igayle@ajclogistics.com'
+			UNION SELECT 505, 'CREDIT'					 ,'CREDIT','JennyKing@ajcfood.com','cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'
+			UNION SELECT 510, 'CLAIMS'					 ,'CLAIMS','ploveland@ajcfood.com','cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'	
+			UNION SELECT 515, 'ICT'						 ,'ICT','sali@ajclogistics.com;bduckett@ajcfood.com','cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'
+			UNION SELECT 525, 'GENERAL OFFICE'			 ,'OFFICE','gberger@ajclogistics.com','igayle@ajclogistics.com'
+			UNION SELECT 535, 'HUMAN RESOURCES'			 ,'HR','tvanderlaan@ajcfood.com','cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'
+			--UNION SELECT 700, 'GENERAL & ADMIN-CORPORATE','ADMIN','gberger@ajclogistics.com','igayle@ajclogistics.com'	--excluded because there are no plan  $$s for this
 
 
 			IF OBJECT_ID ('TEMPDB..##TandE') IS NOT NULL  DROP TABLE ##TandE
 			Select  DPT, 0 Status into ##TandE from #DeptCode
-			DECLARE @YEAR VARCHAR(4) = CASE WHEN MONTH(GETDATE()) = 1 THEN YEAR(DATEADD(YYYY,-1,GETDATE())) --When current month is Jan, we take the previous year
-											ELSE YEAR(GETDATE())
-											END ;
-			DECLARE @tableA_HTML  NVARCHAR(MAX) ;
-			DECLARE @tableB_HTML  NVARCHAR(MAX) ;
-			DECLARE @PERIOD VARCHAR(MAX) = 'CAL' + UPPER(FORMAT(DATEADD(MM,-1,GETDATE()), 'MMM', 'en-US')) + '-' + RIGHT(@YEAR, 2);
-			DECLARE @HTML  NVARCHAR(MAX) ;
+			DECLARE  @YEAR VARCHAR(4) =  YEAR(GETDATE())
+				   , @Month INT = CASE WHEN MONTH(GETDATE()) = 1 THEN 1 ELSE MONTH(GETDATE()) - 1 END
+				   , @tableA_HTML  NVARCHAR(MAX) 
+				   , @tableB_HTML  NVARCHAR(MAX) 
+				   , @HTML  NVARCHAR(MAX) 
+			DECLARE	@PERIOD VARCHAR(MAX) = 'CAL' + UPPER(FORMAT(DATEADD(MM,-1,GETDATE()), 'MMM', 'en-US')) + '-' + RIGHT(@YEAR, 2)
 			DECLARE @DPT INT = (SELECT MIN(DPT) FROM ##TandE);
-			DECLARE @DPTDesc VARCHAR(150), @Recipient varchar(150), @CarbonCopyRecipient varchar(max);
+			DECLARE @DPTDesc VARCHAR(150), @LOBDesc VARCHAR(100), @Recipient varchar(150), @CarbonCopyRecipient varchar(max);
 
 			WHILE (@DPT <= (SELECT MAX(DPT) FROM ##TandE))
 			BEGIN
 
 			BEGIN
 
-			SELECT @DPTDesc = DPTDesc, @Recipient = Recipient, @CarbonCopyRecipient = CarbonCopyRecipient
+			SELECT @DPTDesc = DPTDesc, @LOBDesc = [LOB Desc], @Recipient = Recipient, @CarbonCopyRecipient = CarbonCopyRecipient
 			FROM #DeptCode
 			WHERE DPT = @DPT 
 
 			--YTD
 			IF OBJECT_ID ('TEMPDB..#YTD') IS NOT NULL  DROP TABLE #YTD
-			select ACCTYEAR [Year], segment4 LOB, 'CORP' [LOB Desc], dpt.dpt DeptCode, dpt.DPTDesc DeptDesc, FS_Grouping, fsg.Description, sum(ocost) Actual, sum(plancost) [Plan], sum(plancost) - sum(ocost) [Actual/Plan Var.]
+			select ACCTYEAR [Year], segment4 LOB, @LOBDesc [LOB Desc], dpt.dpt DeptCode, dpt.DPTDesc DeptDesc, FS_Grouping, fsg.Description, sum(ocost) Actual, sum(plancost) [Plan], sum(plancost) - sum(ocost) [Actual/Plan Var.]
 			into #YTD
 			from [tblOracleSGABudgetCleansed] sga
 			inner join tblOracleFSGGroupings fsg on fsg.FLEX_VALUE = sga.SEGMENT2
 			inner join #DeptCode dpt on dpt.DPT = sga.segment3
 			where sga.SEGMENT4 in ('000','998')
-			and PERIOD_NAME IN (SELECT PERIOD_NAME FROM [tblOracleSGABudgetCleansed] WHERE ACCTYEAR = @YEAR)
+			and ACCTYEAR = @YEAR
+			and ACCTMONTH BETWEEN 1 AND @Month --Gets total for entire year up to previous acct mnth
 			and FS_GROUPING = 'TRAVEL AND ENTERTAINMENT'
 			and dpt.DPT = @DPT
 			group by ACCTYEAR, segment4, fs_Grouping, fsg.Description, dpt.dpt, dpt.DPTDesc
@@ -71,20 +71,25 @@ BEGIN
 			inner join tblOracleFSGGroupings fsg on fsg.FLEX_VALUE = sga.SEGMENT2
 			inner join #DeptCode dpt on dpt.DPT = sga.segment3
 			where SEGMENT4 in ('000','998')
-			and PERIOD_NAME IN (SELECT PERIOD_NAME FROM [tblOracleSGABudgetCleansed] WHERE ACCTYEAR = @YEAR)
+			and ACCTYEAR = @YEAR
+			and ACCTMONTH BETWEEN 1 AND @Month --Gets total for entire year up to previous acct mnth
 			and FS_GROUPING = 'TRAVEL AND ENTERTAINMENT'
 			and dpt.DPT = @DPT
 			group by ACCTYEAR, segment4, dpt.dpt, dpt.DPTDesc
 
+			IF @@ROWCOUNT > 0
+
+			BEGIN
 
 			SET @tableA_HTML =
 				N'<H1>T&E YTD For ' + @PERIOD + ':</H1>' +
 				N'<table border="1">' +
-				N'<tr><th>Year</th><th>LOB Desc</th><th>Dept Code</th><th>Department</th><th>Description</th><th>Actual</th><th>Plan</th><th>Actual/Plan Var.</th>     </tr>' +
+				N'<tr><th>Year</th><th>LOB</th><th>LOB Desc</th><th>Dept Code</th><th>Department</th><th>Description</th><th>Actual</th><th>Plan</th><th>Actual/Plan Var.</th>     </tr>' +
 					CAST ( (SELECT  CASE WHEN [LOB Desc] = 'TOTAL' THEN '#FFFF00' END AS [@bgcolor],		/* #F78181 for Red Highlight, #EFFBF2 for light green highlight*/
 									CASE WHEN [Actual/Plan Var.] < 0 THEN 'red' END AS "font/@color",
 									td =  [Year], '',
-									td =  [LOB Desc], '',
+									td =  LOB, '',
+									td =  [LOB Desc],'',
 									td =  DeptCode, '', 
 									td =  DeptDesc, '',
 									td =  Description, '',
@@ -100,9 +105,36 @@ BEGIN
 				) AS NVARCHAR(MAX) ) +
 				N'</table>' ;
 
+			END
+
+			ELSE 
+
+			BEGIN
+
+			SET @tableA_HTML =
+				N'<H1>T&E YTD For ' + @PERIOD + ':</H1>' +
+				N'<table border="1">' +
+				N'<tr><th>Year</th><th>LOB</th><th>LOB Desc</th><th>Dept Code</th><th>Department</th><th>Description</th><th>Actual</th><th>Plan</th><th>Actual/Plan Var.</th>     </tr>' +
+					CAST ( (SELECT  
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'),'',
+									td =  FORMAT(0.00, 'C'), '', 
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'), '' 
+							
+						  FOR XML PATH('tr'), TYPE 
+				) AS NVARCHAR(MAX) ) +
+				N'</table>' ; 
+
+			END
+
 			--Previous Period (Month)
 			IF OBJECT_ID ('TEMPDB..#PrevPeriod') IS NOT NULL  DROP TABLE #PrevPeriod
-			select @Period Period, segment4 LOB, 'CORP' [LOB Desc], dpt.dpt DeptCode, dpt.DPTDesc DeptDesc, FS_Grouping, fsg.Description, sum(ocost) Actual, sum(plancost) [Plan], sum(plancost) - sum(ocost) [Actual/Plan Var.]
+			select @Period Period, segment4 LOB, @LOBDesc [LOB Desc], dpt.dpt DeptCode, dpt.DPTDesc DeptDesc, FS_Grouping, fsg.Description, sum(ocost) Actual, sum(plancost) [Plan], sum(plancost) - sum(ocost) [Actual/Plan Var.]
 			into #PrevPeriod
 			from [tblOracleSGABudgetCleansed] sga
 			inner join tblOracleFSGGroupings fsg on fsg.FLEX_VALUE = sga.SEGMENT2
@@ -125,15 +157,19 @@ BEGIN
 			and dpt.DPT = @DPT
 			group by ACCTYEAR, segment4, dpt.dpt, dpt.DPTDesc
 
-	
+			IF @@ROWCOUNT > 0
+
+			BEGIN
+
 			SET @tableB_HTML =
-				N'<H1>T&E For Period ' + @PERIOD + ':</H1>' +
+				N'<H1>T&E PTD ' + @PERIOD + ':</H1>' +
 				N'<table border="1">' +
-				N'<tr><th>Period</th><th>LOB Desc</th><th>Dept Code</th><th>Department</th><th>Description</th><th>Actual</th><th>Plan</th><th>Actual/Plan Var.</th>     </tr>' +
+				N'<tr><th>Period</th><th>LOB</th><th>LOB Desc</th><th>Dept Code</th><th>Department</th><th>Description</th><th>Actual</th><th>Plan</th><th>Actual/Plan Var.</th>     </tr>' +
 					CAST ( (SELECT  CASE WHEN [LOB Desc] = 'TOTAL' THEN '#FFFF00' END AS [@bgcolor],		/* #F78181 for Red Highlight, #EFFBF2 for light green highlight*/
 									CASE WHEN [Actual/Plan Var.] < 0 THEN 'red' END AS "font/@color",
 									td =  Period, '',
-									td =  [LOB Desc], '',
+									td =  LOB, '',
+									td =  [LOB Desc],'',
 									td =  DeptCode, '', 
 									td =  DeptDesc, '',
 									td =  Description, '',
@@ -149,6 +185,33 @@ BEGIN
 				) AS NVARCHAR(MAX) ) +
 				N'</table>' ;
 
+			END
+
+			ELSE
+
+			BEGIN
+
+			SET @tableB_HTML =
+				N'<H1>T&E PTD ' + @PERIOD + ':</H1>' +
+				N'<table border="1">' +
+				N'<tr><th>Period</th><th>LOB</th><th>LOB Desc</th><th>Dept Code</th><th>Department</th><th>Description</th><th>Actual</th><th>Plan</th><th>Actual/Plan Var.</th>     </tr>' +
+					CAST ( (SELECT  
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'),'',
+									td =  FORMAT(0.00, 'C'), '', 
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'), '' 
+							
+						  FOR XML PATH('tr'), TYPE 
+				) AS NVARCHAR(MAX) ) +
+				N'</table>' ;
+
+			END
+
 
 			SET @HTML = @tableA_HTML + ' <br/> ' +  @tableB_HTML + ' <br/> ' + '' ; -- Line Break
 			SET @HTML = REPLACE(@HTML,'<th>','<th  bgcolor="Orange"/>' ); -- For BackGround Color 
@@ -157,8 +220,8 @@ BEGIN
 
 			EXEC msdb.dbo.sp_send_dbmail 
 				  @profile_name = 'APTEST01SQLMail'
-				, @recipients= @Recipient
-				, @copy_recipients = @CarbonCopyRecipient
+				, @recipients=	'rtierney@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com;emengstie@ajclogistics.com'			--@Recipient					
+				, @copy_recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com'	--@CarbonCopyRecipient
 				, @subject = @PERIOD
 				, @body = @HTML
 				, @body_format = 'HTML' ;
@@ -181,19 +244,19 @@ BEGIN
 
 			--Dept Code Table
 			IF OBJECT_ID ('TEMPDB..#ProdGrouping') IS NOT NULL  DROP TABLE #ProdGrouping
-			CREATE TABLE #ProdGrouping (DPT INT, DPTDesc VARCHAR(150), Recipient2 varchar(150), CarbonCopyRecipient2 varchar(max))
-			INSERT INTO #ProdGrouping (DPT, DPTDesc, Recipient2, CarbonCopyRecipient2) 
+			CREATE TABLE #ProdGrouping (DPT INT, DPTDesc VARCHAR(150), [LOB Desc2] VARCHAR(100), Recipient2 varchar(150), CarbonCopyRecipient2 varchar(max))
+			INSERT INTO #ProdGrouping (DPT, DPTDesc, [LOB Desc2], Recipient2, CarbonCopyRecipient2) 
 			/* Got these Codes from Oracle - They do not exist in SSMS in a table */
-			SELECT		 911, 'TRUCK BROKERAGE'	 , 'rpage@ajclogistics.com', 'cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'
-			UNION SELECT 912, 'HSI'				 , 'cswartz@ajclogistics.com;hroyer@ajclogistics.com', 'gberger@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com'
-			UNION SELECT 925, 'LSC'				 , 'cswartz@ajclogistics.com;hroyer@ajclogistics.com', 'gberger@ajclogistics.com;igayle@ajclogistics.com'
-			UNION SELECT 926, 'SEAWIDE'			 , 'phinkle@seawideexpress.com', 'cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'
-			UNION SELECT 940, 'SAMS'			 , 'igayle@ajclogistics.com', 'gberger@ajclogistics.com'
-			UNION SELECT 941, 'DOM NVOCC'		 , 'rpage@ajclogistics.com', 'cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'
-			UNION SELECT 942, 'EAGLE OCEAN'		 , 'ccolon@eagle-logistics.com', 'cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com'
-			UNION SELECT 943, 'INTL NVOCC'		 , 'rpage@ajclogistics.com', 'cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'
-			UNION SELECT 944, 'WAYNE FARMS'		 , 'rpage@ajclogistics.com', 'cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'
-			UNION SELECT 946, 'FEDEX DELIVERIES' , 'cswartz@ajclogistics.com;hroyer@ajclogistics.com', 'gberger@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com'
+			SELECT		 911, 'TRUCK BROKERAGE'	 , 'SURF TRANS', 'rpage@ajclogistics.com', 'cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'
+			UNION SELECT 912, 'HSI'				 , 'HSI', 'cswartz@ajclogistics.com;hroyer@ajclogistics.com', 'gberger@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com'
+			UNION SELECT 925, 'LSC'				 , 'LSC', 'cswartz@ajclogistics.com;hroyer@ajclogistics.com', 'gberger@ajclogistics.com;igayle@ajclogistics.com'
+			UNION SELECT 926, 'SEAWIDE'			 , 'SEAWIDE', 'phinkle@seawideexpress.com', 'cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'
+			UNION SELECT 940, 'SAMS'			 , 'SAMS', 'igayle@ajclogistics.com', 'gberger@ajclogistics.com'
+			UNION SELECT 941, 'DOM NVOCC'		 , 'DOM NVOCC', 'rpage@ajclogistics.com', 'cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'
+			UNION SELECT 942, 'EAGLE OCEAN'		 , 'EAGLE', 'ccolon@eagle-logistics.com', 'cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com'
+			UNION SELECT 943, 'INTL NVOCC'		 , 'INTL NVOCC', 'rpage@ajclogistics.com', 'cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'
+			UNION SELECT 944, 'WAYNE FARMS'		 , 'WAYNE', 'rpage@ajclogistics.com', 'cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'
+			UNION SELECT 946, 'FEDEX DELIVERIES' , 'FED EX', 'cswartz@ajclogistics.com;hroyer@ajclogistics.com', 'gberger@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com'
 			--UNION SELECT 945, 'FEDEX OCEAN' --Removed from table because we've never had any actuals or planned dollar values for T&E
 			--UNION SELECT 933, 'FEDEX CBI' --Removed from table because we've never had any actuals or planned dollar values for T&E
 
@@ -202,75 +265,103 @@ BEGIN
 
 			IF OBJECT_ID ('TEMPDB..##TandE2') IS NOT NULL  DROP TABLE ##TandE2
 			Select  DPT, 0 Status into ##TandE2 from #ProdGrouping
-			DECLARE @YEAR2 VARCHAR(4) = CASE WHEN MONTH(GETDATE()) = 1 THEN YEAR(DATEADD(YYYY,-1,GETDATE())) --When current month is Jan, we take the previous year
-											ELSE YEAR(GETDATE())
-											END ;
-			DECLARE @tableA_HTML2  NVARCHAR(MAX) ;
-			DECLARE @tableB_HTML2  NVARCHAR(MAX) ;
-			DECLARE @PERIOD2 VARCHAR(MAX) = 'CAL' + UPPER(FORMAT(DATEADD(MM,-1,GETDATE()), 'MMM', 'en-US')) + '-' + RIGHT(@YEAR2, 2);
-			DECLARE @HTML2  NVARCHAR(MAX) ;
+			DECLARE	  @YEAR2 VARCHAR(4) = YEAR(GETDATE())
+				    , @Month2 INT = CASE WHEN MONTH(GETDATE()) = 1 THEN 1 ELSE MONTH(GETDATE()) - 1 END
+					, @tableA_HTML2  NVARCHAR(MAX) 
+					, @tableB_HTML2  NVARCHAR(MAX) 
+					, @HTML2  NVARCHAR(MAX)
+			DECLARE @PERIOD2 VARCHAR(MAX) = 'CAL' + UPPER(FORMAT(DATEADD(MM,-1,GETDATE()), 'MMM', 'en-US')) + '-' + RIGHT(@YEAR2, 2) 
 			DECLARE @DPT2 INT = (SELECT MIN(DPT) FROM ##TandE2);
-			DECLARE @DPTDesc2 VARCHAR(150), @Recipient2 varchar(150), @CarbonCopyRecipient2 varchar(max);
+			DECLARE @DPTDesc2 VARCHAR(150), @LOBDesc2 varchar(100), @Recipient2 varchar(150), @CarbonCopyRecipient2 varchar(max);
 
 			WHILE (@DPT2 <= (SELECT MAX(DPT) FROM ##TandE2))
 			BEGIN
 
 			BEGIN
 
-			SELECT @DPTDesc2 = DPTDesc, @Recipient2 = Recipient2, @CarbonCopyRecipient2 = CarbonCopyRecipient2
+			SELECT @DPTDesc2 = DPTDesc, @LOBDesc2 = [LOB Desc2], @Recipient2 = Recipient2, @CarbonCopyRecipient2 = CarbonCopyRecipient2
 			FROM #ProdGrouping
 			WHERE DPT = @DPT2
 
 			--YTD
 			IF OBJECT_ID ('TEMPDB..#YTD2') IS NOT NULL  DROP TABLE #YTD2
-			select ACCTYEAR [Year], segment4 LOB, 'CORP' [LOB Desc], dpt.dpt DeptCode, dpt.DPTDesc DeptDesc, FS_Grouping, fsg.Description, sum(ocost) Actual, sum(plancost) [Plan], sum(plancost) - sum(ocost) [Actual/Plan Var.]
+			select ACCTYEAR [Year], segment4 LOB, @LOBDesc2 [LOB Desc2], dpt.dpt DeptCode, dpt.DPTDesc DeptDesc, FS_Grouping, fsg.Description, sum(ocost) Actual, sum(plancost) [Plan], sum(plancost) - sum(ocost) [Actual/Plan Var.]
 			into #YTD2
 			from [tblOracleSGABudgetCleansed] sga
 			inner join tblOracleFSGGroupings fsg on fsg.FLEX_VALUE = sga.SEGMENT2
 			inner join #ProdGrouping dpt on dpt.DPT = sga.segment4
-			where PERIOD_NAME IN (SELECT PERIOD_NAME FROM [tblOracleSGABudgetCleansed] WHERE ACCTYEAR = @YEAR2)
+			where ACCTYEAR = @YEAR2
+			and ACCTMONTH BETWEEN 1 AND @Month2 --Gets total for entire year up to previous acct mnth
 			and FS_GROUPING = 'TRAVEL AND ENTERTAINMENT'
 			and dpt.DPT = @DPT2
 			group by ACCTYEAR, segment4, fs_Grouping, fsg.Description, dpt.dpt, dpt.DPTDesc
 
 			UNION 
 
-			select ACCTYEAR [Year], segment4 LOB, 'TOTAL' [LOB Desc], dpt.dpt DeptCode, dpt.DPTDesc DeptDesc, '' , '', sum(ocost) Actual, sum(plancost) [Plan], sum(plancost) - sum(ocost) [Actual/Plan Var.]
+			select ACCTYEAR [Year], segment4 LOB, 'TOTAL' [LOB Desc2], dpt.dpt DeptCode, dpt.DPTDesc DeptDesc, '' , '', sum(ocost) Actual, sum(plancost) [Plan], sum(plancost) - sum(ocost) [Actual/Plan Var.]
 			from [tblOracleSGABudgetCleansed] sga
 			inner join tblOracleFSGGroupings fsg on fsg.FLEX_VALUE = sga.SEGMENT2
 			inner join #ProdGrouping dpt on dpt.DPT = sga.segment4
-			where PERIOD_NAME IN (SELECT PERIOD_NAME FROM [tblOracleSGABudgetCleansed] WHERE ACCTYEAR = @YEAR2)
+			where ACCTYEAR = @YEAR2
+			and ACCTMONTH BETWEEN 1 AND @Month2
 			and FS_GROUPING = 'TRAVEL AND ENTERTAINMENT'
 			and dpt.DPT = @DPT2
 			group by ACCTYEAR, segment4, dpt.dpt, dpt.DPTDesc
 
+			IF @@ROWCOUNT > 0
+			BEGIN
+					SET @tableA_HTML2 =
+						N'<H1>T&E YTD For ' + @PERIOD2 + ':</H1>' +
+						N'<table border="1">' +
+						N'<tr><th>Year</th><th>LOB</th><th>LOB Desc</th><th>Dept Code</th><th>Department</th><th>Description</th><th>Actual</th><th>Plan</th><th>Actual/Plan Var.</th>     </tr>' +
+							CAST ( (SELECT  CASE WHEN [LOB Desc2] = 'TOTAL' THEN '#FFFF00' END AS [@bgcolor],		/* #F78181 for Red Highlight, #EFFBF2 for light green highlight*/
+											CASE WHEN [Actual/Plan Var.] < 0 THEN 'red' END AS "font/@color",
+											td =  [Year], '',
+											td =  LOB, '',
+											td =  [LOB Desc2],'',
+											td =  DeptCode, '', 
+											td =  DeptDesc, '',
+											td =  Description, '',
+											td =  FORMAT(Actual, 'C'), '',
+											td =  FORMAT([Plan], 'C'), '',
+											td =  FORMAT([Actual/Plan Var.], 'C'), '' 
+									from #YTD2
+									ORDER BY (
+													CASE WHEN Description = '' THEN 1 
+														 ELSE 0 END
+											 ), LOB, Description 
+								  FOR XML PATH('tr'), TYPE 
+						) AS NVARCHAR(MAX) ) +
+						N'</table>' ;
+			END
+			
+			ELSE 
 
-			SET @tableA_HTML2 =
-				N'<H1>T&E YTD For ' + @PERIOD2 + ':</H1>' +
-				N'<table border="1">' +
-				N'<tr><th>Year</th><th>LOB Desc</th><th>Dept Code</th><th>Department</th><th>Description</th><th>Actual</th><th>Plan</th><th>Actual/Plan Var.</th>     </tr>' +
-					CAST ( (SELECT  CASE WHEN [LOB Desc] = 'TOTAL' THEN '#FFFF00' END AS [@bgcolor],		/* #F78181 for Red Highlight, #EFFBF2 for light green highlight*/
-									CASE WHEN [Actual/Plan Var.] < 0 THEN 'red' END AS "font/@color",
-									td =  [Year], '',
-									td =  [LOB Desc], '',
-									td =  DeptCode, '', 
-									td =  DeptDesc, '',
-									td =  Description, '',
-									td =  FORMAT(Actual, 'C'), '',
-									td =  FORMAT([Plan], 'C'), '',
-									td =  FORMAT([Actual/Plan Var.], 'C'), '' 
-							from #YTD2
-							ORDER BY (
-											CASE WHEN Description = '' THEN 1 
-												 ELSE 0 END
-									 ), LOB, Description 
+			BEGIN
+					SET @tableA_HTML2 =
+						N'<H1>T&E YTD For ' + @PERIOD2 + ':</H1>' +
+						N'<table border="1">' +
+						N'<tr><th>Year</th><th>LOB</th><th>LOB Desc</th><th>Dept Code</th><th>Department</th><th>Description</th><th>Actual</th><th>Plan</th><th>Actual/Plan Var.</th>     </tr>' +
+							CAST ( (SELECT  
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'),'',
+									td =  FORMAT(0.00, 'C'), '', 
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'), '' 
+							
 						  FOR XML PATH('tr'), TYPE 
-				) AS NVARCHAR(MAX) ) +
-				N'</table>' ;
+						) AS NVARCHAR(MAX) ) +
+						N'</table>' ;
+
+			END
 
 			--Previous Period (Month)
 			IF OBJECT_ID ('TEMPDB..#PrevPeriod2') IS NOT NULL  DROP TABLE #PrevPeriod2
-			select @Period2 Period, segment4 LOB, 'CORP' [LOB Desc], dpt.dpt DeptCode, dpt.DPTDesc DeptDesc, FS_Grouping, fsg.Description, sum(ocost) Actual, sum(plancost) [Plan], sum(plancost) - sum(ocost) [Actual/Plan Var.]
+			select @Period2 Period, segment4 LOB, @LOBDesc2 [LOB Desc2], dpt.dpt DeptCode, dpt.DPTDesc DeptDesc, FS_Grouping, fsg.Description, sum(ocost) Actual, sum(plancost) [Plan], sum(plancost) - sum(ocost) [Actual/Plan Var.]
 			into #PrevPeriod2
 			from [tblOracleSGABudgetCleansed] sga
 			inner join tblOracleFSGGroupings fsg on fsg.FLEX_VALUE = sga.SEGMENT2
@@ -282,7 +373,7 @@ BEGIN
 
 			UNION 
 
-			select @Period2 Period, segment4 LOB, 'TOTAL' [LOB Desc], dpt.dpt DeptCode, dpt.DPTDesc DeptDesc, '' , '', sum(ocost) Actual, sum(plancost) [Plan], sum(plancost) - sum(ocost) [Actual/Plan Var.]
+			select @Period2 Period, segment4 LOB, 'TOTAL' [LOB Desc2], dpt.dpt DeptCode, dpt.DPTDesc DeptDesc, '' , '', sum(ocost) Actual, sum(plancost) [Plan], sum(plancost) - sum(ocost) [Actual/Plan Var.]
 			from [tblOracleSGABudgetCleansed] sga
 			inner join tblOracleFSGGroupings fsg on fsg.FLEX_VALUE = sga.SEGMENT2
 			inner join #ProdGrouping dpt on dpt.DPT = sga.segment4
@@ -291,30 +382,58 @@ BEGIN
 			and dpt.DPT = @DPT2
 			group by ACCTYEAR, segment4, dpt.dpt, dpt.DPTDesc
 
-	
-			SET @tableB_HTML2 =
-				N'<H1>T&E For Period ' + @PERIOD2 + ':</H1>' +
-				N'<table border="1">' +
-				N'<tr><th>Period</th><th>LOB Desc</th><th>Dept Code</th><th>Department</th><th>Description</th><th>Actual</th><th>Plan</th><th>Actual/Plan Var.</th>     </tr>' +
-					CAST ( (SELECT  CASE WHEN [LOB Desc] = 'TOTAL' THEN '#FFFF00' END AS [@bgcolor],		/* #F78181 for Red Highlight, #EFFBF2 for light green highlight*/
-									CASE WHEN [Actual/Plan Var.] < 0 THEN 'red' END AS "font/@color",
-									td =  Period, '',
-									td =  [LOB Desc], '',
-									td =  DeptCode, '', 
-									td =  DeptDesc, '',
-									td =  Description, '',
-									td =  FORMAT(Actual, 'C'), '',
-									td =  FORMAT([Plan], 'C'), '',
-									td =  FORMAT([Actual/Plan Var.], 'C'), '' 
-							from #PrevPeriod2
-							ORDER BY (
-										CASE WHEN Description = '' THEN 1 
-											 ELSE 0 END
-									 ), LOB, Description 
-						  FOR XML PATH('tr'), TYPE 
-				) AS NVARCHAR(MAX) ) +
-				N'</table>' ;
+			IF @@ROWCOUNT > 0
+			
+			BEGIN
+					SET @tableB_HTML2 =
+						N'<H1>T&E PTD ' + @PERIOD2 + ':</H1>' +
+						N'<table border="1">' +
+						N'<tr><th>Period</th><th>LOB</th><th>LOB Desc</th><th>Dept Code</th><th>Department</th><th>Description</th><th>Actual</th><th>Plan</th><th>Actual/Plan Var.</th>     </tr>' +
+							CAST ( (SELECT  CASE WHEN [LOB Desc2] = 'TOTAL' THEN '#FFFF00' END AS [@bgcolor],		/* #F78181 for Red Highlight, #EFFBF2 for light green highlight*/
+											CASE WHEN [Actual/Plan Var.] < 0 THEN 'red' END AS "font/@color",
+											td =  Period, '',
+											td =  LOB, '',
+											td =  [LOB Desc2],'',
+											td =  DeptCode, '', 
+											td =  DeptDesc, '',
+											td =  Description, '',
+											td =  FORMAT(Actual, 'C'), '',
+											td =  FORMAT([Plan], 'C'), '',
+											td =  FORMAT([Actual/Plan Var.], 'C'), '' 
+									from #PrevPeriod2
+									ORDER BY (
+												CASE WHEN Description = '' THEN 1 
+													 ELSE 0 END
+											 ), LOB, Description 
+								  FOR XML PATH('tr'), TYPE 
+						) AS NVARCHAR(MAX) ) +
+						N'</table>' ;
+			END
 
+			ELSE
+
+			BEGIN
+
+					SET @tableB_HTML2 =
+						N'<H1>T&E PTD ' + @PERIOD2 + ':</H1>' +
+						N'<table border="1">' +
+						N'<tr><th>Period</th><th>LOB</th><th>LOB Desc</th><th>Dept Code</th><th>Department</th><th>Description</th><th>Actual</th><th>Plan</th><th>Actual/Plan Var.</th>     </tr>' +
+							CAST ( (SELECT  
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'),'',
+									td =  FORMAT(0.00, 'C'), '', 
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'), '',
+									td =  FORMAT(0.00, 'C'), '' 
+							
+						  FOR XML PATH('tr'), TYPE 
+						) AS NVARCHAR(MAX) ) +
+						N'</table>' ;
+
+			END
 
 			SET @HTML2 = @tableA_HTML2 + ' <br/> ' +  @tableB_HTML2 + ' <br/> ' + '' ; -- Line Break
 			SET @HTML2 = REPLACE(@HTML2,'<th>','<th  bgcolor="Orange"/>' ); -- For BackGround Color 
@@ -323,8 +442,8 @@ BEGIN
 
 			EXEC msdb.dbo.sp_send_dbmail 
 				  @profile_name = 'APTEST01SQLMail'
-				, @recipients= @Recipient2
-				, @copy_recipients = @CarbonCopyRecipient2
+				, @recipients=	'rtierney@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com;emengstie@ajclogistics.com'			--@Recipient2					
+				, @copy_recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com'	--@CarbonCopyRecipient2
 				, @subject = @PERIOD2
 				, @body = @HTML2
 				, @body_format = 'HTML' ;
