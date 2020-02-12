@@ -1,13 +1,16 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendDailyCreditAREmail]    Script Date: 2/12/2020 10:53:07 AM ******/
+/****** Object:  StoredProcedure [dbo].[SendDailyCreditAREmail]    Script Date: 2/12/2020 10:55:41 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 
 
-ALTER procedure [dbo].[SendDailyCreditAREmail] as BEGIN
+ALTER procedure [dbo].[SendDailyCreditAREmail] as 
+
+BEGIN TRY
+BEGIN
 
 --IES & ST ATL
 select    ar.CUSTOMER_NAME
@@ -290,3 +293,22 @@ SET @Message5 =
 
 
 END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[SendDailyCreditAREmail]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
