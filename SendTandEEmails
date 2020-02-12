@@ -1,13 +1,15 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendTandEEmails]    Script Date: 2/11/2020 3:15:10 PM ******/
+/****** Object:  StoredProcedure [dbo].[SendTandEEmails]    Script Date: 2/12/2020 10:28:14 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 
 
-ALTER procedure [dbo].[SendTandEEmails] as
+ALTER procedure [dbo].[SendTandEEmails] 
+@DefaultEmail BIT = 0 
+as
 
 
 BEGIN TRY
@@ -25,7 +27,7 @@ BEGIN
 			UNION SELECT 505, 'CREDIT'					 ,'CREDIT','JennyKing@ajcfood.com','cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'
 			UNION SELECT 510, 'CLAIMS'					 ,'CLAIMS','ploveland@ajcfood.com','cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'	
 			UNION SELECT 515, 'ICT'						 ,'ICT','sali@ajclogistics.com;bduckett@ajcfood.com','cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'
-			UNION SELECT 525, 'GENERAL OFFICE'			 ,'OFFICE','gberger@ajclogistics.com','igayle@ajclogistics.com'
+			--UNION SELECT 525, 'GENERAL OFFICE'			 ,'OFFICE','gberger@ajclogistics.com','igayle@ajclogistics.com' --excluded because there are no plan  $$s for this
 			UNION SELECT 535, 'HUMAN RESOURCES'			 ,'HR','tvanderlaan@ajcfood.com','cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'
 			--UNION SELECT 700, 'GENERAL & ADMIN-CORPORATE','ADMIN','gberger@ajclogistics.com','igayle@ajclogistics.com'	--excluded because there are no plan  $$s for this
 
@@ -46,9 +48,15 @@ BEGIN
 
 			BEGIN
 
-			SELECT @DPTDesc = DPTDesc, @LOBDesc = [LOB Desc], @Recipient = Recipient, @CarbonCopyRecipient = CarbonCopyRecipient
+			SELECT @DPTDesc = DPTDesc, @LOBDesc = [LOB Desc], @Recipient = CASE WHEN @DefaultEmail = 0 THEN 'rtierney@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com;emengstie@ajclogistics.com'
+																				ELSE Recipient
+																				END,
+				   @CarbonCopyRecipient = CASE WHEN @DefaultEmail = 0 THEN 'sali@ajclogistics.com;seljamil@ajclogistics.com'
+											   ELSE CarbonCopyRecipient
+											   END
 			FROM #DeptCode
 			WHERE DPT = @DPT 
+
 
 			--YTD
 			IF OBJECT_ID ('TEMPDB..#YTD') IS NOT NULL  DROP TABLE #YTD
@@ -220,8 +228,8 @@ BEGIN
 
 			EXEC msdb.dbo.sp_send_dbmail 
 				  @profile_name = 'APTEST01SQLMail'
-				, @recipients=	'rtierney@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com;emengstie@ajclogistics.com'			--@Recipient					
-				, @copy_recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com'	--@CarbonCopyRecipient
+				, @recipients=	@Recipient					
+				, @copy_recipients = @CarbonCopyRecipient
 				, @subject = @PERIOD
 				, @body = @HTML
 				, @body_format = 'HTML' ;
@@ -279,9 +287,15 @@ BEGIN
 
 			BEGIN
 
-			SELECT @DPTDesc2 = DPTDesc, @LOBDesc2 = [LOB Desc2], @Recipient2 = Recipient2, @CarbonCopyRecipient2 = CarbonCopyRecipient2
+			SELECT @DPTDesc2 = DPTDesc, @LOBDesc2 = [LOB Desc2], @Recipient2 = CASE WHEN @DefaultEmail = 0 THEN 'rtierney@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com;emengstie@ajclogistics.com'
+																					ELSE Recipient2
+																					END, 
+				   @CarbonCopyRecipient2 = CASE WHEN @DefaultEmail = 0 THEN 'sali@ajclogistics.com;seljamil@ajclogistics.com'
+											   ELSE CarbonCopyRecipient2
+											   END
 			FROM #ProdGrouping
 			WHERE DPT = @DPT2
+
 
 			--YTD
 			IF OBJECT_ID ('TEMPDB..#YTD2') IS NOT NULL  DROP TABLE #YTD2
@@ -442,8 +456,8 @@ BEGIN
 
 			EXEC msdb.dbo.sp_send_dbmail 
 				  @profile_name = 'APTEST01SQLMail'
-				, @recipients=	'rtierney@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com;emengstie@ajclogistics.com'			--@Recipient2					
-				, @copy_recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com'	--@CarbonCopyRecipient2
+				, @recipients=	@Recipient2					
+				, @copy_recipients = @CarbonCopyRecipient2
 				, @subject = @PERIOD2
 				, @body = @HTML2
 				, @body_format = 'HTML' ;
