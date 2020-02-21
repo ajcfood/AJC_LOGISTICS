@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 2/5/2020 11:14:45 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 2/21/2020 09:27:14 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -158,12 +158,27 @@ set MBComm = GP*.18
 where SalesPName = 'Michael Browder'
 
 --Tyler Clendenen Calculation: 
-	--15% of GP where he is Sales Rep not in line of business 31,33,43, or 76
+	--15% of GP where he is Sales Rep not in line of business 31,33,43, or 76.  Changed to 10% starting March 2020
 	--6% of GP where he is Sales Rep in line of business 31,33,43, or 76
 update tblCommCalc
 set TCComm = GP*.15
 where SalesPName = 'Tyler Clendenen'
 	and InvLOB NOT IN ('31,33,43','76')
+	and ACCTYR < 2020
+
+update tblCommCalc
+set TCComm = GP*.15
+where SalesPName = 'Tyler Clendenen'
+	and InvLOB NOT IN ('31,33,43','76')
+	and ACCTYR = 2020
+	and ACCTMONTH IN (1,2)
+
+update tblCommCalc --Changed to 10% starting March 2020
+set TCComm = GP*.10
+where SalesPName = 'Tyler Clendenen'
+	and InvLOB NOT IN ('31,33,43','76')
+	and ACCTYR = 2020
+	and ACCTMONTH NOT IN (1,2)
 
 update tblCommCalc
 set TCComm = GP*.06
