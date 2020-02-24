@@ -1,6 +1,6 @@
 USE [MGXMLProcessing]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadDWRItemRecs]    Script Date: 6/21/2019 2:29:59 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadDWRItemRecs]    Script Date: 2/24/2020 09:12:56 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -11,56 +11,46 @@ GO
 
 
 
-ALTER PROCEDURE [dbo].[sp-MGXML-LoadDWRItemRecs]
+ ALTER PROCEDURE [dbo].[sp-MGXML-LoadDWRItemRecs]
 
-AS
+ AS
 BEGIN TRY
 BEGIN
 
-SET NOCOUNT ON;
-DECLARE @ProcName VARCHAR(100) = (SELECT OBJECT_SCHEMA_NAME(qt.objectid,qt.dbid) + '.' + OBJECT_NAME(qt.objectid, qt.dbid) FROM sys.dm_exec_requests er CROSS APPLY sys.dm_exec_sql_text(er.sql_handle) AS qt)
+ SET NOCOUNT ON;
 
-/*
+ /*
 05/17/2019 - SA - Added Error Logging
 
-*/
+ */
 
 
-/*****************************************************Begin Logging*******************************************************/
 
-EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
-
-/*************************************************************************************************************************/
-
-insert into [MGXMLProcessing].[dbo].[tblXML_DW_LoadRItems]
+ insert into [MGXMLProcessing].[dbo].[tblXML_DW_LoadRItems]
 select min(ItemID) as ItemID, [Weight], Qty, QtyUOM, InsuredValue, Qty, QtyUOM, ItemDesc
-	, cast('201807'+cast(dbo.udf_GetNumeric(SOID) as varchar(50)) as int) as FileNo--, SOID
+	, cast('201807'+cast(dbo.udf_GetNumeric(SOID) as varchar(50)) as bigint) as FileNo--, SOID
 	, WeightUOM, null as UnitPack, 4 as SystemID, 0 as Processed
 from [MGXMLProcessing].[dbo].[tblRouteXML_Item]
 group by [Weight], Qty, QtyUOM, InsuredValue, Qty, QtyUOM, ItemDesc, SOID, WeightUOM;
 
-/*****************************************************End Logging*******************************************************/
 
-EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
 
-/***********************************************************************************************************************/
-
-END
+ END
 End Try
 
 
 
-BEGIN CATCH
+ BEGIN CATCH
 
 
-              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+               DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
 
-              
-              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
-              
-              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+
+               SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+
+               Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
               Select '[sp-MGXML-LoadDWRItemRecs]', @ErrorMessage, @ErrorLine, @ErrorDate
 
 
 
-END CATCH
+ END CATCH
