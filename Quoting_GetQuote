@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 12/20/2019 10:30:17 AM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 2/25/2020 2:37:59 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -13,6 +13,7 @@ ALTER PROCEDURE [dbo].[Quoting_GetQuote]
 @CUSTID INT 
 
 AS
+BEGIN TRY
 BEGIN
 
 			IF EXISTS (SELECT TOP 1 1 FROM Quoting_SWESummary WHERE ISNULL(Gateway,'') = '')
@@ -23,7 +24,7 @@ BEGIN
 			END
 
 			DECLARE @DestState VARCHAR(2) = (SELECT TOP 1 DestState FROM Quoting_SWEDetails WHERE CustID = @CustID AND QuoteNo IS NULL)
-			DECLARE @ZipCode INT = (SELECT TOP 1 DestZipCode FROM Quoting_SWEDetails WHERE CustID = @CustID AND QuoteNo IS NULL)
+			DECLARE @ZipCode VARCHAR(5) = (SELECT TOP 1 DestZipCode FROM Quoting_SWEDetails WHERE CustID = @CustID AND QuoteNo IS NULL)
 			DECLARE @QuoteNo TABLE (QuoteNo INT)
 			DECLARE @SummaryID INT
 
@@ -41,7 +42,7 @@ BEGIN
 											   WHEN 'HI' THEN '900 S. EUCLID ST., UNIT B LA HABRA, CA 90631'
 											   ELSE ''
 											   END 
-						, SUM(CubicFeet) TotCubicFeet
+						, CAST(SUM(CubicFeet) AS INT) TotCubicFeet
 			FROM		Quoting_SWEDetails X
 			WHERE		CustID = @CustID 
 			AND			QuoteNo IN (
@@ -53,42 +54,80 @@ BEGIN
 											   ELSE ''
 											   END 
 
-
-
-			/**********************************************************************Calculate Inland Fee**********************************************************************/
-
-			UPDATE			CSAF 
-			SET				TotInlandFee = Y.FlatFee * CSAF.TotPieces
-			FROM			Quoting_SWESummary CSAF
-			CROSS APPLY		(
-								SELECT	TOP 1 PKGType, OrigZipCode
-								FROM	Quoting_SWEDetails SD
-								WHERE	SD.QuoteNo = CSAF.SummaryID 
-								AND		SD.CustID = CSAF.CustID
-								AND		SD.PKGType = 'PALLET'	--Rates are per pallet rate only
-							) X
-			CROSS APPLY		(
-								SELECT TOP 1 ZipCode, FlatFee, Effective, Terminated 
-								FROM	Quoting_InlandLocalPickUp ILP
-								WHERE	ILP.ZipCode = X.OrigZipCode
-								AND		ILP.CustID = CSAF.CustID
-							) Y
-			WHERE	CSAF.CustID = @CustID 
-			AND		CSAF.TotInlandFee = 0.00
-			AND		CSAF.SummaryID = (
-										SELECT TOP 1 QuoteNo 
-										FROM @QuoteNo
-									 )
-			AND		CAST(GETDATE() AS DATE) >= Y.Effective 
-			AND		CAST(GETDATE() AS DATE) < COALESCE(Y.Terminated, GETDATE())
-
 			/**********************************************************************Calculate Quote for Hawaii**********************************************************************/
 
 			SET @SummaryID = (SELECT DISTINCT QuoteNo FROM @QuoteNo)
 
-			IF @DestState = 'HI'
+			DECLARE @CubicFeet TABLE (CuFt DECIMAL(6,2))
+
+			INSERT INTO @CubicFeet (CuFt) 
+			SELECT		ROUND(
+								(Length * Width * Height) / 1728
+							,0) --Calculate cubic feet per pkg type
+			FROM		Quoting_SWEDetails SD
+			INNER JOIN  @QuoteNo X ON X.QuoteNo = SD.QuoteNo
+
+			DECLARE		@TotUnits DECIMAL(5,2)
+
+			SELECT		@TotUnits = ISNULL(SUM(Units),0.00)
+			FROM		Quoting_SWEDetails SD
+			INNER JOIN  @QuoteNo X ON X.QuoteNo = SD.QuoteNo
+			WHERE		PKGType <> 'CARTON'	--More than 5 units of any pkg type except Cartons cannot be quoted
+			
+								
+
+			IF (
+									@DestState = 'HI' 
+								AND @ZipCode <> '96772'	--Must be quoted manually per Phil
+								AND NOT EXISTS (
+													--Cannot quote any AK shipments where any one piece is > 750 cu ft
+													SELECT  TOP 1 CuFt 
+													FROM	@CubicFeet 
+													WHERE	CuFt > 750.00 
+												)
+								AND NOT EXISTS (
+													--Cannot quote any AK shipments where any DIMS have L > 120 in. OR W > 92 in. OR H > 100 in.
+													SELECT		TOP 1 *
+													FROM		Quoting_SWEDetails QS 
+													INNER JOIN  @QuoteNo X ON X.QuoteNo = QS.QuoteNo
+													WHERE		   QS.Length > 120.00
+																OR QS.Width > 92.00
+																OR QS.Height > 100.00
+												)
+								AND				@TotUnits > 5.00	--Cannot quote more than 5 total pieces
+													 
+				)
 					BEGIN
-		
+
+
+							--Calculate Inland Fee
+							UPDATE			CSAF 
+							SET				TotInlandFee = Y.FlatFee * CSAF.TotPieces
+							FROM			Quoting_SWESummary CSAF
+							CROSS APPLY		(
+												SELECT	TOP 1 PKGType, OrigZipCode
+												FROM	Quoting_SWEDetails SD
+												WHERE	SD.QuoteNo = CSAF.SummaryID 
+												AND		SD.CustID = CSAF.CustID
+												AND		SD.PKGType = 'PALLET'	--Rates are per pallet rate only
+											) X
+							CROSS APPLY		(
+												SELECT TOP 1 ZipCode, FlatFee, Effective, Terminated 
+												FROM	Quoting_InlandLocalPickUp ILP
+												WHERE	ILP.ZipCode = X.OrigZipCode
+												AND		ILP.CustID = CSAF.CustID
+											) Y
+							WHERE	CSAF.CustID = @CustID 
+							AND		CSAF.TotInlandFee = 0.00
+							AND		CSAF.SummaryID = (
+														SELECT TOP 1 QuoteNo 
+														FROM @QuoteNo
+													 )
+							AND		CAST(GETDATE() AS DATE) >= Y.Effective 
+							AND		CAST(GETDATE() AS DATE) < COALESCE(Y.Terminated, GETDATE())
+
+
+							--Calc HI Quote
 							EXEC [Quoting_CalcHIQuote] @CustID, @SummaryID  
 
 					END 
@@ -96,13 +135,6 @@ BEGIN
 			ELSE
 
 			BEGIN
-						DECLARE @CubicFeet TABLE (CuFt DECIMAL(6,2))
-						INSERT INTO @CubicFeet (CuFt) 
-						SELECT		ROUND(
-											(Length * Width * Height) / 1728
-									   ,0) --Calculate cubic feet per pkg type
-						FROM		Quoting_SWEDetails SD
-						INNER JOIN  @QuoteNo X ON X.QuoteNo = SD.QuoteNo
 			
 
 						IF (
@@ -123,9 +155,39 @@ BEGIN
 																OR QS.Width > 92.00
 																OR QS.Height > 100.00
 												)
+								AND				@TotUnits > 5.00	--Cannot quote more than 5 total pieces
+
 							)
 								BEGIN
 
+										--Calculate Inland Fee
+										UPDATE			CSAF 
+										SET				TotInlandFee = Y.FlatFee * CSAF.TotPieces
+										FROM			Quoting_SWESummary CSAF
+										CROSS APPLY		(
+															SELECT	TOP 1 PKGType, OrigZipCode
+															FROM	Quoting_SWEDetails SD
+															WHERE	SD.QuoteNo = CSAF.SummaryID 
+															AND		SD.CustID = CSAF.CustID
+															AND		SD.PKGType = 'PALLET'	--Rates are per pallet rate only
+														) X
+										CROSS APPLY		(
+															SELECT TOP 1 ZipCode, FlatFee, Effective, Terminated 
+															FROM	Quoting_InlandLocalPickUp ILP
+															WHERE	ILP.ZipCode = X.OrigZipCode
+															AND		ILP.CustID = CSAF.CustID
+														) Y
+										WHERE	CSAF.CustID = @CustID 
+										AND		CSAF.TotInlandFee = 0.00
+										AND		CSAF.SummaryID = (
+																	SELECT TOP 1 QuoteNo 
+																	FROM @QuoteNo
+																 )
+										AND		CAST(GETDATE() AS DATE) >= Y.Effective 
+										AND		CAST(GETDATE() AS DATE) < COALESCE(Y.Terminated, GETDATE())
+
+										
+										--Calc AK Quote
 										EXEC [Quoting_CalcAKQuote] @CustID, @SummaryID 
 	
 								END
@@ -141,3 +203,21 @@ BEGIN
 			END
 
 END
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AirTrak.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[Quoting_GetQuote]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
