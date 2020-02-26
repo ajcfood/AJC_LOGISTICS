@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendDailyCreditAREmail]    Script Date: 2/12/2020 10:55:41 AM ******/
+/****** Object:  StoredProcedure [dbo].[SendDailyCreditAREmail]    Script Date: 2/26/2020 8:42:43 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -61,10 +61,10 @@ SET @Message =
 			  @profile_name = 'APTEST01SQLMail'  
 			, @from_address = 'DoNotReply@AJCLogistics.com'
 			, @reply_to = 'sali@ajclogistics.com' 
-			, @recipients = 'csr@ajclogistics.com;ajcltrucksales@ajc.local;agarcia@ajclogistics.com;lpantesco@ajclogistics.com;aalonso@ajclogistics.com'
+			, @recipients = 'csr@ajclogistics.com;ajcltrucksales@ajc.local;lpantesco@ajclogistics.com;aalonso@ajclogistics.com;credit@ajclogistics.com'
 			, @body = @Message
 			, @body_format = 'HTML'
-			, @subject = 'Daily Credit Limit vs. A/R Report'
+			, @subject = 'IES/ST ATL - Daily Credit Limit vs. A/R Report'
 
 --Seawide Express
 select    ar.CUSTOMER_NAME
@@ -120,10 +120,10 @@ SET @Message2 =
 			  @profile_name = 'APTEST01SQLMail'  
 			, @from_address = 'DoNotReply@AJCLogistics.com'
 			, @reply_to = 'sali@ajclogistics.com' 
-			, @recipients = 'phinkle@seawideexpress.com;agarcia@seawideexpress.com'
+			, @recipients = 'phinkle@seawideexpress.com;credit@seawideexpress.com'
 			, @body = @Message2
 			, @body_format = 'HTML'
-			, @subject = 'Daily Credit Limit vs. A/R Report Seawide'
+			, @subject = 'SWE - Daily Credit Limit vs. A/R Report Seawide'
 
 
 --ST JAX
@@ -177,10 +177,10 @@ SET @Message3 =
 			  @profile_name = 'APTEST01SQLMail'  
 			, @from_address = 'DoNotReply@AJCLogistics.com'
 			, @reply_to = 'sali@ajclogistics.com' 
-			, @recipients = 'agarcia@ajclogistics.com;cmendez@ajclogistics.com;bstallings@ajclogistics.com'
+			, @recipients = 'cmendez@ajclogistics.com;bstallings@ajclogistics.com;credit@ajclogistics.com'
 			, @body = @Message3
 			, @body_format = 'HTML'
-			, @subject = 'Daily Credit Limit vs. A/R Report'
+			, @subject = 'ST JAX - Daily Credit Limit vs. A/R Report'
 
 --IES NVO
 select    ar.CUSTOMER_NAME
@@ -234,7 +234,7 @@ SET @Message4 =
 			, @recipients = 'credit@ajclogistics.com'
 			, @body = @Message4
 			, @body_format = 'HTML'
-			, @subject = 'Daily Credit Limit vs. A/R Report'
+			, @subject = 'NVOCC - Daily Credit Limit vs. A/R Report'
 
 
 --IES Eagle
@@ -289,7 +289,7 @@ SET @Message5 =
 			, @recipients = 'credit@eagle-logistics.com'
 			, @body = @Message5
 			, @body_format = 'HTML'
-			, @subject = 'Daily Credit Limit vs. A/R Report'
+			, @subject = 'Eagle - Daily Credit Limit vs. A/R Report'
 
 
 END
