@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 12/20/2019 12:04:21 PM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 2/27/2020 10:37:32 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -166,13 +166,13 @@ BEGIN
 								INTO		#DeliveryRate
 								FROM		Quoting_SWESummary CSAF
 								CROSS APPLY (
-												SELECT		TOP 1 Island, DestZipCode, IsHazmat, WillCall 
+												SELECT		TOP 1 Island, SD.DestCity City, DestZipCode, IsHazmat, WillCall 
 												FROM		Quoting_SWEDetails SD
 												INNER JOIN (
-																SELECT	DISTINCT CustID, ZipCode, Island 
+																SELECT	DISTINCT CustID, ZipCode, Island, City  
 																FROM	Quoting_HiDestDelivRates
 																WHERE	CustID = @CustID 
-															) X		ON X.custid = SD.CustID AND X.ZipCode = SD.DestZipCode
+															) X		ON X.custid = SD.CustID AND X.ZipCode = SD.DestZipCode AND X.City = SD.DestCity
 												WHERE   SD.CustID = CSAF.CustID 
 												AND		SD.QuoteNo = CSAF.SummaryID
 											) X
@@ -183,6 +183,7 @@ BEGIN
 													WHERE  DD.CustID = CSAF.CustID 
 													AND	DD.ZipCode = X.DestZipCode
 													AND	DD.Island = X.Island
+													AND DD.City = X.City 
 											) Y
 								WHERE	CSAF.CustID = @CustID 
 								AND		CSAF.SummaryID = @SummaryID
@@ -368,6 +369,7 @@ BEGIN
 
 			BEGIN
 
+			
 								--Accessorial: HAZMAT Ocean Fee (Per Cubic Feet)
 								UPDATE			CSAF 
 								SET				HazmatOceanFee = ISNULL(
@@ -393,6 +395,7 @@ BEGIN
 								AND		F.FeeSubTypeID = 1
 								AND		CAST(GETDATE() AS DATE) >= F.Effective 
 								AND		CAST(GETDATE() AS DATE) < COALESCE(F.Terminated, GETDATE())
+		 
 
 								--Accessorial: Lift Gate Fee
 								UPDATE		CSAF 
@@ -478,7 +481,7 @@ BEGIN
 								AND		CAST(GETDATE() AS DATE) >= F.Effective 
 								AND		CAST(GETDATE() AS DATE) < COALESCE(F.Terminated, GETDATE())
 
-
+/*
 								--Accessorial: Hazmat Delivery Fee (Per Island)
 								UPDATE		CSAF 
 								SET			HazmatDeliveryFee = ISNULL(Y.AccHZMTDelivFee ,0.00)
@@ -503,6 +506,7 @@ BEGIN
 								AND		CAST(GETDATE() AS DATE) >= Y.Effective 
 								AND		CAST(GETDATE() AS DATE) < COALESCE(Y.Terminated, GETDATE())
 
+*/
 
 								--Accessorial: Residential Delivery Fee
 								UPDATE			CSAF 
@@ -733,7 +737,7 @@ BEGIN CATCH
               
               SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
               
-              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Insert into AirTrak.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
               Select '[Quoting_CalcHIQuote]', @ErrorMessage, @ErrorLine, @ErrorDate
 
 
