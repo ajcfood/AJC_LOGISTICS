@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 2/27/2020 10:37:32 AM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 2/27/2020 11:18:58 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -147,7 +147,7 @@ BEGIN
 								UPDATE		SD 
 								SET			WillCall = 'Y'
 								FROM		Quoting_SWEDetails SD
-								INNER JOIN	Quoting_HiDestDelivRates DD ON DD.CustID = SD.CustID AND DD.ZipCode = SD.DestZipCode AND DD.Zone = 'WC'
+								INNER JOIN	Quoting_HiDestDelivRates DD ON DD.CustID = SD.CustID AND DD.ZipCode = SD.DestZipCode AND DD.City = SD.DestCity AND DD.Zone = 'WC'
 								WHERE		SD.CustID = @CustID
 								AND			SD.QuoteNo = @SummaryID
 
