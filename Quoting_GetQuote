@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 2/25/2020 2:37:59 PM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 2/28/2020 4:50:25 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -94,7 +94,7 @@ BEGIN
 																OR QS.Width > 92.00
 																OR QS.Height > 100.00
 												)
-								AND				@TotUnits > 5.00	--Cannot quote more than 5 total pieces
+								AND				@TotUnits <= 5.00	--Cannot quote more than 5 total pieces
 													 
 				)
 					BEGIN
@@ -132,65 +132,62 @@ BEGIN
 
 					END 
 			
-			ELSE
-
-			BEGIN
 			
 
-						IF (
-									@DestState = 'AK' 
-								AND @ZipCode IN (SELECT ZipCode FROM Quoting_AKZones)
-								AND NOT EXISTS (
-													--Cannot quote any AK shipments where any one piece is > 750 cu ft
-													SELECT  TOP 1 CuFt 
-													FROM	@CubicFeet 
-													WHERE	CuFt > 750.00 
-												)
-								AND NOT EXISTS (
-													--Cannot quote any AK shipments where any DIMS have L > 120 in. OR W > 92 in. OR H > 100 in.
-													SELECT		TOP 1 *
-													FROM		Quoting_SWEDetails QS 
-													INNER JOIN  @QuoteNo X ON X.QuoteNo = QS.QuoteNo
-													WHERE		   QS.Length > 120.00
-																OR QS.Width > 92.00
-																OR QS.Height > 100.00
-												)
-								AND				@TotUnits > 5.00	--Cannot quote more than 5 total pieces
+			IF (
+						@DestState = 'AK' 
+					AND @ZipCode IN (SELECT ZipCode FROM Quoting_AKZones)
+					AND NOT EXISTS (
+										--Cannot quote any AK shipments where any one piece is > 750 cu ft
+										SELECT  TOP 1 CuFt 
+										FROM	@CubicFeet 
+										WHERE	CuFt > 750.00 
+									)
+					AND NOT EXISTS (
+										--Cannot quote any AK shipments where any DIMS have L > 120 in. OR W > 92 in. OR H > 100 in.
+										SELECT		TOP 1 *
+										FROM		Quoting_SWEDetails QS 
+										INNER JOIN  @QuoteNo X ON X.QuoteNo = QS.QuoteNo
+										WHERE		   QS.Length > 120.00
+													OR QS.Width > 92.00
+													OR QS.Height > 100.00
+									)
+					AND				@TotUnits <= 5.00	--Cannot quote more than 5 total pieces
 
-							)
-								BEGIN
+				)
+					BEGIN
 
-										--Calculate Inland Fee
-										UPDATE			CSAF 
-										SET				TotInlandFee = Y.FlatFee * CSAF.TotPieces
-										FROM			Quoting_SWESummary CSAF
-										CROSS APPLY		(
-															SELECT	TOP 1 PKGType, OrigZipCode
-															FROM	Quoting_SWEDetails SD
-															WHERE	SD.QuoteNo = CSAF.SummaryID 
-															AND		SD.CustID = CSAF.CustID
-															AND		SD.PKGType = 'PALLET'	--Rates are per pallet rate only
-														) X
-										CROSS APPLY		(
-															SELECT TOP 1 ZipCode, FlatFee, Effective, Terminated 
-															FROM	Quoting_InlandLocalPickUp ILP
-															WHERE	ILP.ZipCode = X.OrigZipCode
-															AND		ILP.CustID = CSAF.CustID
-														) Y
-										WHERE	CSAF.CustID = @CustID 
-										AND		CSAF.TotInlandFee = 0.00
-										AND		CSAF.SummaryID = (
-																	SELECT TOP 1 QuoteNo 
-																	FROM @QuoteNo
-																 )
-										AND		CAST(GETDATE() AS DATE) >= Y.Effective 
-										AND		CAST(GETDATE() AS DATE) < COALESCE(Y.Terminated, GETDATE())
+							--Calculate Inland Fee
+							UPDATE			CSAF 
+							SET				TotInlandFee = Y.FlatFee * CSAF.TotPieces
+							FROM			Quoting_SWESummary CSAF
+							CROSS APPLY		(
+												SELECT	TOP 1 PKGType, OrigZipCode
+												FROM	Quoting_SWEDetails SD
+												WHERE	SD.QuoteNo = CSAF.SummaryID 
+												AND		SD.CustID = CSAF.CustID
+												AND		SD.PKGType = 'PALLET'	--Rates are per pallet rate only
+											) X
+							CROSS APPLY		(
+												SELECT TOP 1 ZipCode, FlatFee, Effective, Terminated 
+												FROM	Quoting_InlandLocalPickUp ILP
+												WHERE	ILP.ZipCode = X.OrigZipCode
+												AND		ILP.CustID = CSAF.CustID
+											) Y
+							WHERE	CSAF.CustID = @CustID 
+							AND		CSAF.TotInlandFee = 0.00
+							AND		CSAF.SummaryID = (
+														SELECT TOP 1 QuoteNo 
+														FROM @QuoteNo
+														)
+							AND		CAST(GETDATE() AS DATE) >= Y.Effective 
+							AND		CAST(GETDATE() AS DATE) < COALESCE(Y.Terminated, GETDATE())
 
 										
-										--Calc AK Quote
-										EXEC [Quoting_CalcAKQuote] @CustID, @SummaryID 
+							--Calc AK Quote
+							EXEC [Quoting_CalcAKQuote] @CustID, @SummaryID 
 	
-								END
+					END
 
 						--ELSE	BEGIN
 					
@@ -200,7 +197,6 @@ BEGIN
 
 						--		END
 
-			END
 
 END
 End Try
