@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 2/27/2020 11:18:58 AM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 2/28/2020 9:32:56 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -229,7 +229,7 @@ BEGIN
 																					   WHEN DestDelivWC > ISNULL(DestDelivWCMin,0.00) THEN DestDelivWC
 																					   END
 																			,0.00), 
-															HZMTDestDelivFee = DestDelivHZMT --Not applied on WC shipments
+															HZMTDestDelivFee = 0.00 --Not applied on WC shipments
 											FROM		Quoting_SWESummary CSAF
 											INNER JOIN	#DeliveryRate X ON X.CustID = CSAF.CustID AND X.SummaryID = CSAF.SummaryID 
 											CROSS APPLY (
@@ -280,7 +280,7 @@ BEGIN
 																							WHEN DestDelivWC > ISNULL(DestDelivWCMin,0.00) THEN DestDelivWC
 																							END
 																			,0.00), 
-															HZMTDestDelivFee = CASE IsHazmat WHEN 'Y' THEN DestDelivHZMT ELSE 0.00 END
+															HZMTDestDelivFee = 0.00	--Not applied on WC shipments
 											FROM		Quoting_SWESummary csaf
 											INNER JOIN  #DeliveryRate X ON X.CustID = CSAF.CustID AND X.SummaryID = CSAF.SummaryID 
 											CROSS APPLY (
