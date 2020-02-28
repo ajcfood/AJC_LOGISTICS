@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 2/28/2020 9:32:56 AM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 2/28/2020 9:49:33 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -59,7 +59,7 @@ BEGIN
 								AND		HORAD.OceanMin IS NOT NULL
 								AND		CAST(GETDATE() AS DATE) >= HORAD.Effective 
 								AND		CAST(GETDATE() AS DATE) < COALESCE(HORAD.Terminated, GETDATE())
-
+								 
 								--Apply Ocean Fee for all shipments beyond minimums
 								UPDATE		CSAF 
 								SET			OceanFee = ISNULL(@OceanFee,0.00)							
@@ -90,7 +90,7 @@ BEGIN
 								INNER JOIN  Quoting_HiOceanRatesandDiscounts HORAD ON HORAD.CustID = CSAF.CustID AND HORAD.ZipCode = X.DestZipCode
 								WHERE	CSAF.Custid = @CustID 
 								AND		CSAF.SummaryID = @SummaryID
-								AND		@OceanFee * (1 - ISNULL(HORAD.OceanDiscount,0.00)) > HORAD.OceanMin
+								AND		@OceanFee * (1 - ISNULL(HORAD.OceanDiscount,0.00)) > ISNULL(HORAD.OceanMin, 0.00)
 								AND		CSAF.OceanDiscPerc = 0.00
 								AND		CAST(GETDATE() AS DATE) >= HORAD.Effective 
 								AND		CAST(GETDATE() AS DATE) < COALESCE(HORAD.Terminated, GETDATE())
