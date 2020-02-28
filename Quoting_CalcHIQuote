@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 2/28/2020 9:49:33 AM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 2/28/2020 4:50:34 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -25,12 +25,12 @@ BEGIN
 																															 END --45LB Rule
 																				FROM		Quoting_SWESummary CSAF
 																				CROSS APPLY (
-																								SELECT	TOP 1 DestZipCode
+																								SELECT	TOP 1 DestZipCode, DestCity
 																								FROM	Quoting_SWEDetails SD
 																								WHERE	SD.QuoteNo = CSAF.SummaryID 
 																								and		SD.CustID = CSAF.CustID
 																							) x
-																				INNER JOIN  Quoting_HiOceanRatesandDiscounts HORAD ON HORAD.CustID = CSAF.CustID AND HORAD.ZipCode = X.DestZipCode
+																				INNER JOIN  Quoting_HiOceanRatesandDiscounts HORAD ON HORAD.CustID = CSAF.CustID AND HORAD.ZipCode = X.DestZipCode AND HORAD.City = X.DestCity
 																				WHERE	CSAF.custid = @CustID 
 																				AND		CSAF.SummaryID = @SummaryID
 																				AND		CSAF.OceanFee = 0.00
@@ -46,12 +46,12 @@ BEGIN
 								SET			OceanFee = ISNULL(HORAD.OceanMin,0.00)												
 								FROM		Quoting_SWESummary CSAF
 								CROSS APPLY (
-												SELECT	TOP 1 DestZipCode
+												SELECT	TOP 1 DestZipCode, DestCity
 												FROM	Quoting_SWEDetails SD
 												WHERE	SD.QuoteNo = CSAF.SummaryID 
 												and		SD.CustID = CSAF.CustID
 											) X
-								INNER JOIN  Quoting_HiOceanRatesandDiscounts HORAD on HORAD.CustID = CSAF.CustID AND HORAD.ZipCode = X.DestZipCode
+								INNER JOIN  Quoting_HiOceanRatesandDiscounts HORAD on HORAD.CustID = CSAF.CustID AND HORAD.ZipCode = X.DestZipCode AND HORAD.City = X.DestCity
 								WHERE	CSAF.custid = @CustID 
 								AND		CSAF.SummaryID = @SummaryID
 								AND		CSAF.OceanFee = 0.00
@@ -65,12 +65,12 @@ BEGIN
 								SET			OceanFee = ISNULL(@OceanFee,0.00)							
 								FROM		Quoting_SWESummary CSAF
 								CROSS APPLY (
-												SELECT	TOP 1 DestZipCode
+												SELECT	TOP 1 DestZipCode, DestCity
 												FROM	Quoting_SWEDetails SD
 												WHERE	SD.QuoteNo = CSAF.SummaryID 
 												and		SD.CustID = CSAF.CustID
 											) X
-								INNER JOIN  Quoting_HiOceanRatesandDiscounts HORAD on HORAD.CustID = CSAF.CustID AND HORAD.ZipCode = X.DestZipCode
+								INNER JOIN  Quoting_HiOceanRatesandDiscounts HORAD on HORAD.CustID = CSAF.CustID AND HORAD.ZipCode = X.DestZipCode AND HORAD.City = X.DestCity
 								WHERE	CSAF.custid = @CustID 
 								AND		CSAF.SummaryID = @SummaryID
 								AND		CSAF.OceanFee = 0.00
@@ -82,12 +82,12 @@ BEGIN
 								SET			OceanDiscPerc = ISNULL(HORAD.OceanDiscount,0.00)
 								FROM		Quoting_SWESummary CSAF
 								CROSS APPLY (
-												SELECT	TOP 1 DestZipCode
+												SELECT	TOP 1 DestZipCode, DestCity
 												FROM	Quoting_SWEDetails SD
 												WHERE	SD.QuoteNo = CSAF.SummaryID 
 												AND		SD.CustID = CSAF.CustID
 											) X
-								INNER JOIN  Quoting_HiOceanRatesandDiscounts HORAD ON HORAD.CustID = CSAF.CustID AND HORAD.ZipCode = X.DestZipCode
+								INNER JOIN  Quoting_HiOceanRatesandDiscounts HORAD ON HORAD.CustID = CSAF.CustID AND HORAD.ZipCode = X.DestZipCode AND HORAD.City = X.DestCity
 								WHERE	CSAF.Custid = @CustID 
 								AND		CSAF.SummaryID = @SummaryID
 								AND		@OceanFee * (1 - ISNULL(HORAD.OceanDiscount,0.00)) > ISNULL(HORAD.OceanMin, 0.00)
@@ -642,7 +642,7 @@ BEGIN
 								CROSS APPLY		(
 													SELECT TOP 1 HORAD.InterIslandFee FlatFee, InterIslandFeeMin FeeMin
 													FROM		Quoting_SWEDetails SD 
-													INNER JOIN  Quoting_HiOceanRatesandDiscounts HORAD ON HORAD.CustID = SD.CustID AND HORAD.ZipCode = SD.DestZipCode AND HORAD.Island IN ('LANAI','MOLOKAI')
+													INNER JOIN  Quoting_HiOceanRatesandDiscounts HORAD ON HORAD.CustID = SD.CustID AND HORAD.ZipCode = SD.DestZipCode AND HORAD.City = SD.DestCity AND HORAD.Island IN ('LANAI','MOLOKAI')
 													WHERE		SD.CustID = CSAF.CustID
 													AND			SD.QuoteNo = CSAF.SummaryID
 													AND			CAST(GETDATE() AS DATE) >= HORAD.Effective 
