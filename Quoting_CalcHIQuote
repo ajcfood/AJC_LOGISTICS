@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 2/28/2020 4:50:34 PM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 3/1/2020 7:41:09 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -512,7 +512,7 @@ BEGIN
 								UPDATE			CSAF 
 								SET				ResidentialDeliveryFee = ISNULL(
 																					CASE WHEN TotCubicFeet * FlatFee <= FeeMin AND FeeMin IS NOT NULL AND FeeCalcTypeID = 1 THEN FeeMin 
-																						 WHEN TotCubicFeet * FlatFee > FeeMin AND FeeCalcTypeID = 1 THEN TotCubicFeet * FlatFee
+																						 WHEN TotCubicFeet * FlatFee > FeeMin AND FeeMin IS NOT NULL AND FeeCalcTypeID = 1 THEN TotCubicFeet * FlatFee
 																						 WHEN FeeMin IS NULL AND FeeCalcTypeID = 1 THEN TotCubicFeet * FlatFee
 																						 WHEN FeeCalcTypeID = 2 THEN FlatFee 
 																						 END
