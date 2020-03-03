@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_PopulatePowerBIReporting]    Script Date: 11/11/2019 3:06:50 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_PopulatePowerBIReporting]    Script Date: 3/3/2020 9:23:28 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -42,11 +42,13 @@ TRUNCATE TABLE AJCDW..RptFXFAnalysis
 
  /*************************************************************************************************************************/
 
-insert into AJCDW..RptFXFAnalysis ([Manifest], [Account], [LOB], [ACCTYR], [ACCTMONTH], [DeliveryDate], [Sum of InvRevenue], [Sum of InvCost], [Sum of InvGP], 
+insert into AJCDW..RptFXFAnalysis ([Manifest], [Account], [LOB], [ACCTYR], [ACCTMONTH], [DeliveryDate], [Weekday], [Sum of InvRevenue], [Sum of InvCost], [Sum of InvGP], 
 [No. of Pros], [Zone 1 Pros], [Zone 2 Pros], [Zone 3 Pros], [Zone 4 Pros])
 
-select s.ShpBkgNum Manifest, s.ShpAccnt Account, s.ShpLOB LOB, ti.ACCTYR, ti.ACCTMONTH, MIN(ti.InvDate) DeliveryDate, SUM(ti.InvRevenue) [Sum of InvRevenue],
-SUM(ti.InvCost) [Sum of InvCost], SUM(ti.InvGP) [Sum of InvGP], ISNULL([No. of Pros],0) [No. of Pros], ISNULL([Zone 1 Pros],'') [Zone 1 Pros], ISNULL([Zone 2 Pros],'') [Zone 2 Pros], 
+select s.ShpBkgNum Manifest, s.ShpAccnt Account, s.ShpLOB LOB, ti.ACCTYR, ti.ACCTMONTH, MIN(ti.InvDate) DeliveryDate, FORMAT(MIN(ti.InvDate), 'dddd', 'en-US') AS Weekday, 
+SUM(ti.InvRevenue) [Sum of InvRevenue],
+SUM(ti.InvCost) [Sum of InvCost], SUM(ti.InvGP) [Sum of InvGP], ISNULL([No. of Pros],0) [No. of Pros], ISNULL([Zone 1 Pros],'') [Zone 1 Pros], 
+ISNULL([Zone 2 Pros],'') [Zone 2 Pros], 
 ISNULL([Zone 3 Pros],'') [Zone 3 Pros], ISNULL([Zone 4 Pros],'') [Zone 4 Pros]
 from AJCDW..tblShipment s
 inner join AJCDW..tblInvoice ti on ti.ShipmentID = s.ShipmentID
@@ -108,6 +110,15 @@ and isnull(s.ShpBkgNum,'') <> ''
 and ShpMaster <> 'M'
 group by s.ShpBkgNum, s.ShpAccnt, s.ShpLOB, ti.ACCTYR, ti.ACCTMONTH, ISNULL([No. of Pros],0), ISNULL([Zone 1 Pros],''), ISNULL([Zone 2 Pros],''), 
 ISNULL([Zone 3 Pros],''), ISNULL([Zone 4 Pros],'')
+
+
+UPDATE	AJCDW..RptFXFAnalysis
+SET		[No. of Pros] = 0, 
+		[Zone 1 Pros] = 0, 
+		[Zone 2 Pros] = 0, 
+		[Zone 3 Pros] = 0, 
+		[Zone 4 Pros] = 0
+WHERE	Weekday IN ('Saturday','Sunday')
 
 /*****************************************************End Logging*******************************************************/
 
