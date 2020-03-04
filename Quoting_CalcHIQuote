@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 3/4/2020 9:22:33 AM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 3/4/2020 10:15:59 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -162,11 +162,11 @@ BEGIN
 																							WHEN TotCubicFeet >= 400 THEN  ISNULL([DestDeliv_400+],0.00)
 																							END * CONVERT(DECIMAL(6,2),TotCubicFeet) DestDelivery, 
 											ISNULL([DestDelivHZMT],0.00) [DestDelivHZMT], CONVERT(DECIMAL(6,2),TotCubicFeet) * [DestDelivWC] AS [DestDelivWC], [DestDelivWCMin], [DestDelivMin], [DestDelivMax], 
-											ISNULL([ContSpotRate],0.00) AS [ContSpotRate], X.Island, X.City, X.DestZipCode
+											ISNULL([ContSpotRate],0.00) AS [ContSpotRate], X.Island, X.City, X.DestZipCode, ContainerDrop
 								INTO		#DeliveryRate
 								FROM		Quoting_SWESummary CSAF
 								CROSS APPLY (
-												SELECT		TOP 1 Island, SD.DestCity City, DestZipCode, IsHazmat, WillCall
+												SELECT		TOP 1 Island, SD.DestCity City, DestZipCode, IsHazmat, WillCall, ContainerDrop
 												FROM		Quoting_SWEDetails SD
 												INNER JOIN (
 																SELECT	DISTINCT CustID, ZipCode, Island, City  
@@ -195,11 +195,20 @@ BEGIN
 								--Apply Container Spot Rate (if applicable)
 
 								IF EXISTS (
-												SELECT	Island, TotCubicFeet
+												SELECT	1
 												FROM	#DeliveryRate
-												WHERE	Island IN ('MAUI','OAHU')
-												AND		TotCubicFeet >= 400
-												--Need to add in new column for ContainerDelivery here as an OR statement
+												WHERE	
+														(
+																(
+																		Island IN ('MAUI','OAHU')
+																  AND	TotCubicFeet >= 400
+																)
+															OR  (
+																		ContainerDrop = 'Y'
+																  AND	Island NOT IN ('MAUI','OAHU')
+																)
+														)
+												
 										  )
 
 								BEGIN
@@ -248,7 +257,6 @@ BEGIN
 
 								ELSE
 
-								BEGIN
 											--Apply Dest Delivery Rate OR Minimums (if applicable)
 											UPDATE			CSAF 
 											SET				DestDelivFee = ISNULL(
@@ -295,8 +303,6 @@ BEGIN
 											AND		CSAF.HZMTDestDelivFee = 0.00
 											AND		CSAF.DestDelivFee = 0.00
 
-							END
-			
 			END
 
 
