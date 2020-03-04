@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 2/21/2020 09:27:14 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 3/4/2020 08:40:29 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -97,6 +97,7 @@ SELECT ACCTYR
 	,Convert(decimal(18,2),0.00) as DTComm -- Dalton Thomas
 	,Convert(decimal(18,2),0.00) as DBComm -- Dana Beck
 	,Convert(decimal(18,2),0.00) as AUSTINComm -- Austin Miller
+	,Convert(decimal(18,2),0.00) as CLComm -- Crystal Lubin
 into #tmp1
 from tblInvoice i
 JOIN tblShipment s on i.ShipmentID = s.ShipmentID
@@ -494,6 +495,12 @@ where InvLOB = '10'
 Update tblCommCalc
 set DBComm = GP * .01
 where InvLOB = '10'
+
+-- Crystal Lubin: 8.5% GP of her own GP
+Update tblCommCalc
+set CLComm = GP * .085
+where InvLOB = '10'
+and SalesPName = 'Crystal Lubin'
 
 
 --SELECT * from #tmp1
