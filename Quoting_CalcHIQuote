@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 3/2/2020 3:32:20 PM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 3/4/2020 9:22:33 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -162,11 +162,11 @@ BEGIN
 																							WHEN TotCubicFeet >= 400 THEN  ISNULL([DestDeliv_400+],0.00)
 																							END * CONVERT(DECIMAL(6,2),TotCubicFeet) DestDelivery, 
 											ISNULL([DestDelivHZMT],0.00) [DestDelivHZMT], CONVERT(DECIMAL(6,2),TotCubicFeet) * [DestDelivWC] AS [DestDelivWC], [DestDelivWCMin], [DestDelivMin], [DestDelivMax], 
-											ISNULL([ContSpotRate],0.00) + (CONVERT(DECIMAL(6,2),TotCubicFeet) * ISNULL([ContSpotRatePLUSPerCuFt],0.00)) AS [ContSpotRate]
+											ISNULL([ContSpotRate],0.00) AS [ContSpotRate], X.Island, X.City, X.DestZipCode
 								INTO		#DeliveryRate
 								FROM		Quoting_SWESummary CSAF
 								CROSS APPLY (
-												SELECT		TOP 1 Island, SD.DestCity City, DestZipCode, IsHazmat, WillCall 
+												SELECT		TOP 1 Island, SD.DestCity City, DestZipCode, IsHazmat, WillCall
 												FROM		Quoting_SWEDetails SD
 												INNER JOIN (
 																SELECT	DISTINCT CustID, ZipCode, Island, City  
@@ -178,7 +178,7 @@ BEGIN
 											) X
 								CROSS APPLY (
 													SELECT  [DestDeliv_0-99], [DestDeliv_100-199], [DestDeliv_200-299], [DestDeliv_300-399], [DestDeliv_400+], [DestDelivHZMT], ISNULL([DestDelivWC],0.00) [DestDelivWC], [DestDelivWCMin], [DestDelivMin], [DestDelivMax], [ContSpotRate], 
-															[ContSpotRatePLUSPerCuFt], [Effective], [Terminated] 
+															[Effective], [Terminated] 
 													FROM	Quoting_HiDestDelivRates DD 
 													WHERE  DD.CustID = CSAF.CustID 
 													AND	DD.ZipCode = X.DestZipCode
@@ -194,19 +194,18 @@ BEGIN
 
 								--Apply Container Spot Rate (if applicable)
 
-								DECLARE		@TotCubicFeet INT = (SELECT TotCubicFeet FROM #DeliveryRate)
-
-								IF @TotCubicFeet >= 400
+								IF EXISTS (
+												SELECT	Island, TotCubicFeet
+												FROM	#DeliveryRate
+												WHERE	Island IN ('MAUI','OAHU')
+												AND		TotCubicFeet >= 400
+												--Need to add in new column for ContainerDelivery here as an OR statement
+										  )
 
 								BEGIN
-											--Apply Dest Deliv Fee
+											
 											UPDATE			CSAF 
-											SET				DestDelivFee = ISNULL(
-																					CASE WHEN DestDelivery + ContSpotRate <= DestDelivMin AND DestDelivMin IS NOT NULL THEN DestDelivMin
-																						 WHEN DestDelivery + ContSpotRate > DestDelivMin AND DestDelivMin IS NOT NULL AND DestDelivMax IS NOT NULL AND DestDelivery + ContSpotRate > DestDelivMax THEN DestDelivMax
-																						 WHEN DestDelivery + ContSpotRate > DestDelivMin AND DestDelivMin IS NOT NULL THEN DestDelivery + ContSpotRate
-																						 END
-																			,0.00), 
+											SET				DestDelivFee = ISNULL(ContSpotRate,0.00), 
 															HZMTDestDelivFee = CASE IsHazmat WHEN 'Y' THEN DestDelivHZMT ELSE 0.00 END
 											FROM		Quoting_SWESummary CSAF
 											INNER JOIN	#DeliveryRate X ON X.CustID = CSAF.CustID AND X.SummaryID = CSAF.SummaryID 
@@ -249,6 +248,7 @@ BEGIN
 
 								ELSE
 
+								BEGIN
 											--Apply Dest Delivery Rate OR Minimums (if applicable)
 											UPDATE			CSAF 
 											SET				DestDelivFee = ISNULL(
@@ -258,7 +258,7 @@ BEGIN
 																							 END
 																			,0.00), 
 															HZMTDestDelivFee = CASE IsHazmat WHEN 'Y' THEN DestDelivHZMT ELSE 0.00 END
-											FROM		Quoting_SWESummary csaf
+											FROM		Quoting_SWESummary CSAF
 											INNER JOIN  #DeliveryRate X ON X.CustID = CSAF.CustID AND X.SummaryID = CSAF.SummaryID 
 											CROSS APPLY (
 															SELECT  TOP 1 IsHazmat, WillCall
@@ -295,6 +295,8 @@ BEGIN
 											AND		CSAF.HZMTDestDelivFee = 0.00
 											AND		CSAF.DestDelivFee = 0.00
 
+							END
+			
 			END
 
 
