@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 3/9/2020 9:06:34 AM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 3/9/2020 4:10:13 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -65,15 +65,7 @@ BEGIN
 								(Length * Width * Height) / 1728
 							,0) * ISNULL(Units, 1.00) --Calculate cubic feet per pkg type
 			FROM		Quoting_SWEDetails SD
-			INNER JOIN  @QuoteNo X ON X.QuoteNo = SD.QuoteNo
-
-			DECLARE		@TotUnits DECIMAL(5,2)
-
-			SELECT		@TotUnits = SUM(ISNULL(Units, 1.00))
-			FROM		Quoting_SWEDetails SD
-			INNER JOIN  @QuoteNo X ON X.QuoteNo = SD.QuoteNo
-			WHERE		PKGType <> 'CARTON'	--More than 5 units of any pkg type except Cartons cannot be quoted
-			
+			INNER JOIN  @QuoteNo X ON X.QuoteNo = SD.QuoteNo			
 								
 
 			IF (
@@ -94,8 +86,13 @@ BEGIN
 																OR QS.Width > 92.00
 																OR QS.Height > 100.00
 												)
-								AND				@TotUnits <= 5.00	--Cannot quote more than 5 total pieces
-													 
+								AND	NOT EXISTS  (
+													SELECT 		SUM(ISNULL(Units, 1.00))
+													FROM		Quoting_SWEDetails SD
+													INNER JOIN  @QuoteNo X ON X.QuoteNo = SD.QuoteNo
+													WHERE		PKGType <> 'CARTON'	--More than 5 units of any pkg type except Cartons cannot be quoted
+													HAVING		SUM(ISNULL(Units, 1.00)) > 5.00
+												)	 
 				)
 					BEGIN
 
@@ -152,7 +149,13 @@ BEGIN
 													OR QS.Width > 92.00
 													OR QS.Height > 100.00
 									)
-					AND				@TotUnits <= 5.00	--Cannot quote more than 5 total pieces
+					AND	NOT EXISTS  (
+										SELECT 		SUM(ISNULL(Units, 1.00))
+										FROM		Quoting_SWEDetails SD
+										INNER JOIN  @QuoteNo X ON X.QuoteNo = SD.QuoteNo
+										WHERE		PKGType <> 'CARTON'	--More than 5 units of any pkg type except Cartons cannot be quoted
+										HAVING		SUM(ISNULL(Units, 1.00)) > 5.00
+									)	 
 
 				)
 					BEGIN
@@ -188,14 +191,6 @@ BEGIN
 							EXEC [Quoting_CalcAKQuote] @CustID, @SummaryID 
 	
 					END
-
-						--ELSE	BEGIN
-					
-						--				DELETE	   QS
-						--				FROM       Quoting_SWESummary QS
-						--				INNER JOIN @QuoteNo X ON X.QuoteNo = QS.SummaryID 
-
-						--		END
 
 
 END
