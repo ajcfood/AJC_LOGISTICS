@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 2/28/2020 4:50:25 PM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 3/9/2020 9:06:34 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -63,13 +63,13 @@ BEGIN
 			INSERT INTO @CubicFeet (CuFt) 
 			SELECT		ROUND(
 								(Length * Width * Height) / 1728
-							,0) --Calculate cubic feet per pkg type
+							,0) * ISNULL(Units, 1.00) --Calculate cubic feet per pkg type
 			FROM		Quoting_SWEDetails SD
 			INNER JOIN  @QuoteNo X ON X.QuoteNo = SD.QuoteNo
 
 			DECLARE		@TotUnits DECIMAL(5,2)
 
-			SELECT		@TotUnits = ISNULL(SUM(Units),0.00)
+			SELECT		@TotUnits = SUM(ISNULL(Units, 1.00))
 			FROM		Quoting_SWEDetails SD
 			INNER JOIN  @QuoteNo X ON X.QuoteNo = SD.QuoteNo
 			WHERE		PKGType <> 'CARTON'	--More than 5 units of any pkg type except Cartons cannot be quoted
@@ -80,13 +80,13 @@ BEGIN
 									@DestState = 'HI' 
 								AND @ZipCode <> '96772'	--Must be quoted manually per Phil
 								AND NOT EXISTS (
-													--Cannot quote any AK shipments where any one piece is > 750 cu ft
+													--Cannot quote any HI shipments where any one piece is > 750 cu ft
 													SELECT  TOP 1 CuFt 
 													FROM	@CubicFeet 
 													WHERE	CuFt > 750.00 
 												)
 								AND NOT EXISTS (
-													--Cannot quote any AK shipments where any DIMS have L > 120 in. OR W > 92 in. OR H > 100 in.
+													--Cannot quote any HI shipments where any DIMS have L > 120 in. OR W > 92 in. OR H > 100 in.
 													SELECT		TOP 1 *
 													FROM		Quoting_SWEDetails QS 
 													INNER JOIN  @QuoteNo X ON X.QuoteNo = QS.QuoteNo
