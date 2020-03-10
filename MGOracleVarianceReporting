@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 3/10/2020 1:57:47 PM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 3/10/2020 2:21:17 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -291,7 +291,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 
 									EXEC msdb.dbo.sp_send_dbmail 
 										@profile_name = 'APTEST01SQLMail'  
-									,@recipients = 'cmendez@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
+									,@recipients = 'lpantesco@ajclogistics.com;cmendez@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
 									,@copy_recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
 									,@body = @Message
 									,@body_format = 'HTML'
@@ -314,7 +314,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 
 									EXEC msdb.dbo.sp_send_dbmail 
 										@profile_name = 'APTEST01SQLMail'  
-									,@recipients = 'cmendez@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
+									,@recipients = 'lpantesco@ajclogistics.com;cmendez@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
 									,@copy_recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
 									,@body = @Message
 									,@body_format = 'HTML'
@@ -632,7 +632,7 @@ BEGIN
 
 				EXEC msdb.dbo.sp_send_dbmail 
 					@profile_name = 'APTEST01SQLMail'  
-				,@recipients = 'cmendez@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
+				,@recipients = 'lpantesco@ajclogistics.com;cmendez@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
 				,@copy_recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
 				,@body = @Message
 				,@body_format = 'HTML'
@@ -655,7 +655,7 @@ SET @Message =
 
 				EXEC msdb.dbo.sp_send_dbmail 
 					@profile_name = 'APTEST01SQLMail'  
-				,@recipients = 'cmendez@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
+				,@recipients = 'lpantesco@ajclogistics.com;cmendez@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
 				,@copy_recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
 				,@body = @Message
 				,@body_format = 'HTML'
