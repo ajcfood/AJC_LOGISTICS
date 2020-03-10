@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 3/4/2020 10:15:59 AM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 3/10/2020 12:44:33 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -257,6 +257,7 @@ BEGIN
 
 								ELSE
 
+								BEGIN
 											--Apply Dest Delivery Rate OR Minimums (if applicable)
 											UPDATE			CSAF 
 											SET				DestDelivFee = ISNULL(
@@ -302,6 +303,7 @@ BEGIN
 											AND		CSAF.SummaryID = @SummaryID
 											AND		CSAF.HZMTDestDelivFee = 0.00
 											AND		CSAF.DestDelivFee = 0.00
+								END
 
 			END
 
