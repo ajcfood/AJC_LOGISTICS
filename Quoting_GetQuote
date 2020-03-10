@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 3/9/2020 4:10:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 3/10/2020 11:17:19 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -65,7 +65,7 @@ BEGIN
 								(Length * Width * Height) / 1728
 							,0) * ISNULL(Units, 1.00) --Calculate cubic feet per pkg type
 			FROM		Quoting_SWEDetails SD
-			INNER JOIN  @QuoteNo X ON X.QuoteNo = SD.QuoteNo			
+			WHERE		SD.QuoteNo = @SummaryID		
 								
 
 			IF (
