@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 2/6/2020 10:29:15 AM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 3/10/2020 9:40:17 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -431,7 +431,7 @@ BEGIN
 							<th>RouteFileRev</th>
 							<th>CustomerInvTotal</th>
 							<th>OracleRev</th>
-							<th>Notes</th>
+							<th>InitiallyReportedOn</th>
 							</tr>' +  
 										CAST ( ( SELECT td = ISNULL(t.SO_Number,''), '',
 														td = ISNULL(t.LD#,''), '',
@@ -441,7 +441,7 @@ BEGIN
 														td = ISNULL(t.RouteFileRev,0.00), '',
 														td = ISNULL(t.CustomerInvTotal,0.00), '',
 														td = ISNULL(t.OracleRev,0.00), '',
-														td = ISNULL(v.Notes,''),''
+														td = ISNULL(FORMAT(v.DateAdded, 'MM/dd/yyyy'),''),''
 													FROM #TMP t
 													INNER JOIN @PrevVariancesATL x on x.SO_Number = t.SO_Number
 													INNER JOIN AJCDW.dbo.MGToOracleVariance v on v.SO_Number = x.SO_Number
@@ -608,17 +608,17 @@ BEGIN
 							<th>RouteFileRev</th>
 							<th>CustomerInvTotal</th>
 							<th>OracleRev</th>
-							<th>Notes</th>
+							<th>InitiallyReportedOn</th>
 							</tr>' +  
-										CAST ( ( SELECT td = ISNULL(SO_Number,''), '',
-														td = ISNULL(LD#,''), '',
-														td = ISNULL(RouteFileCost,0.00), '',
-														td = ISNULL(CarrierInvTotal,0.00), '',
-														td = ISNULL(OracleCost,0.00), '',
-														td = ISNULL(RouteFileRev,0.00), '',
-														td = ISNULL(CustomerInvTotal,0.00), '',
-														td = ISNULL(OracleRev,0.00), '',
-														td = ISNULL(v.Notes,''),''
+										CAST ( ( SELECT td = ISNULL(t.SO_Number,''), '',
+														td = ISNULL(t.LD#,''), '',
+														td = ISNULL(t.RouteFileCost,0.00), '',
+														td = ISNULL(t.CarrierInvTotal,0.00), '',
+														td = ISNULL(t.OracleCost,0.00), '',
+														td = ISNULL(t.RouteFileRev,0.00), '',
+														td = ISNULL(t.CustomerInvTotal,0.00), '',
+														td = ISNULL(t.OracleRev,0.00), '',
+														td = ISNULL(FORMAT(v.DateAdded, 'MM/dd/yyyy'),''),''
 													FROM #TMP2 t
 													INNER JOIN @PrevVariancesJAX x on x.SO_Number = t.SO_Number
 													INNER JOIN AJCDW.dbo.MGToOracleVariance v on v.SO_Number = x.SO_Number
