@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansedEAGLE]    Script Date: 3/11/2020 11:32:20 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansedEAGLE]    Script Date: 3/11/2020 02:57:20 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -39,7 +39,9 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 -- Description: Calculate Eagle Volume by excluding customer account PRSG and Domestic and Empty Pallet loads
 -- Note #1: update i.ACCTYR in where clause at the end of each year
 -- ==========================================================================================================
-SELECT LTRIM(RTRIM(InvCustName)) as InvCustName, count(distinct s.shipmentid) as LoadCnt, i.refno, InvLOB, i.ACCTYR, NULL as DELWEEK, NULL as DELYEAR, f.SHPWEEK, f.SHPYEAR
+SELECT LTRIM(RTRIM(InvCustName)) as InvCustName, count(distinct s.shipmentid) as LoadCnt, i.refno, InvLOB
+	,i.ACCTMONTH
+	, i.ACCTYR, NULL as DELWEEK, NULL as DELYEAR, f.SHPWEEK, f.SHPYEAR
 INTO #tmp7
 from tblInvoice i
 JOIN tblFile f on i.ShipmentID = f.ShipmentID
@@ -51,13 +53,15 @@ and s.ShpAccnt <> 'PRSG'
 and s.ShpCarrier NOT IN ('DOMEST','PALLET')
 and s.ShpMoveType NOT IN ('DLTL','RLTL')
 Group By InvCustName, s.shipmentid, i.refno, i.ACCTYR, DELWEEK, DELYEAR, InvLOB
+	,i.ACCTMONTH
 	,f.SHPWEEK,f.SHPYEAR
 Order by InvCustName
 
-SELECT LTRIM(RTRIM(InvCustName)) as InvCustName, sum(LoadCnt) as LDCNT, NULL as REVENUE, NULL as COSTT, NULL as GPT, InvLOB, ACCTYR, DELWEEK,DELYEAR, SHPWEEK, SHPYEAR
+SELECT LTRIM(RTRIM(InvCustName)) as InvCustName, sum(LoadCnt) as LDCNT, NULL as REVENUE, NULL as COSTT, NULL as GPT, InvLOB, ACCTMONTH
+	, ACCTYR, DELWEEK,DELYEAR, SHPWEEK, SHPYEAR
 INTO #tmp8
 FROM #tmp7 t7
-GROUP BY InvCustName, InvLOB, ACCTYR, DELWEEK, DELYEAR, SHPWEEK, SHPYEAR
+GROUP BY InvCustName, InvLOB, ACCTMONTH, ACCTYR, DELWEEK, DELYEAR, SHPWEEK, SHPYEAR
 
 -- ========================================================================================
 -- Step #2
@@ -65,7 +69,9 @@ GROUP BY InvCustName, InvLOB, ACCTYR, DELWEEK, DELYEAR, SHPWEEK, SHPYEAR
 -- Note #1: update i.ACCTYR in where clause at the end of each year
 -- ========================================================================================
 SELECT LTRIM(RTRIM(InvCustName)) as InvCustName, NULL as LoadCnt, SUM(InvRevenue) as REVENUE, sum(InvCost) as COSTT, SUM(InvGP) as GPT
-	,InvLOB, i.ACCTYR, NULL as DELWEEK, NULL as DELYEAR, f.SHPWEEK, f.SHPYEAR
+	,InvLOB
+	, i.ACCTMONTH
+	, i.ACCTYR, NULL as DELWEEK, NULL as DELYEAR, f.SHPWEEK, f.SHPYEAR
 INTO #tmp4
 from tblInvoice i
 JOIN tblFile f on i.ShipmentID = f.ShipmentID
@@ -75,6 +81,7 @@ and InvLOB IN ('21')
 and s.ShpLOB <> '22'
 and s.ShpMoveType NOT IN ('DLTL','RLTL')
 Group By InvCustName, i.ACCTYR, InvLOB
+	, i.ACCTMONTH
 	,f.SHPWEEK,f.SHPYEAR
 Order by InvCustName
 
@@ -114,17 +121,21 @@ where GPT IS NULL
 -- Description: Get relevant columns from temp 9 and use them to create temp 10 table for further queries
 -- Note #1: use "select * from #tmp9" to troubleshoot temp table
 -- ======================================================================================================
-SELECT invcustname, sum(Loadcnt) as LoadCnt, sum(revenue) as Rev, sum(costt)as Cost, sum(GPt)as GP, invlob, acctyr, delweek, delyear, shpweek, shpyear
+SELECT invcustname, sum(Loadcnt) as LoadCnt, sum(revenue) as Rev, sum(costt)as Cost, sum(GPt)as GP, invlob
+	, ACCTMONTH
+	, acctyr, delweek, delyear, shpweek, shpyear
 INTO #tmp10
 from #tmp9
-GROUP BY invcustname, invlob, acctyr, delweek, delyear, shpweek, shpyear
+GROUP BY invcustname, invlob, acctmonth, acctyr, delweek, delyear, shpweek, shpyear
 
 -- ======================================================================================================
 -- Step #6
 -- Description: Result is to show actuals for any customers that have a planned amount in tblCustPlan
 -- ======================================================================================================
 SELECT LTRIM(RTRIM(CustName)) as CustName, CustMasterCode, rev, cost, gp
-	,InvLOB, acctyr, wknum, monthnum, targetyear, DELWEEK,DELYEAR, SHPWEEK, SHPYEAR, FK_DivID, FK_LOBNum
+	,InvLOB, acctyr, wknum, monthnum
+	, ACCTMONTH
+	, targetyear, DELWEEK,DELYEAR, SHPWEEK, SHPYEAR, FK_DivID, FK_LOBNum
 	, ISNULL([GP],0) as ActualGP, WklyGP as PlanGP, ISNULL([GP],0) -WklyGP as GP_Variance
 	, ISNULL([LoadCnt],0) as ActVol, WklyVol as PlannedVol, ISNULL([LoadCnt],0) - WklyVol as LoadVar
 INTO #tmp5
@@ -137,7 +148,9 @@ Where FK_LOBNum IN ('21')
 -- Step #6
 -- Description: Result is to planned amounts for any customers that have an actual amount in tblInvoice
 -- ======================================================================================================
-SELECT InvCustName, CustMasterCode,REV, COST, GP, InvLOB, ACCTYR, wknum, monthnum, targetyear
+SELECT InvCustName, CustMasterCode,REV, COST, GP, InvLOB, ACCTYR, wknum, monthnum
+	, ACCTMONTH
+	, targetyear
 	,DELWEEK, DELYEAR, SHPWEEK, SHPYEAR
 	,FK_DivID,FK_LOBNum
 	, GP as Actual_GP, isnull([WklyGP],0) as PlanGP, GP-ISNULL([WklyGP],0) as GP_Variance
@@ -147,7 +160,9 @@ from #tmp10 t10
 FULL OUTER JOIN tblCustPlan c 
 ON (c.CustName = t10.InvCustName AND c.TargetYear = t10.SHPYEAR AND c.WkNum = t10.SHPWEEK and t10.INVLob = c.FK_LOBNum)
 WHERE InvCustName IS NOT NULL
-GROUP BY InvCustName, CustMasterCode,REV, COST, GP, InvLOB, ACCTYR, wknum, monthnum, targetyear
+GROUP BY InvCustName, CustMasterCode,REV, COST, GP, InvLOB, ACCTYR, wknum, monthnum
+	, ACCTMONTH
+	, targetyear
 	,DELWEEK, DELYEAR, SHPWEEK, SHPYEAR
 	,FK_DivID,FK_LOBNum
 	, GP , isnull([WklyGP],0), GP-ISNULL([WklyGP],0) 
