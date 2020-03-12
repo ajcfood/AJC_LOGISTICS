@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansed]    Script Date: 3/11/2020 02:56:46 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansed]    Script Date: 3/12/2020 03:23:15 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -42,9 +42,13 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 --          and other lines of business focus on Shipment Weeks
 -- ===================================================================================================================================
 
-SELECT InvCustName, count(DISTINCT s.shipmentid) as LoadCnt, SUM(InvRevenue) as REV, sum(InvCost) as COST, SUM(InvGP) as GP
-	,InvLOB
-	, i .ACCTMONTH
+SELECT InvCustName, 	
+	CASE WHEN i.InvOutofPeriod = 0 THEN	count(DISTINCT s.shipmentid) 
+	ELSE 0
+	END as LoadCnt
+	, SUM(InvRevenue) as REV, sum(InvCost) as COST, SUM(InvGP) as GP
+	, InvLOB
+	, i.ACCTMONTH
 	, i.ACCTYR, f.DELWEEK, f.DELYEAR, NULL as SHPWEEK, NULL as SHPYEAR, s.FK_SystemID
 INTO #tmp1
 from tblInvoice i
@@ -53,9 +57,15 @@ JOIN tblShipment s on f.ShipmentID = s.shipmentID
 where i.ACCTYR IN (YEAR(GETDATE()), YEAR(DATEADD(YY,-1,GETDATE())))	
 and InvLOB = '11'
 Group By InvCustName, i.ACCTYR, InvLOB
-	,i.ACCTMONTH
+	,i.ACCTMONTH, i.InvOutofPeriod
 	,f.DELWEEK, f.DELYEAR, s.FK_SystemID
 Order by InvCustName
+
+select invcustname, SUm(LoadCnt) as LoadCnt, Sum(REV) as REV, sum(cost) AS COST, sum(gp) AS GP, InvLOB, ACCTMONTH, ACCTYR, DELWEEK, DELYEAR, SHPWEEK, SHPYEAR, FK_SystemID 
+INTO #tmp7
+FROM #tmp1
+group by invcustname, InvLOB, ACCTMONTH, ACCTYR, DELWEEK, DELYEAR, SHPWEEK, SHPYEAR, FK_SystemID
+order by DELWEEK
 
 -- ==================================================================================================================
 -- Step #2
@@ -70,9 +80,9 @@ SELECT CustName, CustMasterCode, rev, cost, gp
 	, ISNULL([GP],0) as ActualGP, WklyGP as PlanGP, ISNULL([GP],0) -WklyGP as GP_Variance
 	, ISNULL([LoadCnt],0) as ActVol, WklyVol as PlannedVol, ISNULL([LoadCnt],0) - WklyVol as LoadVar
 INTO #tmp2
-from #tmp1 t1
+from #tmp7 t7
 RIGHT OUTER JOIN tblCustPlan c
-ON (c.CustName = t1.InvCustName AND c.TargetYear = t1.DELYEAR AND c.WkNum = t1.DELWEEK and t1.FK_SystemID = c.FK_SystemID)
+ON (c.CustName = t7.InvCustName AND c.TargetYear = t7.DELYEAR AND c.WkNum = t7.DELWEEK and t7.FK_SystemID = c.FK_SystemID)
 Where FK_LOBNum = '11'
 
 -- ==================================================================================================================
@@ -81,16 +91,16 @@ Where FK_LOBNum = '11'
 -- Note #1: Only Run for Surface Trans (InvLOB = 11)
 -- ==================================================================================================================
 
-SELECT InvCustName, CustMasterCode,REV, COST, GP, InvLOB, ACCTYR, wknum, monthnum,t1.ACCTMONTH
+SELECT InvCustName, CustMasterCode,REV, COST, GP, InvLOB, ACCTYR, wknum, monthnum,t7.ACCTMONTH
 	,targetyear
 	,DELWEEK, DELYEAR, SHPWEEK, SHPYEAR
 	,FK_DivID,FK_LOBNum
 	, GP as Actual_GP, isnull([WklyGP],0) as PlanGP, GP-ISNULL([WklyGP],0) as GP_Variance
 	, ISNULL([LoadCnt],0) as ActualVol, isnull([WklyVol],0) as PlanVol, ISNULL([LoadCnt],0)-ISNULL([WklyVol],0) as VolVar
 INTO #tmp3
-from #tmp1 t1
+from #tmp7 t7
 FULL OUTER JOIN tblCustPlan c 
-ON (c.CustName = t1.InvCustName AND c.TargetYear = t1.DELYEAR AND c.WkNum = t1.DELWEEK and t1.FK_SystemID = c.FK_SystemID)
+ON (c.CustName = t7.InvCustName AND c.TargetYear = t7.DELYEAR AND c.WkNum = t7.DELWEEK and t7.FK_SystemID = c.FK_SystemID)
 WHERE InvCustName IS NOT NULL
 GROUP BY InvCustName, CustMasterCode,REV, COST, GP, InvLOB, ACCTYR, wknum, monthnum
 	, ACCTMONTH
@@ -120,7 +130,11 @@ SELECT * from #tmp5
 -- Note #1: Run for lines of business other than 11 and 21
 -- Note #2: Add lines of business to where clause as we get plan data from Accounting and import into tblCustPlan table
 -- ====================================================================================================================
-SELECT InvCustName, count(DISTINCT s.shipmentid) as LoadCnt, SUM(InvRevenue) as REV, sum(InvCost) as COST, SUM(InvGP) as GP
+SELECT InvCustName, 
+	CASE WHEN i.InvOutofPeriod = 0 THEN	count(DISTINCT s.shipmentid) 
+	ELSE 0
+	END as LoadCnt
+	, SUM(InvRevenue) as REV, sum(InvCost) as COST, SUM(InvGP) as GP
 	,InvLOB
 	, i.ACCTMONTH
 	, i.ACCTYR, NULL as DELWEEK, NULL as DELYEAR, f.SHPWEEK, f.SHPYEAR
@@ -131,9 +145,15 @@ JOIN tblShipment s on f.ShipmentID = s.shipmentID
 where i.ACCTYR IN (YEAR(GETDATE()), YEAR(DATEADD(YY,-1,GETDATE())))	
 and InvLOB IN ('62','61')
 Group By InvCustName, i.ACCTYR, InvLOB
-	,i.ACCTMONTH
+	,i.ACCTMONTH, i.InvOutofPeriod
 	,f.SHPWEEK,f.SHPYEAR
 Order by InvCustName
+
+select invcustname, SUm(LoadCnt) as LoadCnt, Sum(REV) as REV, sum(cost) AS COST, sum(gp) AS GP, InvLOB, ACCTMONTH, ACCTYR, DELWEEK, DELYEAR, SHPWEEK, SHPYEAR
+INTO #tmp8
+FROM #tmp4
+group by invcustname, InvLOB, ACCTMONTH, ACCTYR, DELWEEK, DELYEAR, SHPWEEK, SHPYEAR
+order by DELWEEK
 
 -- ==================================================================================================================
 -- Step #6
@@ -148,7 +168,7 @@ SELECT CustName, CustMasterCode, rev, cost, gp
 	, ISNULL([GP],0) as ActualGP, WklyGP as PlanGP, ISNULL([GP],0) -WklyGP as GP_Variance
 	, ISNULL([LoadCnt],0) as ActVol, WklyVol as PlannedVol, ISNULL([LoadCnt],0) - WklyVol as LoadVar
 INTO #tmp5
-from #tmp4 t4
+from #tmp8 t4
 RIGHT OUTER JOIN tblCustPlan c
 ON (c.CustName = t4.InvCustName AND c.TargetYear = t4.SHPYEAR AND c.WkNum = t4.SHPWEEK and t4.INVLob = c.FK_LOBNum)
 Where FK_LOBNum IN ('62','61') 
@@ -165,7 +185,7 @@ SELECT InvCustName, CustMasterCode,REV, COST, GP, InvLOB, ACCTYR, wknum, monthnu
 	, GP as Actual_GP, isnull([WklyGP],0) as PlanGP, GP-ISNULL([WklyGP],0) as GP_Variance
 	, ISNULL([LoadCnt],0) as ActualVol, isnull([WklyVol],0) as PlanVol, ISNULL([LoadCnt],0)-ISNULL([WklyVol],0) as VolVar
 INTO #tmp6
-from #tmp4 t4
+from #tmp8 t4
 FULL OUTER JOIN tblCustPlan c 
 ON (c.CustName = t4.InvCustName AND c.TargetYear = t4.SHPYEAR AND c.WkNum = t4.SHPWEEK and t4.INVLob = c.FK_LOBNum)
 WHERE InvCustName IS NOT NULL
@@ -256,6 +276,14 @@ UPDATE tblCustPlanCleansed
 SET ACCTYR = TargetYear
 WHERE ACCTYR IS NULL
 
+UPDATE tblCustPlanCleansed
+SET ACCTMONTH = MonthNum
+WHERE ACCTMONTH IS NULL
+
+UPDATE tblCustPlanCleansed
+SET PlanGP = 0, GPVar = 0, PlanLoads = 0, LoadVar = 0
+WHERE ACCTMONTH <> MonthNum
+
 /*
 Drop Table #tmp1
 Drop Table #tmp2
@@ -263,6 +291,8 @@ Drop Table #tmp3
 Drop Table #tmp4
 Drop Table #tmp5
 Drop Table #tmp6
+Drop Table #tmp7
+Drop Table #tmp8
 
 SELECT * From #tmp1
 SELECT * from #tmp2
@@ -270,6 +300,8 @@ SELECT * from #tmp3
 SELECT * from #tmp4
 SELECT * from #tmp5
 SELECT * from #tmp6
+SELECT * from #tmp7
+SELECT * from #tmp8
 */
 /*****************************************************End Logging*******************************************************/
 
