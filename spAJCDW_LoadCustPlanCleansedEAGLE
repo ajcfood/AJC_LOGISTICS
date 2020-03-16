@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansedEAGLE]    Script Date: 3/11/2020 02:57:20 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansedEAGLE]    Script Date: 3/16/2020 09:27:34 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -39,7 +39,11 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 -- Description: Calculate Eagle Volume by excluding customer account PRSG and Domestic and Empty Pallet loads
 -- Note #1: update i.ACCTYR in where clause at the end of each year
 -- ==========================================================================================================
-SELECT LTRIM(RTRIM(InvCustName)) as InvCustName, count(distinct s.shipmentid) as LoadCnt, i.refno, InvLOB
+SELECT LTRIM(RTRIM(InvCustName)) as InvCustName, 
+	CASE WHEN i.InvOutofPeriod = 0 THEN	count(DISTINCT s.shipmentid) 
+	ELSE 0
+	END as LoadCnt
+	, i.refno, InvLOB
 	,i.ACCTMONTH
 	, i.ACCTYR, NULL as DELWEEK, NULL as DELYEAR, f.SHPWEEK, f.SHPYEAR
 INTO #tmp7
@@ -53,7 +57,7 @@ and s.ShpAccnt <> 'PRSG'
 and s.ShpCarrier NOT IN ('DOMEST','PALLET')
 and s.ShpMoveType NOT IN ('DLTL','RLTL')
 Group By InvCustName, s.shipmentid, i.refno, i.ACCTYR, DELWEEK, DELYEAR, InvLOB
-	,i.ACCTMONTH
+	,i.ACCTMONTH, i.InvOutofPeriod
 	,f.SHPWEEK,f.SHPYEAR
 Order by InvCustName
 
@@ -219,6 +223,14 @@ WHERE SHPYEAR IS NULL
 UPDATE tblCustPlanCleansed
 SET ACCTYR = TargetYear
 WHERE ACCTYR IS NULL
+
+UPDATE tblCustPlanCleansed
+SET ACCTMONTH = MonthNum
+WHERE ACCTMONTH IS NULL
+
+UPDATE tblCustPlanCleansed
+SET PlanGP = 0, GPVar = 0, PlanLoads = 0, LoadVar = 0
+WHERE ACCTMONTH <> MonthNum
 
 /*
 --JOIN temp 6 and 5 for troublshooting --
