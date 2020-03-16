@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 3/4/2020 08:40:29 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 3/16/2020 09:27:59 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -439,7 +439,7 @@ and ACCTYR >= 2020
 
 -- Ari Matsumura Comm: 7% of GP for his loads for SeaWide
 Update tblCommCalc
-set AMComm = GP * .07
+set AMComm = (GP*.93) * .07
 where SalesPName = 'Ari Matsumura'
 and InvLOB = '76'
 
