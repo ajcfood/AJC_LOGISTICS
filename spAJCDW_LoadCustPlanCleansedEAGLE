@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansedEAGLE]    Script Date: 3/16/2020 09:27:34 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansedEAGLE]    Script Date: 3/17/2020 11:11:21 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -145,7 +145,8 @@ SELECT LTRIM(RTRIM(CustName)) as CustName, CustMasterCode, rev, cost, gp
 INTO #tmp5
 from #tmp10 t10
 RIGHT OUTER JOIN tblCustPlan c
-ON (LTRIM(RTRIM(CustName)) = t10.InvCustName AND c.TargetYear = t10.SHPYEAR AND c.WkNum = t10.SHPWEEK and t10.INVLob = c.FK_LOBNum)
+ON (LTRIM(RTRIM(CustName)) = t10.InvCustName AND c.TargetYear = t10.ACCTYR--t10.SHPYEAR
+AND c.WkNum = t10.SHPWEEK and t10.INVLob = c.FK_LOBNum)
 Where FK_LOBNum IN ('21')
 
 -- ======================================================================================================
@@ -162,7 +163,8 @@ SELECT InvCustName, CustMasterCode,REV, COST, GP, InvLOB, ACCTYR, wknum, monthnu
 INTO #tmp6
 from #tmp10 t10
 FULL OUTER JOIN tblCustPlan c 
-ON (c.CustName = t10.InvCustName AND c.TargetYear = t10.SHPYEAR AND c.WkNum = t10.SHPWEEK and t10.INVLob = c.FK_LOBNum)
+ON (c.CustName = t10.InvCustName AND c.TargetYear = t10.ACCTYR --t10.SHPYEAR
+AND c.WkNum = t10.SHPWEEK and t10.INVLob = c.FK_LOBNum)
 WHERE InvCustName IS NOT NULL
 GROUP BY InvCustName, CustMasterCode,REV, COST, GP, InvLOB, ACCTYR, wknum, monthnum
 	, ACCTMONTH
