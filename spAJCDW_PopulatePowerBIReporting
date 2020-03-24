@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_PopulatePowerBIReporting]    Script Date: 3/5/2020 10:53:05 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_PopulatePowerBIReporting]    Script Date: 3/24/2020 5:28:52 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -232,6 +232,22 @@ order by ct.CUSTOMER_NUMBER, ard.TRX_Number, ISNULL(ARD1.ARCreatedate, ARD.ARCre
  EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 6, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
 
  /***********************************************************************************************************************/
+
+ /*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 7, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+--Invoices with CreditMemos that net out report
+EXEC AJCDW.dbo.[NetInvoicedCM]
+
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 7, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
 
 
 END
