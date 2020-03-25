@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadOracleCalendar]    Script Date: 5/21/2019 11:20:07 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadOracleCalendar]    Script Date: 3/25/2020 09:56:07 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -34,7 +34,7 @@ WHERE PERIOD_SET_NAME = ''CALENDAR YEAR'' AND PERIOD_SET_NAME=''CALENDAR YEAR'' 
 ORDER BY PERIOD_YEAR DESC, USER_PERIOD_TYPE, PERIOD_NUM
 	');
 
-
+update tblOracleCalendar set END_DATE = END_DATE + '23:59:59'
 
 END
 
