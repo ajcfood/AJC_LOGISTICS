@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 3/10/2020 2:21:17 PM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 3/26/2020 4:17:04 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -34,8 +34,8 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 																CustInvLoadedDateTime, RouteFileCost, CarrierInvTotal, OracleCost, RouteFileRev, CustomerInvTotal, OracleRev 
 															 )
 					SELECT	COALESCE(v.RefShippingOrder, w.RefShippingOrder, x.RefShippingOrder, y.RefShippingOrder, z.OracleRefShippingOrder) SO_Number, COALESCE(v.RefLoadID, w.RefLoadID, x.RefLoadID, y.RefLoadID) LD#,
-						    v.FileName RouteCostFilename, v.LoadedDateTime RouteCostLoadedDateTime, 
-							w.FileName RouteRevFilename, w.LoadedDateTime RouteRevLoadedDateTime, y.Filename CarrierInvFilename, y.LoadedDateTime CarrierInvLoadedDateTime, x.FileName CustInvFilename, x.LoadedDateTime CustInvLoadedDateTime, 
+						    w.FileName RouteCostFilename, v.LoadedDateTime RouteCostLoadedDateTime, 
+							v.FileName RouteRevFilename, w.LoadedDateTime RouteRevLoadedDateTime, y.Filename CarrierInvFilename, y.LoadedDateTime CarrierInvLoadedDateTime, x.FileName CustInvFilename, x.LoadedDateTime CustInvLoadedDateTime, 
 							RouteFileCost, CarrierInvTotal, OracleCost, RouteFileRev, CustomerInvTotal, OracleRev
 					FROM 				(
 												SELECT x.RefShippingOrder, x.RefLoadID, SUM(ChargesAmount) RouteFileRev, x.Filename, CAST(LoadedDateTime AS DATETIME) LoadedDateTime
@@ -182,8 +182,8 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 																CustInvLoadedDateTime, RouteFileCost, CarrierInvTotal, OracleCost, RouteFileRev, CustomerInvTotal, OracleRev 
 															 )
 					SELECT	COALESCE(v.RefShippingOrder, w.RefShippingOrder, x.RefShippingOrder, y.RefShippingOrder, z.OracleRefShippingOrder) SO_Number, COALESCE(v.RefLoadID, w.RefLoadID, x.RefLoadID, y.RefLoadID) LD#,
-						    v.FileName RouteCostFilename, v.LoadedDateTime RouteCostLoadedDateTime, 
-							w.FileName RouteRevFilename, w.LoadedDateTime RouteRevLoadedDateTime, y.Filename CarrierInvFilename, y.LoadedDateTime CarrierInvLoadedDateTime, x.FileName CustInvFilename, x.LoadedDateTime CustInvLoadedDateTime, 
+						    w.FileName RouteCostFilename, v.LoadedDateTime RouteCostLoadedDateTime, 
+							v.FileName RouteRevFilename, w.LoadedDateTime RouteRevLoadedDateTime, y.Filename CarrierInvFilename, y.LoadedDateTime CarrierInvLoadedDateTime, x.FileName CustInvFilename, x.LoadedDateTime CustInvLoadedDateTime, 
 							RouteFileCost, CarrierInvTotal, OracleCost, RouteFileRev, CustomerInvTotal, OracleRev
 					FROM 				(
 												SELECT x.RefShippingOrder, x.RefLoadID, SUM(ChargesAmount) RouteFileRev, x.Filename, CAST(LoadedDateTime AS DATETIME) LoadedDateTime
@@ -348,8 +348,8 @@ AND	 LD# NOT LIKE '%J'
  
 --Run report on loads with variances reported 7 days ago to see if variance still exists. Else delete output the loads to AJCDW.dbo.MGToOracleVarianceDeleted
 SELECT	COALESCE(v.RefShippingOrder, w.RefShippingOrder, x.RefShippingOrder, y.RefShippingOrder, z.OracleRefShippingOrder) SO_Number, COALESCE(v.RefLoadID, w.RefLoadID, x.RefLoadID, y.RefLoadID) LD#,
-		v.FileName RouteCostFilename, v.LoadedDateTime RouteCostLoadedDateTime, 
-		w.FileName RouteRevFilename, w.LoadedDateTime RouteRevLoadedDateTime, y.Filename CarrierInvFilename, y.LoadedDateTime CarrierInvLoadedDateTime, x.FileName CustInvFilename, x.LoadedDateTime CustInvLoadedDateTime, 
+		w.FileName RouteCostFilename, v.LoadedDateTime RouteCostLoadedDateTime, 
+		v.FileName RouteRevFilename, w.LoadedDateTime RouteRevLoadedDateTime, y.Filename CarrierInvFilename, y.LoadedDateTime CarrierInvLoadedDateTime, x.FileName CustInvFilename, x.LoadedDateTime CustInvLoadedDateTime, 
 		RouteFileCost, CarrierInvTotal, OracleCost, RouteFileRev, CustomerInvTotal, OracleRev
 INTO	#TMP
 FROM 				(
@@ -525,8 +525,8 @@ AND	 LD# LIKE '%J'
  
 --Run report on loads with variances reported 7 days ago to see if variance still exists. Else delete output the loads to AJCDW.dbo.MGToOracleVarianceDeleted
 SELECT	COALESCE(v.RefShippingOrder, w.RefShippingOrder, x.RefShippingOrder, y.RefShippingOrder, z.OracleRefShippingOrder) SO_Number, COALESCE(v.RefLoadID, w.RefLoadID, x.RefLoadID, y.RefLoadID) LD#,
-		v.FileName RouteCostFilename, v.LoadedDateTime RouteCostLoadedDateTime, 
-		w.FileName RouteRevFilename, w.LoadedDateTime RouteRevLoadedDateTime, y.Filename CarrierInvFilename, y.LoadedDateTime CarrierInvLoadedDateTime, x.FileName CustInvFilename, x.LoadedDateTime CustInvLoadedDateTime, 
+		w.FileName RouteCostFilename, v.LoadedDateTime RouteCostLoadedDateTime, 
+		v.FileName RouteRevFilename, w.LoadedDateTime RouteRevLoadedDateTime, y.Filename CarrierInvFilename, y.LoadedDateTime CarrierInvLoadedDateTime, x.FileName CustInvFilename, x.LoadedDateTime CustInvLoadedDateTime, 
 		RouteFileCost, CarrierInvTotal, OracleCost, RouteFileRev, CustomerInvTotal, OracleRev
 INTO	#TMP2
 FROM 				(
