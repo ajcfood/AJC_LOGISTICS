@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 4/2/2020 10:34:19 AM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 4/2/2020 3:49:27 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -779,6 +779,7 @@ BEGIN
 															+	ISNULL(TradeshowDeliveryFee,0.00)
 															+   ISNULL(InterIslandTransFee,0.00)
 															+   ISNULL(NotificationFee,0.00)
+															+   ISNULL(MilitaryDeliveryFee,0.00)
 
 								FROM	Quoting_SWESummary CSAF
 								WHERE	CSAF.TotAccessorialFee = 0.00
