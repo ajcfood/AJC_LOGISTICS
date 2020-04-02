@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 12/26/2019 10:07:02 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 4/2/2020 12:51:46 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -445,9 +445,9 @@ AND					ts.ShpDelivDate IS NOT NULL;
 TRUNCATE TABLE AJCDW.dbo.tblCSARevRecog 
 
 INSERT INTO  AJCDW.dbo.tblCSARevRecog (
-										[PK_OrderNo], [HandlingStation], [Housebill], [ShipmentDateTime], [ScheduledDateTime], [CustName], [APARCode], [ChargeCode], [Descrption], [Total], 
-										[New Shipment Milestone], [Shipment Picked Up Milestone], [Consolidation Milestone], [In Transit Inland Milestone], [Arrvied Origin Port Milestone], 
-										[In Transit Ocean Milestone], [Arrived Destination Port Milestone], [Out For Delivery Milestone], [Delivered Milestone], InvoiceDate 
+										[PK_OrderNo], [HandlingStation], [Housebill], [ShipmentDateTime], [ScheduledDateTime], [CustName], [APARCode], [ChargeCode], [Descrption], [Total], InvoiceDate 
+										,[New Shipment Milestone], [Shipment Picked Up Milestone], [Consolidation Milestone], [In Transit Inland Milestone], [Arrvied Origin Port Milestone], 
+										[In Transit Ocean Milestone], [Arrived Destination Port Milestone], [Out For Delivery Milestone], [Delivered Milestone] 
 									  )
 SELECT		 x.*
 			,[New shipment] AS [New Shipment Milestone]
