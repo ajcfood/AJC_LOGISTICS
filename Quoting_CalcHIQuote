@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 4/2/2020 3:49:27 PM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 4/2/2020 5:14:45 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -338,7 +338,7 @@ BEGIN
 								SET			TotWharfageFee = COALESCE(F.CalcFee,F1.CalcFee,0.00)
 								FROM		Quoting_SWESummary CSAF
 								OUTER APPLY  (
-												SELECT ISNULL(FlatFee * CASE WHEN CONVERT(FLOAT,CONVERT(FLOAT,TotWeight) / CONVERT(FLOAT,TotCubicFeet)) > 45.00 THEN CONVERT(FLOAT,TotWeight) / 45.00
+												SELECT ISNULL(FlatFee * CASE WHEN CONVERT(FLOAT,CONVERT(FLOAT,TotWeight) / CONVERT(FLOAT,TotCubicFeet)) > 45.00 THEN ROUND(CONVERT(FLOAT,TotWeight) / 45.00,0)
 																			       ELSE TotCubicFeet 
 																				   END --45LB Rule
 															  ,0.00) CalcFee, F.Effective, F.Terminated
@@ -350,12 +350,12 @@ BEGIN
 												AND		F.FeeMax IS NULL
 											) F
 								OUTER APPLY  (
-												SELECT CASE WHEN ISNULL(FlatFee * CASE WHEN CONVERT(FLOAT,CONVERT(FLOAT,TotWeight) / CONVERT(FLOAT,TotCubicFeet)) > 45.00 THEN CONVERT(FLOAT,TotWeight) / 45.00
+												SELECT CASE WHEN ISNULL(FlatFee * CASE WHEN CONVERT(FLOAT,CONVERT(FLOAT,TotWeight) / CONVERT(FLOAT,TotCubicFeet)) > 45.00 THEN ROUND(CONVERT(FLOAT,TotWeight) / 45.00,0)
 																			       ELSE TotCubicFeet 
 																				   END --45LB Rule
 																,0.00) >= F.FeeMax 
 															THEN F.FeeMax 
-															ELSE ISNULL(FlatFee * CASE WHEN CONVERT(FLOAT,CONVERT(FLOAT,TotWeight) / CONVERT(FLOAT,TotCubicFeet)) > 45.00 THEN CONVERT(FLOAT,TotWeight) / 45.00
+															ELSE ISNULL(FlatFee * CASE WHEN CONVERT(FLOAT,CONVERT(FLOAT,TotWeight) / CONVERT(FLOAT,TotCubicFeet)) > 45.00 THEN ROUND(CONVERT(FLOAT,TotWeight) / 45.00,0)
 																			       ELSE TotCubicFeet 
 																				   END --45LB Rule
 																,0.00)
