@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 3/10/2020 12:44:33 PM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 4/2/2020 10:34:19 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -162,7 +162,7 @@ BEGIN
 																							WHEN TotCubicFeet >= 400 THEN  ISNULL([DestDeliv_400+],0.00)
 																							END * CONVERT(DECIMAL(6,2),TotCubicFeet) DestDelivery, 
 											ISNULL([DestDelivHZMT],0.00) [DestDelivHZMT], CONVERT(DECIMAL(6,2),TotCubicFeet) * [DestDelivWC] AS [DestDelivWC], [DestDelivWCMin], [DestDelivMin], [DestDelivMax], 
-											ISNULL([ContSpotRate],0.00) AS [ContSpotRate], X.Island, X.City, X.DestZipCode, ContainerDrop
+											ISNULL([ContSpotRate],0.00) AS [ContSpotRate], X.Island, X.City, X.DestZipCode, ContainerDrop, UseContSpotRates
 								INTO		#DeliveryRate
 								FROM		Quoting_SWESummary CSAF
 								CROSS APPLY (
@@ -178,7 +178,7 @@ BEGIN
 											) X
 								CROSS APPLY (
 													SELECT  [DestDeliv_0-99], [DestDeliv_100-199], [DestDeliv_200-299], [DestDeliv_300-399], [DestDeliv_400+], [DestDelivHZMT], ISNULL([DestDelivWC],0.00) [DestDelivWC], [DestDelivWCMin], [DestDelivMin], [DestDelivMax], [ContSpotRate], 
-															[Effective], [Terminated] 
+															[Effective], [Terminated], UseContSpotRates
 													FROM	Quoting_HiDestDelivRates DD 
 													WHERE  DD.CustID = CSAF.CustID 
 													AND	DD.ZipCode = X.DestZipCode
@@ -205,6 +205,7 @@ BEGIN
 																)
 															OR  (
 																		ContainerDrop = 'Y'
+																  AND	UseContSpotRates = 'Y'
 																  AND	Island NOT IN ('MAUI','OAHU')
 																)
 														)
@@ -568,6 +569,32 @@ BEGIN
 								AND		X.ResidentialDelivery = 'Y'
 								AND		F.FeeTypeID = 1
 								AND		F.FeeSubTypeID = 11
+								AND		CAST(GETDATE() AS DATE) >= F.Effective 
+								AND		CAST(GETDATE() AS DATE) < COALESCE(F.Terminated, GETDATE())
+
+								--Accessorial: Military Delivery Fee
+								UPDATE			CSAF 
+								SET				MilitaryDeliveryFee = ISNULL(
+																					CASE WHEN TotCubicFeet * FlatFee <= FeeMin AND FeeMin IS NOT NULL AND FeeCalcTypeID = 1 THEN FeeMin 
+																						 WHEN TotCubicFeet * FlatFee > FeeMin AND FeeMin IS NOT NULL AND FeeCalcTypeID = 1 THEN TotCubicFeet * FlatFee
+																						 WHEN FeeMin IS NULL AND FeeCalcTypeID = 1 THEN TotCubicFeet * FlatFee
+																						 WHEN FeeCalcTypeID = 2 THEN FlatFee 
+																						 END
+																		  ,0.00)
+								FROM			Quoting_SWESummary CSAF
+								CROSS APPLY		(
+													SELECT	TOP 1 MilitaryDelivery
+													FROM	Quoting_SWEDetails SD
+													WHERE	SD.QuoteNo = CSAF.SummaryID 
+													AND		SD.CustID = CSAF.CustID
+												) X
+								INNER JOIN		Quoting_Fees F ON F.CustID = CSAF.CustID AND State = 'HI'
+								WHERE	CSAF.CustID = @CustID 
+								AND		CSAF.SummaryID = @SummaryID
+								AND		CSAF.ResidentialDeliveryFee = 0.00
+								AND		X.MilitaryDelivery = 'Y'
+								AND		F.FeeTypeID = 1
+								AND		F.FeeSubTypeID = 16
 								AND		CAST(GETDATE() AS DATE) >= F.Effective 
 								AND		CAST(GETDATE() AS DATE) < COALESCE(F.Terminated, GETDATE())
 
