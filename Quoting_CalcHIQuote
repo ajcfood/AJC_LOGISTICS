@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 4/2/2020 5:14:45 PM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 4/3/2020 1:19:39 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -315,7 +315,7 @@ BEGIN
 
 
 								UPDATE		CSAF
-								SET			TotInvasiveSpeciesFee = ISNULL(CEILING((TotWeight + 1000) / 1000) * FlatFee,0.00)
+								SET			TotInvasiveSpeciesFee = ISNULL(CEILING((CAST(TotWeight AS INT) + 1000) / 1000) * FlatFee,0.00)
 								FROM		Quoting_SWESummary CSAF
 								INNER JOIN  Quoting_Fees F ON F.CustID = CSAF.CustID AND State = 'HI'
 								WHERE		CSAF.custid = @CustID 
