@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 3/10/2020 11:28:37 AM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 4/3/2020 10:53:53 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -95,6 +95,13 @@ BEGIN
 													AND			PKGType <> 'CARTON'	--More than 5 units of any pkg type except Cartons cannot be quoted
 													HAVING		SUM(ISNULL(Units, 1.00)) > 5.00
 												)	 
+								AND NOT EXISTS  (
+													SELECT		TOP 1 1
+													FROM		Quoting_SWEDetails SD
+													WHERE		SD.QuoteNo = @SummaryID
+													AND			WeightPerPKGType > 5000.00	
+													AND			Units = 1
+												)
 				)
 					BEGIN
 
