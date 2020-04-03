@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 4/3/2020 10:53:53 AM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 4/3/2020 12:13:13 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -27,6 +27,21 @@ BEGIN
 			DECLARE @ZipCode VARCHAR(5) = (SELECT TOP 1 DestZipCode FROM Quoting_SWEDetails WHERE CustID = @CustID AND QuoteNo IS NULL)
 			DECLARE @QuoteNo TABLE (QuoteNo INT)
 			DECLARE @SummaryID INT
+
+			--Round Cubic Feet and Units
+			UPDATE		x
+			SET			Units = CEILING(Units)
+			FROM		Quoting_SWEDetails X 
+			WHERE	    CAST(X.DateQuoted AS DATE) = CAST(GETDATE() AS DATE)		
+			AND			X.CustID = @CUSTID
+			AND			X.QuoteNo IS NULL 
+
+			UPDATE		x 
+			SET			CubicFeet = ROUND((ROUND([Length],0)*ROUND([Width],0)*ROUND([Height],0))/1728,0) * UNITS 
+			FROM		Quoting_SWEDetails X 
+			WHERE	    CAST(X.DateQuoted AS DATE) = CAST(GETDATE() AS DATE)		
+			AND			X.CustID = @CUSTID
+			AND			X.QuoteNo IS NULL 
 
 			UPDATE		X 
 			SET			QuoteNo = (SELECT IDENT_CURRENT('Quoting_SWESummary') + IDENT_INCR('Quoting_SWESummary'))
