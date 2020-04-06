@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendDailyCreditAREmail]    Script Date: 2/26/2020 8:42:43 AM ******/
+/****** Object:  StoredProcedure [dbo].[SendDailyCreditAREmail]    Script Date: 4/6/2020 8:37:54 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -286,7 +286,7 @@ SET @Message5 =
 			  @profile_name = 'APTEST01SQLMail'  
 			, @from_address = 'DoNotReply@AJCLogistics.com'
 			, @reply_to = 'sali@ajclogistics.com' 
-			, @recipients = 'credit@eagle-logistics.com'
+			, @recipients = 'credit@eagle-logistics.com;ccolon@eagle-logistics.com'
 			, @body = @Message5
 			, @body_format = 'HTML'
 			, @subject = 'Eagle - Daily Credit Limit vs. A/R Report'
