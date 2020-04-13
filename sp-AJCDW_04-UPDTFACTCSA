@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 4/2/2020 12:51:46 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 4/13/2020 04:18:23 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -501,6 +501,78 @@ INNER JOIN	 (
 							) as pvt
 			) Y ON x.PK_OrderNo = y.FK_OrderNo
 ORDER BY	x.PK_OrderNo
+
+
+
+------CSA CUSTOMER INVOICE AGING BASED ON PRINTED DATE IN SYSTEM-------
+-----------------------------------------------------------------------
+
+select *
+into #tmp50
+FROM OPENQUERY(USDCFCSASQL01, '
+select MAX(PK_NoteNo) AS NOTE, t.FK_OrderNo, HOUSEBILL, MAX(DateTimeEntered) AS PRINTED_DATE
+, CAST(getdate()-MAX(DateTimeEntered) as INT) DaysSincePrinting
+, MAX(i.PODDateTime) AS PODDATE
+, CASE
+	WHEN MAX(i.PODDateTime) <> ''1900-01-01 00:00:00.000'' THEN CAST(MAX(DateTimeEntered) - MAX(i.PODDateTime) as INT)
+    ELSE 0
+END AS PODLag
+FROM [AirTrak].[dbo].tbl_TrackingNotes t
+JOIN [AirTrak].[dbo].tbl_interfaceAPAR i on t.FK_OrderNo = i.FK_OrderNo
+where CAST(Note as varchar(500)) = ''Print Invoice(MAIN) Button Clicked from Costs/Billing Page''
+--and FK_OrderNo = 28820
+GROUP BY t.FK_OrderNo, HOUSEBILL, CAST(Note as varchar(500))
+ORDER BY HOUSEBILL
+');
+
+/*
+SELECT * from #tmp50
+DROP TABLE #tmp50
+*/
+
+SELECT a.CUSTOMER_NAME
+	  ,c.STANDARD_TERMS_NAME
+	  ,MAX(a.trx_Number) as TRX_NUM
+	  ,t.HOUSEBILL
+	  ,t.PRINTED_DATE
+	  ,t.DaysSincePrinting
+	  ,t.PODDate
+	  ,t.PODLag
+	  ,	CASE
+			WHEN STANDARD_TERMS_NAME = 'NET 30' THEN PRINTED_DATE+30
+			WHEN STANDARD_TERMS_NAME = 'NET 45' THEN PRINTED_DATE+45
+			WHEN STANDARD_TERMS_NAME = 'NET 60' THEN PRINTED_DATE+60
+			WHEN STANDARD_TERMS_NAME = 'CIA' THEN PRINTED_DATE
+	    ELSE PODDate
+	END AS PrintedAgingDate
+	,SUM(a.AMOUNT_DUE_REMAINING) AS AMOUNT_DUE
+INTO #tmp51
+FROM #tmp50 t
+JOIN tblOracleARData a on t.HOUSEBILL = a.INTERFACE_HEADER_ATTRIBUTE1
+JOIN tblOracleCustTerms c on c.CUSTOMER_ID = a.BILL_TO_CUSTOMER_ID
+where INTERFACE_HEADER_CONTEXT = 'CSA'
+GROUP BY a.CUSTOMER_NAME,c.STANDARD_TERMS_NAME,t.HOUSEBILL,t.PRINTED_DATE,t.DaysSincePrinting,t.PODDate,t.PODLag
+ORDER BY t.Housebill
+
+/*
+SELECT * from #tmp51
+where TRX_NUM like '70-139507%'
+DROP TABLE #tmp51
+*/
+
+TRUNCATE TABLE RptCSAPrintAging
+
+INSERT INTO RptCSAPrintAging
+SELECT t51.*,
+	CASE
+		WHEN STANDARD_TERMS_NAME = 'NET 30' THEN CAST((GETDATE() - PrintedAgingDate) AS INT)
+		WHEN STANDARD_TERMS_NAME = 'NET 45' THEN CAST((GETDATE() - PrintedAgingDate) AS INT)
+		WHEN STANDARD_TERMS_NAME = 'NET 60' THEN CAST((GETDATE() - PrintedAgingDate) AS INT)
+		WHEN STANDARD_TERMS_NAME = 'CIA' THEN CAST((GETDATE() - PRINTED_DATE) AS INT)
+	ELSE CAST((GETDATE() - PODDate) AS INT)
+	END AS DaysOutstanding
+	FROM #tmp51 t51
+
 
 /*****************************************************End Logging*******************************************************/
 
