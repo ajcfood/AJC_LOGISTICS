@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 4/14/2020 11:08:29 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 4/14/2020 11:42:41 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -514,8 +514,8 @@ select MAX(PK_NoteNo) AS NOTE, t.FK_OrderNo, HOUSEBILL, MAX(DateTimeEntered) AS 
 , CAST(getdate()-MAX(DateTimeEntered) as INT) DaysSincePrinting
 , MAX(i.PODDateTime) AS PODDATE
 , CASE
-	WHEN MAX(i.PODDateTime) <> ''1900-01-01 00:00:00.000'' THEN CAST(MAX(DateTimeEntered) - MAX(i.PODDateTime) as INT)
-    ELSE 0
+	WHEN MAX(i.PODDateTime) <> ''1900-01-01 00:00:00.000'' THEN CAST(MAX(i.PODDateTime) - MAX(DateTimeEntered) as INT)
+    ELSE CAST(GETDATE() - MAX(DateTimeEntered) AS INT)
 END AS PODLag
 FROM [AirTrak].[dbo].tbl_TrackingNotes t
 JOIN [AirTrak].[dbo].tbl_interfaceAPAR i on t.FK_OrderNo = i.FK_OrderNo
@@ -539,13 +539,13 @@ SELECT a.CUSTOMER_NAME
          ,t.DaysSincePrinting
          ,t.PODDate
          ,t.PODLag
-         ,    CASE
+         , CASE
                      WHEN STANDARD_TERMS_NAME = 'NET 30' THEN PRINTED_DATE+30
                      WHEN STANDARD_TERMS_NAME = 'NET 45' THEN PRINTED_DATE+45
                      WHEN STANDARD_TERMS_NAME = 'NET 60' THEN PRINTED_DATE+60
                      WHEN STANDARD_TERMS_NAME = 'CIA' THEN PRINTED_DATE
            ELSE PODDate
-       END AS PrintedAgingDate
+           END AS PrintedAgingDate
        ,SUM(a.AMOUNT_DUE_REMAINING) AS AMOUNT_DUE
 INTO #tmp51
 FROM #tmp50 t
@@ -567,13 +567,16 @@ TRUNCATE TABLE RptCSAPrintAging
 INSERT INTO RptCSAPrintAging
 SELECT t51.*,
 	CASE
-		WHEN STANDARD_TERMS_NAME = 'NET 30' THEN CAST((GETDATE() - PrintedAgingDate) AS INT)
-		WHEN STANDARD_TERMS_NAME = 'NET 45' THEN CAST((GETDATE() - PrintedAgingDate) AS INT)
-		WHEN STANDARD_TERMS_NAME = 'NET 60' THEN CAST((GETDATE() - PrintedAgingDate) AS INT)
-		WHEN STANDARD_TERMS_NAME = 'CIA' THEN CAST((GETDATE() - PRINTED_DATE) AS INT)
-	ELSE CAST((GETDATE() - PODDate) AS INT)
+		WHEN STANDARD_TERMS_NAME = 'NET 30' AND AMOUNT_DUE <> 0 THEN CAST((GETDATE() - PrintedAgingDate) AS INT)
+		WHEN STANDARD_TERMS_NAME = 'NET 45' AND AMOUNT_DUE <> 0 THEN CAST((GETDATE() - PrintedAgingDate) AS INT)
+		WHEN STANDARD_TERMS_NAME = 'NET 60' AND AMOUNT_DUE <> 0 THEN CAST((GETDATE() - PrintedAgingDate) AS INT)
+		WHEN STANDARD_TERMS_NAME = 'CIA' AND AMOUNT_DUE <> 0 THEN CAST((GETDATE() - PRINTED_DATE) AS INT)
+		WHEN STANDARD_TERMS_NAME = 'COD' AND AMOUNT_DUE <> 0 THEN CAST((GETDATE() - PODDate) AS INT)
+		WHEN STANDARD_TERMS_NAME IS NULL THEN CAST((GETDATE() - PRINTED_DATE) AS INT)
+	ELSE 0
 	END AS DaysOutstanding
 	FROM #tmp51 t51
+
 
 
 /*****************************************************End Logging*******************************************************/
