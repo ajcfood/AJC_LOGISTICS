@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 4/13/2020 04:18:23 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 4/14/2020 11:08:29 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -520,39 +520,41 @@ END AS PODLag
 FROM [AirTrak].[dbo].tbl_TrackingNotes t
 JOIN [AirTrak].[dbo].tbl_interfaceAPAR i on t.FK_OrderNo = i.FK_OrderNo
 where CAST(Note as varchar(500)) = ''Print Invoice(MAIN) Button Clicked from Costs/Billing Page''
---and FK_OrderNo = 28820
-GROUP BY t.FK_OrderNo, HOUSEBILL, CAST(Note as varchar(500))
-ORDER BY HOUSEBILL
+	OR CAST(Note as varchar(500)) LIKE ''Invoice Emailed%''
+--t.FK_OrderNo = 35275
+GROUP BY t.FK_OrderNo, HOUSEBILL
+ORDER BY HOUSEBILL, PRINTED_DATE
 ');
 
 /*
-SELECT * from #tmp50
+SELECT * from #tmp50 where housebill = '38274'
 DROP TABLE #tmp50
 */
 
 SELECT a.CUSTOMER_NAME
-	  ,c.STANDARD_TERMS_NAME
-	  ,MAX(a.trx_Number) as TRX_NUM
-	  ,t.HOUSEBILL
-	  ,t.PRINTED_DATE
-	  ,t.DaysSincePrinting
-	  ,t.PODDate
-	  ,t.PODLag
-	  ,	CASE
-			WHEN STANDARD_TERMS_NAME = 'NET 30' THEN PRINTED_DATE+30
-			WHEN STANDARD_TERMS_NAME = 'NET 45' THEN PRINTED_DATE+45
-			WHEN STANDARD_TERMS_NAME = 'NET 60' THEN PRINTED_DATE+60
-			WHEN STANDARD_TERMS_NAME = 'CIA' THEN PRINTED_DATE
-	    ELSE PODDate
-	END AS PrintedAgingDate
-	,SUM(a.AMOUNT_DUE_REMAINING) AS AMOUNT_DUE
+         ,c.STANDARD_TERMS_NAME
+         ,MAX(a.trx_Number) as TRX_NUM
+         ,t.HOUSEBILL
+         ,t.PRINTED_DATE
+         ,t.DaysSincePrinting
+         ,t.PODDate
+         ,t.PODLag
+         ,    CASE
+                     WHEN STANDARD_TERMS_NAME = 'NET 30' THEN PRINTED_DATE+30
+                     WHEN STANDARD_TERMS_NAME = 'NET 45' THEN PRINTED_DATE+45
+                     WHEN STANDARD_TERMS_NAME = 'NET 60' THEN PRINTED_DATE+60
+                     WHEN STANDARD_TERMS_NAME = 'CIA' THEN PRINTED_DATE
+           ELSE PODDate
+       END AS PrintedAgingDate
+       ,SUM(a.AMOUNT_DUE_REMAINING) AS AMOUNT_DUE
 INTO #tmp51
 FROM #tmp50 t
-JOIN tblOracleARData a on t.HOUSEBILL = a.INTERFACE_HEADER_ATTRIBUTE1
-JOIN tblOracleCustTerms c on c.CUSTOMER_ID = a.BILL_TO_CUSTOMER_ID
-where INTERFACE_HEADER_CONTEXT = 'CSA'
+LEFT JOIN tblOracleARData a on t.HOUSEBILL = a.INTERFACE_HEADER_ATTRIBUTE1 and a.INTERFACE_HEADER_ATTRIBUTE1 NOT LIKE '%[a-z]%' and a.INTERFACE_HEADER_CONTEXT = 'CSA'
+LEFT JOIN tblOracleCustTerms c on c.CUSTOMER_ID = a.BILL_TO_CUSTOMER_ID
+where t.Housebill <> 0
 GROUP BY a.CUSTOMER_NAME,c.STANDARD_TERMS_NAME,t.HOUSEBILL,t.PRINTED_DATE,t.DaysSincePrinting,t.PODDate,t.PODLag
 ORDER BY t.Housebill
+
 
 /*
 SELECT * from #tmp51
