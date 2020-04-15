@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 4/14/2020 11:42:41 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 4/15/2020 09:50:23 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -514,7 +514,7 @@ select MAX(PK_NoteNo) AS NOTE, t.FK_OrderNo, HOUSEBILL, MAX(DateTimeEntered) AS 
 , CAST(getdate()-MAX(DateTimeEntered) as INT) DaysSincePrinting
 , MAX(i.PODDateTime) AS PODDATE
 , CASE
-	WHEN MAX(i.PODDateTime) <> ''1900-01-01 00:00:00.000'' THEN CAST(MAX(i.PODDateTime) - MAX(DateTimeEntered) as INT)
+	WHEN MAX(i.PODDateTime) <> ''1900-01-01 00:00:00.000'' THEN CAST(MAX(DateTimeEntered) - MAX(i.PODDateTime) as INT)
     ELSE CAST(GETDATE() - MAX(DateTimeEntered) AS INT)
 END AS PODLag
 FROM [AirTrak].[dbo].tbl_TrackingNotes t
