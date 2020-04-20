@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendCommissionEmails]    Script Date: 4/20/2020 10:49:46 AM ******/
+/****** Object:  StoredProcedure [dbo].[SendCommissionEmails]    Script Date: 4/20/2020 10:47:40 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -280,7 +280,7 @@ BEGIN
 				N'<tr bgcolor="#cceeff"><th>Total GP</th><th>Commission</th></tr>' +
 			N'<tfoot>' +
 				CAST ( ( SELECT td = format(sum(c.GP), 'c', 'en-us'), '',    
-								td = format(sum(c.AAComm), 'c', 'en-us')  --set to sales rep column for the correct sales person
+								td = format(sum(c.LPComm), 'c', 'en-us')  --set to sales rep column for the correct sales person
 							from tblCommCalc c
 							JOIN tblOracleCalendar on PERIOD_NAME = ACCTPERIODNAME
 							WHERE cast(DATEADD(dd,-25,getdate()) as date) between START_DATE and END_DATE
@@ -491,7 +491,7 @@ BEGIN
 				N'<table align=''left'' border="1" bgcolor="#ffffe6">' +  
 				N'<tr bgcolor="#cceeff"><th> Commission</th></tr>' +
 			N'<tfoot>' +
-				CAST ( ( SELECT td = format((sum(c.BMComm)*0)+200, 'c', 'en-us'), '' 
+				CAST ( ( SELECT td = format((sum(c.QTComm)*0)+200, 'c', 'en-us'), '' 
 							from tblCommCalc c
 							JOIN tblOracleCalendar on PERIOD_NAME = ACCTPERIODNAME
 							WHERE cast(DATEADD(dd,-25,getdate()) as date) between START_DATE and END_DATE
@@ -1538,8 +1538,8 @@ BEGIN
 
 			EXEC msdb.dbo.sp_send_dbmail      
 					@profile_name = 'APTEST01SQLMail'     
-				  , @recipients = 'clubin@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;bstallings@ajclogistics.com' -- update email receipient      
-				  --, @recipients = 'seljamil@ajclogistics.com'
+				  --, @recipients = 'clubin@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;bstallings@ajclogistics.com' -- update email receipient      
+				  , @recipients = 'seljamil@ajclogistics.com'
 				  , @subject = @subj      
 				  , @body= @tableHTML      
 				  , @body_format = 'HTML'  
