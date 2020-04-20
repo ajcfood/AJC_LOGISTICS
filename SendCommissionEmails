@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendCommissionEmails]    Script Date: 3/23/2020 10:01:12 AM ******/
+/****** Object:  StoredProcedure [dbo].[SendCommissionEmails]    Script Date: 4/20/2020 10:49:46 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1538,8 +1538,8 @@ BEGIN
 
 			EXEC msdb.dbo.sp_send_dbmail      
 					@profile_name = 'APTEST01SQLMail'     
-				  --, @recipients = 'clubin@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;bstallings@ajclogistics.com' -- update email receipient      
-				  , @recipients = 'seljamil@ajclogistics.com'
+				  , @recipients = 'clubin@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;bstallings@ajclogistics.com' -- update email receipient      
+				  --, @recipients = 'seljamil@ajclogistics.com'
 				  , @subject = @subj      
 				  , @body= @tableHTML      
 				  , @body_format = 'HTML'  
