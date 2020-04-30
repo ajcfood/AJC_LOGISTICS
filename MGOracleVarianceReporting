@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 3/26/2020 4:17:04 PM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 4/30/2020 3:47:35 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -43,6 +43,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 												INNER JOIN (
 																SELECT RefShippingOrder, MAX(Filename) Filename
 																FROM MGXMLProcessing.[dbo].[tblRouteXML_TransportLoadRecs]
+																WHERE PriceSheetType = 'Cost'
 																GROUP BY RefShippingOrder
 															) y ON y.RefShippingOrder = x.RefShippingOrder AND y.Filename = x.FileName
 												WHERE PriceSheetType = 'Cost'
@@ -55,6 +56,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 												INNER JOIN (
 																SELECT RefShippingOrder, MAX(Filename) Filename
 																FROM MGXMLProcessing.[dbo].[tblRouteXML_TransportLoadRecs]
+																WHERE PriceSheetType in ('Charge','VendorRate')
 																GROUP BY RefShippingOrder
 															) y ON y.RefShippingOrder = x.RefShippingOrder AND y.Filename = x.FileName
 												WHERE PriceSheetType in ('Charge','VendorRate')
@@ -92,10 +94,10 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 											GROUP BY REPLACE(LINE_ATTRIBUTE11,'MG',''), LOB 
 										) Z ON Z.OracleRefShippingOrder = COALESCE(v.RefShippingOrder, w.RefShippingOrder)
 					WHERE		(
-									RouteFileCost <> ISNULL(CarrierInvTotal,RouteFileCost) 
-								OR  RouteFileCost <> ISNULL(OracleCost,0.00)
-								OR  RouteFileRev  <> ISNULL(CustomerInvTotal,RouteFileRev)
-								OR  RouteFileRev  <> ISNULL(OracleRev,0.00)
+									ISNULL(RouteFileCost,0.00) <> ISNULL(CarrierInvTotal,ISNULL(RouteFileCost,0.00)) 
+								OR  ISNULL(RouteFileCost,0.00) <> ISNULL(OracleCost,0.00)
+								OR  ISNULL(RouteFileRev ,0.00) <> ISNULL(CustomerInvTotal,ISNULL(RouteFileRev,0.00))
+								OR  ISNULL(RouteFileRev ,0.00) <> ISNULL(OracleRev,0.00)
 								)
 					AND			(
 										v.LoadedDateTime >= DATEADD(dd,-1,CAST(GETDATE() AS DATE))
@@ -191,6 +193,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 												INNER JOIN (
 																SELECT RefShippingOrder, MAX(Filename) Filename
 																FROM MGXMLProcessing.[dbo].[tblRouteXML_TransportLoadRecs]
+																WHERE PriceSheetType = 'Cost'
 																GROUP BY RefShippingOrder
 															) y ON y.RefShippingOrder = x.RefShippingOrder AND y.Filename = x.FileName
 												WHERE PriceSheetType = 'Cost'
@@ -203,6 +206,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 												INNER JOIN (
 																SELECT RefShippingOrder, MAX(Filename) Filename
 																FROM MGXMLProcessing.[dbo].[tblRouteXML_TransportLoadRecs]
+																WHERE PriceSheetType in ('Charge','VendorRate')
 																GROUP BY RefShippingOrder
 															) y ON y.RefShippingOrder = x.RefShippingOrder AND y.Filename = x.FileName
 												WHERE PriceSheetType in ('Charge','VendorRate')
@@ -240,10 +244,10 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 											GROUP BY REPLACE(LINE_ATTRIBUTE11,'MG',''), LOB 
 										) Z ON Z.OracleRefShippingOrder = COALESCE(v.RefShippingOrder, w.RefShippingOrder)
 					WHERE		(
-									RouteFileCost <> ISNULL(CarrierInvTotal,RouteFileCost) 
-								OR  RouteFileCost <> ISNULL(OracleCost,0.00)
-								OR  RouteFileRev  <> ISNULL(CustomerInvTotal,RouteFileRev)
-								OR  RouteFileRev  <> ISNULL(OracleRev,0.00)
+									ISNULL(RouteFileCost,0.00) <> ISNULL(CarrierInvTotal,ISNULL(RouteFileCost,0.00)) 
+								OR  ISNULL(RouteFileCost,0.00) <> ISNULL(OracleCost,0.00)
+								OR  ISNULL(RouteFileRev ,0.00) <> ISNULL(CustomerInvTotal,ISNULL(RouteFileRev,0.00))
+								OR  ISNULL(RouteFileRev ,0.00) <> ISNULL(OracleRev,0.00)
 								)
 					AND			(
 										v.LoadedDateTime >= DATEADD(dd,-1,CAST(GETDATE() AS DATE))
