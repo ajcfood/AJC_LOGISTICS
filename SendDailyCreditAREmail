@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendDailyCreditAREmail]    Script Date: 4/6/2020 8:37:54 AM ******/
+/****** Object:  StoredProcedure [dbo].[SendDailyCreditAREmail]    Script Date: 5/8/2020 10:06:51 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -61,7 +61,7 @@ SET @Message =
 			  @profile_name = 'APTEST01SQLMail'  
 			, @from_address = 'DoNotReply@AJCLogistics.com'
 			, @reply_to = 'sali@ajclogistics.com' 
-			, @recipients = 'csr@ajclogistics.com;ajcltrucksales@ajc.local;lpantesco@ajclogistics.com;aalonso@ajclogistics.com;credit@ajclogistics.com'
+			, @recipients = 'csr@ajclogistics.com;ajcltrucksales@ajc.local;lpantesco@ajclogistics.com;aalonso@ajclogistics.com;credit@ajclogistics.com;gberger@ajclogistics.com'
 			, @body = @Message
 			, @body_format = 'HTML'
 			, @subject = 'IES/ST ATL - Daily Credit Limit vs. A/R Report'
@@ -120,7 +120,7 @@ SET @Message2 =
 			  @profile_name = 'APTEST01SQLMail'  
 			, @from_address = 'DoNotReply@AJCLogistics.com'
 			, @reply_to = 'sali@ajclogistics.com' 
-			, @recipients = 'phinkle@seawideexpress.com;credit@seawideexpress.com'
+			, @recipients = 'phinkle@seawideexpress.com;credit@seawideexpress.com;gberger@ajclogistics.com'
 			, @body = @Message2
 			, @body_format = 'HTML'
 			, @subject = 'SWE - Daily Credit Limit vs. A/R Report Seawide'
@@ -177,7 +177,7 @@ SET @Message3 =
 			  @profile_name = 'APTEST01SQLMail'  
 			, @from_address = 'DoNotReply@AJCLogistics.com'
 			, @reply_to = 'sali@ajclogistics.com' 
-			, @recipients = 'cmendez@ajclogistics.com;bstallings@ajclogistics.com;credit@ajclogistics.com'
+			, @recipients = 'cmendez@ajclogistics.com;bstallings@ajclogistics.com;credit@ajclogistics.com;gberger@ajclogistics.com'
 			, @body = @Message3
 			, @body_format = 'HTML'
 			, @subject = 'ST JAX - Daily Credit Limit vs. A/R Report'
@@ -231,7 +231,7 @@ SET @Message4 =
 			  @profile_name = 'APTEST01SQLMail'  
 			, @from_address = 'DoNotReply@AJCLogistics.com'
 			, @reply_to = 'sali@ajclogistics.com' 
-			, @recipients = 'credit@ajclogistics.com'
+			, @recipients = 'credit@ajclogistics.com;gberger@ajclogistics.com'
 			, @body = @Message4
 			, @body_format = 'HTML'
 			, @subject = 'NVOCC - Daily Credit Limit vs. A/R Report'
@@ -286,7 +286,7 @@ SET @Message5 =
 			  @profile_name = 'APTEST01SQLMail'  
 			, @from_address = 'DoNotReply@AJCLogistics.com'
 			, @reply_to = 'sali@ajclogistics.com' 
-			, @recipients = 'credit@eagle-logistics.com;ccolon@eagle-logistics.com'
+			, @recipients = 'credit@eagle-logistics.com;ccolon@eagle-logistics.com;gberger@ajclogistics.com'
 			, @body = @Message5
 			, @body_format = 'HTML'
 			, @subject = 'Eagle - Daily Credit Limit vs. A/R Report'
