@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 4/30/2020 3:47:35 PM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 5/13/2020 10:37:18 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -242,7 +242,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 											WHERE   LOB IN ('10','11')
 											AND     REPLACE(LINE_ATTRIBUTE11,'MG','') LIKE '%J'
 											GROUP BY REPLACE(LINE_ATTRIBUTE11,'MG',''), LOB 
-										) Z ON Z.OracleRefShippingOrder = COALESCE(v.RefShippingOrder, w.RefShippingOrder)
+										) Z ON Z.OracleRefShippingOrder = COALESCE(v.RefShippingOrder, w.RefShippingOrder, x.RefShippingOrder)
 					WHERE		(
 									ISNULL(RouteFileCost,0.00) <> ISNULL(CarrierInvTotal,ISNULL(RouteFileCost,0.00)) 
 								OR  ISNULL(RouteFileCost,0.00) <> ISNULL(OracleCost,0.00)
