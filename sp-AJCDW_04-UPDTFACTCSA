@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 5/20/2020 10:51:43 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 5/20/2020 11:17:08 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -593,9 +593,9 @@ SELECT a.CUSTOMER_NAME
          ,t.PODDate
          ,t.PODLag
          , CASE
-                     WHEN STANDARD_TERMS_NAME = 'NET 30' THEN PRINTED_DATE+30
-                     WHEN STANDARD_TERMS_NAME = 'NET 45' THEN PRINTED_DATE+45
-                     WHEN STANDARD_TERMS_NAME = 'NET 60' THEN PRINTED_DATE+60
+                     WHEN STANDARD_TERMS_NAME = 'NET 30' THEN DATEADD(DD,30,PRINTED_DATE)
+                     WHEN STANDARD_TERMS_NAME = 'NET 45' THEN DATEADD(DD,45,PRINTED_DATE)
+                     WHEN STANDARD_TERMS_NAME = 'NET 60' THEN DATEADD(DD,60,PRINTED_DATE)
                      WHEN STANDARD_TERMS_NAME = 'CIA' THEN PRINTED_DATE
            ELSE PODDate
            END AS PrintedAgingDate
