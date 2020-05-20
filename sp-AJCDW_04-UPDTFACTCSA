@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 4/15/2020 04:02:39 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 5/20/2020 9:05:40 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -507,6 +507,7 @@ ORDER BY	x.PK_OrderNo
 ------CSA CUSTOMER INVOICE AGING BASED ON PRINTED DATE IN SYSTEM-------
 -----------------------------------------------------------------------
 
+
 --- Files where they have invoice printed or emailed ---
 select *
 into #tmp50
@@ -522,6 +523,7 @@ END AS PODLag
 FROM [AirTrak].[dbo].tbl_TrackingNotes t
 JOIN [AirTrak].[dbo].tbl_interfaceAPAR i on t.FK_OrderNo = i.FK_OrderNo
 where CAST(Note as varchar(500)) LIKE ''Print Invoice(MAIN) Button Clicked from Costs/Billing Page''
+	OR  CAST(Note as varchar(500)) LIKE ''Invoice 00 Printed%''
 	OR CAST(Note as varchar(500)) LIKE ''Invoice Emailed%''
 GROUP BY t.FK_OrderNo, HOUSEBILL
 --, CAST(t.Note as varchar(250))
@@ -546,8 +548,9 @@ INNER JOIN           USDCFCSASQL01.[AirTrak].[dbo].tbl_interfaceAPAR i on t.FK_O
 LEFT OUTER JOIN      (
                                   SELECT DISTINCT FK_OrderNo 
                                   FROM   USDCFCSASQL01.[AirTrak].[dbo].tbl_TrackingNotes 
-                                  WHERE         CAST(Note as varchar(500)) LIKE 'Print Invoice(MAIN) Button Clicked from Costs/Billing Page'
-                                                OR CAST(Note as varchar(500)) LIKE 'Invoice Emailed%'
+                                  WHERE				CAST(Note as varchar(500)) LIKE 'Print Invoice(MAIN) Button Clicked from Costs/Billing Page'
+												OR  CAST(Note as varchar(500)) LIKE 'Invoice 00 Printed%'
+                                                OR  CAST(Note as varchar(500)) LIKE 'Invoice Emailed%'
                            ) t2 ON t2.FK_OrderNo = t.FK_OrderNo
 where t2.Fk_OrderNo IS NULL 
 GROUP BY t.FK_OrderNo, i.HOUSEBILL
