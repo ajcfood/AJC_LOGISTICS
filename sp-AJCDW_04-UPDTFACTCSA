@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 5/20/2020 3:16:49 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 5/22/2020 1:02:36 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -509,32 +509,54 @@ ORDER BY	x.PK_OrderNo
 
 
 --- Files where they have invoice printed or emailed ---
-select *
-into #tmp50
-FROM OPENQUERY(USDCFCSASQL01, '
-select MAX(PK_NoteNo) AS NOTENUM, t.FK_OrderNo, HOUSEBILL, MAX(DateTimeEntered) AS PRINTED_DATE
+--select *
+--into #tmp50
+--FROM OPENQUERY(USDCFCSASQL01, '
+--select MAX(PK_NoteNo) AS NOTENUM, t.FK_OrderNo, HOUSEBILL, MAX(DateTimeEntered) AS PRINTED_DATE
+----, CAST(t.Note as varchar(250)) NOTE
+--, DATEDIFF(dd,MAX(DateTimeEntered),getdate()) DaysSincePrinting
+--, MAX(i.PODDateTime) AS PODDATE
+--, CASE
+--	WHEN MAX(i.PODDateTime) <> ''1900-01-01 00:00:00.000'' THEN DATEDIFF(dd, MAX(i.PODDateTime),MAX(DateTimeEntered))
+--    ELSE DATEDIFF(dd,MAX(DateTimeEntered),GETDATE())
+--END AS PODLag
+--FROM [AirTrak].[dbo].tbl_TrackingNotes t
+--JOIN [AirTrak].[dbo].tbl_interfaceAPAR i on t.FK_OrderNo = i.FK_OrderNo
+--where CAST(Note as varchar(500)) LIKE ''Print Invoice(MAIN) Button Clicked from Costs/Billing Page''
+--	OR  CAST(Note as varchar(500)) LIKE ''Invoice 00 Printed%''
+--	--OR CAST(Note as varchar(500)) LIKE ''Invoice Emailed%''
+--GROUP BY t.FK_OrderNo, HOUSEBILL
+----, CAST(t.Note as varchar(250))
+--ORDER BY HOUSEBILL, PRINTED_DATE
+--');
+
+SELECT MAX(PK_NoteNo) AS NOTENUM, t.FK_OrderNo, i.FK_StationID, i.HOUSEBILL, MAX(DateTimeEntered) AS PRINTED_DATE
 --, CAST(t.Note as varchar(250)) NOTE
 , DATEDIFF(dd,MAX(DateTimeEntered),getdate()) DaysSincePrinting
 , MAX(i.PODDateTime) AS PODDATE
 , CASE
-	WHEN MAX(i.PODDateTime) <> ''1900-01-01 00:00:00.000'' THEN DATEDIFF(dd, MAX(i.PODDateTime),MAX(DateTimeEntered))
+       WHEN MAX(i.PODDateTime) <> '1900-01-01 00:00:00.000' THEN DATEDIFF(dd, MAX(i.PODDateTime),MAX(DateTimeEntered))
     ELSE DATEDIFF(dd,MAX(DateTimeEntered),GETDATE())
 END AS PODLag
-FROM [AirTrak].[dbo].tbl_TrackingNotes t
-JOIN [AirTrak].[dbo].tbl_interfaceAPAR i on t.FK_OrderNo = i.FK_OrderNo
-where CAST(Note as varchar(500)) LIKE ''Print Invoice(MAIN) Button Clicked from Costs/Billing Page''
-	OR  CAST(Note as varchar(500)) LIKE ''Invoice 00 Printed%''
-	--OR CAST(Note as varchar(500)) LIKE ''Invoice Emailed%''
-GROUP BY t.FK_OrderNo, HOUSEBILL
---, CAST(t.Note as varchar(250))
-ORDER BY HOUSEBILL, PRINTED_DATE
-');
-
+into #tmp50
+FROM USDCFCSASQL01.[AirTrak].[dbo].tbl_TrackingNotes t
+JOIN USDCFCSASQL01.[AirTrak].[dbo].tbl_interfaceAPAR i on t.FK_OrderNo = i.FK_OrderNo
+INNER JOIN (
+				SELECT Pk_SeqNo, Housebill, FK_StationID, CreateDate, ROW_NUMBER() OVER (PARTITION BY HouseBill Order By PK_SeqNo DESC) RN
+				FROM USDCFCSASQL01.[AirTrak].[dbo].tbl_interfaceAPAR 
+			) x on x.Pk_SeqNo = i.Pk_SeqNo
+where (
+			 CAST(Note as varchar(500)) LIKE 'Print Invoice(MAIN) Button Clicked from Costs/Billing Page' 
+          OR CAST(Note as varchar(500)) LIKE 'Invoice 00 Printed%'
+	  )
+AND x.RN = 1
+GROUP BY t.FK_OrderNo, i.FK_StationID ,i.HOUSEBILL
+ORDER BY i.HOUSEBILL, PRINTED_DATE
 
 
 --- Files where have POD date but have not been printed or emailed from CSA ---
 
-select MAX(t.PK_NoteNo) AS NOTENUM, t.FK_OrderNo, i.HOUSEBILL, NULL AS PRINTED_DATE
+select MAX(t.PK_NoteNo) AS NOTENUM, t.FK_OrderNo, i.FK_StationID, i.HOUSEBILL, NULL AS PRINTED_DATE
        , DATEDIFF(dd,MAX(t.DateTimeEntered),getdate()) DaysSincePrinting
        , MAX(i.PODDateTime) AS PODDATE
        , CASE
@@ -546,6 +568,10 @@ select MAX(t.PK_NoteNo) AS NOTENUM, t.FK_OrderNo, i.HOUSEBILL, NULL AS PRINTED_D
 into #tmp52
 FROM                 USDCFCSASQL01.[AirTrak].[dbo].tbl_TrackingNotes t
 INNER JOIN           USDCFCSASQL01.[AirTrak].[dbo].tbl_interfaceAPAR i on t.FK_OrderNo = i.FK_OrderNo
+INNER JOIN (
+				SELECT Pk_SeqNo, Housebill, FK_StationID, CreateDate, ROW_NUMBER() OVER (PARTITION BY HouseBill Order By PK_SeqNo DESC) RN
+				FROM USDCFCSASQL01.[AirTrak].[dbo].tbl_interfaceAPAR 
+			) x on x.Pk_SeqNo = i.Pk_SeqNo
 LEFT OUTER JOIN      (
                                   SELECT DISTINCT FK_OrderNo 
                                   FROM   USDCFCSASQL01.[AirTrak].[dbo].tbl_TrackingNotes 
@@ -554,10 +580,11 @@ LEFT OUTER JOIN      (
                                                 --OR  CAST(Note as varchar(500)) LIKE 'Invoice Emailed%'
                            ) t2 ON t2.FK_OrderNo = t.FK_OrderNo
 where t2.Fk_OrderNo IS NULL 
-GROUP BY t.FK_OrderNo, i.HOUSEBILL
+AND x.RN = 1
+GROUP BY t.FK_OrderNo, i.HOUSEBILL, i.FK_StationID
 ORDER BY i.HOUSEBILL
 
-SELECT NOTENUM, FK_OrderNo, HOUSEBILL, PRINTED_DATE, DaysSincePrinting, PODDATE,
+SELECT NOTENUM, FK_OrderNo, FK_StationID, HOUSEBILL, PRINTED_DATE, DaysSincePrinting, PODDATE,
 	CASE
 		      WHEN PODDATE <> '1900-01-01 00:00:00.000' AND PRINTED_DATE IS NOT NULL THEN DATEDIFF(dd,PODDATE,PRINTED_DATE)
 			  WHEN PODDATE <> '1900-01-01 00:00:00.000' AND PRINTED_DATE IS NULL THEN DATEDIFF(dd,GETDATE(),PODDATE)
@@ -588,6 +615,7 @@ SELECT a.CUSTOMER_NAME
          ,c.STANDARD_TERMS_NAME
          ,MAX(a.trx_Number) as TRX_NUM
          ,t.HOUSEBILL
+		 ,FK_StationID 
          ,t.PRINTED_DATE
          ,t.DaysSincePrinting
          ,t.PODDate
@@ -605,7 +633,7 @@ FROM #tmp53 t
 LEFT JOIN tblOracleARData a on t.HOUSEBILL = a.INTERFACE_HEADER_ATTRIBUTE1 and a.INTERFACE_HEADER_ATTRIBUTE1 NOT LIKE '%[a-z]%' and a.INTERFACE_HEADER_CONTEXT = 'CSA'
 LEFT JOIN tblOracleCustTerms c on c.CUSTOMER_ID = a.BILL_TO_CUSTOMER_ID
 where t.Housebill <> 0
-GROUP BY a.CUSTOMER_NAME,c.STANDARD_TERMS_NAME,t.HOUSEBILL,t.PRINTED_DATE,t.DaysSincePrinting,t.PODDate,t.PODLag
+GROUP BY a.CUSTOMER_NAME,c.STANDARD_TERMS_NAME,t.HOUSEBILL,t.PRINTED_DATE,t.DaysSincePrinting,t.PODDate,t.PODLag,FK_StationID 
 ORDER BY t.Housebill
 
 
