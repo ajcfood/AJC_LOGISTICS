@@ -1,6 +1,6 @@
 USE [AirTrak]
 GO
-/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 5/22/2020 10:40:37 AM ******/
+/****** Object:  StoredProcedure [dbo].[Quoting_CalcHIQuote]    Script Date: 5/22/2020 10:50:40 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -263,9 +263,9 @@ BEGIN
 											--Apply Dest Delivery Rate OR Minimums (if applicable)
 											UPDATE			CSAF 
 											SET				DestDelivFee = ISNULL(
-																						CASE WHEN DestDelivery <= DestDelivMin AND DestDelivMin <> 0.00 THEN DestDelivMin
-																							 WHEN DestDelivery > DestDelivMin AND DestDelivMin <> 0.00 AND DestDelivery < DestDelivMax THEN DestDelivery
-																							 WHEN DestDelivery > DestDelivMin AND DestDelivMin <> 0.00 AND DestDelivMax <> 0.00 AND DestDelivery > DestDelivMax THEN DestDelivMax
+																						CASE WHEN DestDelivery <= DestDelivMin AND DestDelivMin IS NOT NULL THEN DestDelivMin
+																							 WHEN DestDelivery > DestDelivMin AND DestDelivMin IS NOT NULL AND DestDelivery <= ISNULL(DestDelivMax,DestDelivery) THEN DestDelivery
+																							 WHEN DestDelivery > DestDelivMin AND DestDelivMin IS NOT NULL AND DestDelivMax IS NOT NULL AND DestDelivery > DestDelivMax THEN DestDelivMax
 																							 END,0.00
 																				  ), HZMTDestDelivFee = CASE IsHazmat WHEN 'Y' THEN DestDelivHZMT ELSE 0.00 END
 											FROM		Quoting_SWESummary CSAF
