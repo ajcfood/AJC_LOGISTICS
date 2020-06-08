@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 5/22/2020 1:02:36 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 6/8/2020 3:59:38 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -553,7 +553,6 @@ AND x.RN = 1
 GROUP BY t.FK_OrderNo, i.FK_StationID ,i.HOUSEBILL
 ORDER BY i.HOUSEBILL, PRINTED_DATE
 
-
 --- Files where have POD date but have not been printed or emailed from CSA ---
 
 select MAX(t.PK_NoteNo) AS NOTENUM, t.FK_OrderNo, i.FK_StationID, i.HOUSEBILL, NULL AS PRINTED_DATE
@@ -585,11 +584,7 @@ GROUP BY t.FK_OrderNo, i.HOUSEBILL, i.FK_StationID
 ORDER BY i.HOUSEBILL
 
 SELECT NOTENUM, FK_OrderNo, FK_StationID, HOUSEBILL, PRINTED_DATE, DaysSincePrinting, PODDATE,
-	CASE
-		      WHEN PODDATE <> '1900-01-01 00:00:00.000' AND PRINTED_DATE IS NOT NULL THEN DATEDIFF(dd,PODDATE,PRINTED_DATE)
-			  WHEN PODDATE <> '1900-01-01 00:00:00.000' AND PRINTED_DATE IS NULL THEN DATEDIFF(dd,GETDATE(),PODDATE)
-   			  ELSE 0
-	  END AS PODLag
+	NULL PODLag
 INTO #tmp54
 FROM #tmp52
 ORDER BY HOUSEBILL
@@ -655,8 +650,66 @@ SELECT t51.*,
 		WHEN STANDARD_TERMS_NAME = 'COD' AND AMOUNT_DUE <> 0 THEN DATEDIFF(DD,PODDate,GETDATE()) 
 		WHEN STANDARD_TERMS_NAME IS NULL THEN DATEDIFF(DD,PRINTED_DATE,GETDATE())
 	ELSE 0
-	END AS DaysOutstanding
+	END AS DaysOutstanding, NULL, NULL, NULL, NULL, NULL, NULL, NULL 
 	FROM #tmp51 t51
+
+
+update t50 set PODDateAdded = EventDateTime
+from RptCSAPrintAging t50
+inner join (
+				SELECT MAX(t.EventDateTime) EventDateTime, i.Housebill
+				FROM USDCFCSASQL01.[AirTrak].[dbo].tbl_TrackingNotes t 
+				INNER JOIN USDCFCSASQL01.[AirTrak].[dbo].tbl_interfaceAPAR i on t.FK_OrderNo = i.FK_OrderNo
+				INNER JOIN (
+								SELECT Pk_SeqNo, Housebill, FK_StationID, CreateDate, ROW_NUMBER() OVER (PARTITION BY HouseBill Order By PK_SeqNo DESC) RN
+								FROM USDCFCSASQL01.[AirTrak].[dbo].tbl_interfaceAPAR 
+							) x on x.Pk_SeqNo = i.Pk_SeqNo
+				WHERE x.RN = 1
+				and note like 'POD%'
+				group by i.housebill
+			) y on y.housebill = t50.housebill
+
+update t50 set InvoiceFinalized = EventDateTime
+from RptCSAPrintAging t50
+inner join (
+				SELECT MAX(t.EventDateTime) EventDateTime, i.Housebill
+				FROM USDCFCSASQL01.[AirTrak].[dbo].tbl_TrackingNotes t 
+				INNER JOIN USDCFCSASQL01.[AirTrak].[dbo].tbl_interfaceAPAR i on t.FK_OrderNo = i.FK_OrderNo
+				INNER JOIN (
+								SELECT Pk_SeqNo, Housebill, FK_StationID, CreateDate, ROW_NUMBER() OVER (PARTITION BY HouseBill Order By PK_SeqNo DESC) RN
+								FROM USDCFCSASQL01.[AirTrak].[dbo].tbl_interfaceAPAR 
+							) x on x.Pk_SeqNo = i.Pk_SeqNo
+				WHERE x.RN = 1
+				and note like '%FINALIZED%'
+				and note NOT LIKE '%UNFINALIZED%'
+				group by i.housebill
+			) y on y.housebill = t50.housebill
+
+
+update t50 set FirstEmailed = EventDateTime
+from RptCSAPrintAging t50
+inner join (
+				SELECT MAX(t.EventDateTime) EventDateTime, i.Housebill
+				FROM USDCFCSASQL01.[AirTrak].[dbo].tbl_TrackingNotes t 
+				INNER JOIN USDCFCSASQL01.[AirTrak].[dbo].tbl_interfaceAPAR i on t.FK_OrderNo = i.FK_OrderNo
+				INNER JOIN (
+								SELECT Pk_SeqNo, Housebill, FK_StationID, CreateDate, ROW_NUMBER() OVER (PARTITION BY HouseBill Order By PK_SeqNo DESC) RN
+								FROM USDCFCSASQL01.[AirTrak].[dbo].tbl_interfaceAPAR 
+							) x on x.Pk_SeqNo = i.Pk_SeqNo
+				WHERE x.RN = 1
+				and note like 'INVOICE EMAIL%'
+				group by i.housebill
+			) y on y.housebill = t50.housebill
+
+
+--pod lag, inv finalize lag, inv email lag, total inv lag, cust financial lag
+
+update RptCSAPrintAging set InvFinalizeLag = DATEDIFF(dd,PODDateadded, InvoiceFinalized), InvEmailLag = ISNULL(DATEDIFF(dd,InvoiceFinalized,FirstEmailed),0), 
+							TotalInvLag = ISNULL(DATEDIFF(dd,PODDate, FirstEmailed),0),
+							CustFinancialLag = DATEDIFF(dd,PODDATE,PRINTED_DATE), PODLag = CASE WHEN PODDATE <> '1900-01-01 00:00:00.000' AND PRINTED_DATE IS NOT NULL THEN DATEDIFF(dd,PODDATE,PODDateadded)
+																								WHEN PODDATE <> '1900-01-01 00:00:00.000' AND PRINTED_DATE IS NULL THEN DATEDIFF(dd,GETDATE(),PODDATE)
+   																								END
+	  
 
 
 /*****************************************************End Logging*******************************************************/
