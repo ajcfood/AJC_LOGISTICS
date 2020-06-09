@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 6/8/2020 3:59:38 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 6/9/2020 9:17:43 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -686,7 +686,7 @@ inner join (
 			) y on y.housebill = t50.housebill
 
 
-update t50 set FirstEmailed = EventDateTime
+update t50 set FirstEmailed = CAST(EventDateTime AS DATE)
 from RptCSAPrintAging t50
 inner join (
 				SELECT MAX(t.EventDateTime) EventDateTime, i.Housebill
@@ -704,8 +704,15 @@ inner join (
 
 --pod lag, inv finalize lag, inv email lag, total inv lag, cust financial lag
 
-update RptCSAPrintAging set InvFinalizeLag = DATEDIFF(dd,PODDateadded, InvoiceFinalized), InvEmailLag = ISNULL(DATEDIFF(dd,InvoiceFinalized,FirstEmailed),0), 
-							TotalInvLag = ISNULL(DATEDIFF(dd,PODDate, FirstEmailed),0),
+
+update RptCSAPrintAging set InvEmailLag = ISNULL(DATEDIFF(dd,InvoiceFinalized,FirstEmailed),0), 
+				TotalInvLag = ISNULL(DATEDIFF(dd,PODDate, FirstEmailed),0)
+where FirstEmailed is not null 
+
+update RptCSAPrintAging set FirstEmailed = 'NO RECORD'
+where FirstEmailed is null 
+
+update RptCSAPrintAging set InvFinalizeLag = DATEDIFF(dd,PODDateadded, InvoiceFinalized), 
 							CustFinancialLag = DATEDIFF(dd,PODDATE,PRINTED_DATE), PODLag = CASE WHEN PODDATE <> '1900-01-01 00:00:00.000' AND PRINTED_DATE IS NOT NULL THEN DATEDIFF(dd,PODDATE,PODDateadded)
 																								WHEN PODDATE <> '1900-01-01 00:00:00.000' AND PRINTED_DATE IS NULL THEN DATEDIFF(dd,GETDATE(),PODDATE)
    																								END
