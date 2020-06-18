@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 6/9/2020 9:17:43 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 6/18/2020 10:26:21 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -697,7 +697,7 @@ inner join (
 								FROM USDCFCSASQL01.[AirTrak].[dbo].tbl_interfaceAPAR 
 							) x on x.Pk_SeqNo = i.Pk_SeqNo
 				WHERE x.RN = 1
-				and note like 'INVOICE EMAIL%'
+				and note like '%EMAIL%'
 				group by i.housebill
 			) y on y.housebill = t50.housebill
 
@@ -709,8 +709,6 @@ update RptCSAPrintAging set InvEmailLag = ISNULL(DATEDIFF(dd,InvoiceFinalized,Fi
 				TotalInvLag = ISNULL(DATEDIFF(dd,PODDate, FirstEmailed),0)
 where FirstEmailed is not null 
 
-update RptCSAPrintAging set FirstEmailed = 'NO RECORD'
-where FirstEmailed is null 
 
 update RptCSAPrintAging set InvFinalizeLag = DATEDIFF(dd,PODDateadded, InvoiceFinalized), 
 							CustFinancialLag = DATEDIFF(dd,PODDATE,PRINTED_DATE), PODLag = CASE WHEN PODDATE <> '1900-01-01 00:00:00.000' AND PRINTED_DATE IS NOT NULL THEN DATEDIFF(dd,PODDATE,PODDateadded)
