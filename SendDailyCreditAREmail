@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendDailyCreditAREmail]    Script Date: 5/8/2020 10:06:51 AM ******/
+/****** Object:  StoredProcedure [dbo].[SendDailyCreditAREmail]    Script Date: 7/9/2020 08:30:13 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -13,7 +13,7 @@ BEGIN TRY
 BEGIN
 
 --IES & ST ATL
-select    ar.CUSTOMER_NAME
+select    ar.CUSTOMER_NAME, ct.STANDARD_TERMS_NAME
           , MAX(OVERALL_CREDIT_LIMIT) CREDIT_LIMIT
 		  , SUM(AMOUNT_DUE_REMAINING) OUTSTANDING_AR
 		  ,      CASE WHEN MAX(OVERALL_CREDIT_LIMIT) > 0 
@@ -29,7 +29,7 @@ from          tblOracleARData ar
 INNER join    tbloraclecustterms ct on ct.customer_id = bill_to_customer_ID
 WHERE INTERFACE_HEADER_CONTEXT IN ('IES', 'MGATE') 
 	AND CUSTOMER_NUMBER LIKE '430%'  
-group by      ar.CUSTOMER_NAME
+group by      ar.CUSTOMER_NAME, ct.STANDARD_TERMS_NAME
 having			CASE WHEN MAX(OVERALL_CREDIT_LIMIT) > 0 
                      THEN   (MAX(OVERALL_CREDIT_LIMIT) - SUM(AMOUNT_DUE_REMAINING))/ MAX(OVERALL_CREDIT_LIMIT) * 100
                          ELSE MAX(OVERALL_CREDIT_LIMIT) * 100
@@ -45,13 +45,14 @@ DECLARE @Message VARCHAR(MAX)
 
 SET @Message =  
     N'<table align=''center'' border="1" bgcolor="#ffffe6">' +  
-	N'<tr bgcolor="#cceeff"><th>CUSTOMER_NAME</th><th>CREDIT_LIMIT</th><th>OUTSTANDING_AR</th><th>REMAIN_CREDIT_AMT</th><th>REMAINING_CREDIT_PERC</th>' +  
+	N'<tr bgcolor="#cceeff"><th>CUSTOMER_NAME</th><th>STANDARD_TERMS_NAME</th><th>CREDIT_LIMIT</th><th>OUTSTANDING_AR</th><th>REMAIN_CREDIT_AMT</th><th>REMAINING_CREDIT_PERC</th>' +  
 				CAST ( ( SELECT td = CUSTOMER_NAME, '',
+								td = STANDARD_TERMS_NAME, '',
 								td = format(CREDIT_LIMIT, 'c', 'en-us'), '',   
 								td = format(OUTSTANDING_AR, 'c', 'en-us'), '', 
 								td = format(RemainCreditAmt, 'c', 'en-us'), '', 
 								td = RemainingCreditPerc, ''
-						  FROM #TMP  
+						  FROM #tmp2  
 						  FOR XML PATH('tr'), TYPE   
 				) AS NVARCHAR(MAX) ) +  
 				N'</table>'
@@ -67,7 +68,7 @@ SET @Message =
 			, @subject = 'IES/ST ATL - Daily Credit Limit vs. A/R Report'
 
 --Seawide Express
-select    ar.CUSTOMER_NAME
+select    ar.CUSTOMER_NAME, ct.STANDARD_TERMS_NAME
           , MAX(OVERALL_CREDIT_LIMIT) CREDIT_LIMIT
 		  , SUM(AMOUNT_DUE_REMAINING) OUTSTANDING_AR
 		  ,      CASE WHEN MAX(OVERALL_CREDIT_LIMIT) > 0 
@@ -83,7 +84,7 @@ from          tblOracleARData ar
 INNER join    tbloraclecustterms ct on ct.customer_id = bill_to_customer_ID
 WHERE INTERFACE_HEADER_CONTEXT IN ('CSA') 
 	AND CUSTOMER_NUMBER LIKE '460%'  
-group by      ar.CUSTOMER_NAME
+group by      ar.CUSTOMER_NAME, ct.STANDARD_TERMS_NAME
 having			CASE WHEN MAX(OVERALL_CREDIT_LIMIT) > 0 
                      THEN   (MAX(OVERALL_CREDIT_LIMIT) - SUM(AMOUNT_DUE_REMAINING))/ MAX(OVERALL_CREDIT_LIMIT) * 100
                          ELSE MAX(OVERALL_CREDIT_LIMIT) * 100
@@ -104,8 +105,9 @@ DECLARE @Message2 VARCHAR(MAX)
 
 SET @Message2 =  
     N'<table align=''center'' border="1" bgcolor="#ffffe6">' +  
-	N'<tr bgcolor="#cceeff"><th>CUSTOMER_NAME</th><th>CREDIT_LIMIT</th><th>OUTSTANDING_AR</th><th>REMAIN_CREDIT_AMT</th><th>REMAINING_CREDIT_PERC</th>' +  
+	N'<tr bgcolor="#cceeff"><th>CUSTOMER_NAME</th><th>STANDARD_TERMS_NAME</th><th>CREDIT_LIMIT</th><th>OUTSTANDING_AR</th><th>REMAIN_CREDIT_AMT</th><th>REMAINING_CREDIT_PERC</th>' +  
 				CAST ( ( SELECT td = CUSTOMER_NAME, '',
+								td = STANDARD_TERMS_NAME, '',
 								td = format(CREDIT_LIMIT, 'c', 'en-us'), '',   
 								td = format(OUTSTANDING_AR, 'c', 'en-us'), '', 
 								td = format(RemainCreditAmt, 'c', 'en-us'), '', 
@@ -116,20 +118,10 @@ SET @Message2 =
 				N'</table>'
 
 
-			EXEC msdb.dbo.sp_send_dbmail 
-			  @profile_name = 'APTEST01SQLMail'  
-			, @from_address = 'DoNotReply@AJCLogistics.com'
-			, @reply_to = 'sali@ajclogistics.com' 
-			, @recipients = 'phinkle@seawideexpress.com;credit@seawideexpress.com;gberger@ajclogistics.com'
-			, @body = @Message2
-			, @body_format = 'HTML'
-			, @subject = 'SWE - Daily Credit Limit vs. A/R Report Seawide'
-
-
 --ST JAX
 
 
-select    ar.CUSTOMER_NAME
+select    ar.CUSTOMER_NAME, ct.STANDARD_TERMS_NAME
           , MAX(OVERALL_CREDIT_LIMIT) CREDIT_LIMIT
 		  , SUM(AMOUNT_DUE_REMAINING) OUTSTANDING_AR
 		  ,      CASE WHEN MAX(OVERALL_CREDIT_LIMIT) > 0 
@@ -145,7 +137,7 @@ from          tblOracleARData ar
 INNER join    tbloraclecustterms ct on ct.customer_id = bill_to_customer_ID
 WHERE INTERFACE_HEADER_CONTEXT IN ('MGATE') 
 	AND CUSTOMER_NUMBER LIKE '431%'  
-group by      ar.CUSTOMER_NAME
+group by      ar.CUSTOMER_NAME, ct.STANDARD_TERMS_NAME
 having			CASE WHEN MAX(OVERALL_CREDIT_LIMIT) > 0 
                      THEN   (MAX(OVERALL_CREDIT_LIMIT) - SUM(AMOUNT_DUE_REMAINING))/ MAX(OVERALL_CREDIT_LIMIT) * 100
                          ELSE MAX(OVERALL_CREDIT_LIMIT) * 100
@@ -161,13 +153,14 @@ DECLARE @Message3 VARCHAR(MAX)
 
 SET @Message3 =  
     N'<table align=''center'' border="1" bgcolor="#ffffe6">' +  
-	N'<tr bgcolor="#cceeff"><th>CUSTOMER_NAME</th><th>CREDIT_LIMIT</th><th>OUTSTANDING_AR</th><th>REMAIN_CREDIT_AMT</th><th>REMAINING_CREDIT_PERC</th>' +  
+	N'<tr bgcolor="#cceeff"><th>CUSTOMER_NAME</th><th>STANDARD_TERMS_NAME</th><th>CREDIT_LIMIT</th><th>OUTSTANDING_AR</th><th>REMAIN_CREDIT_AMT</th><th>REMAINING_CREDIT_PERC</th>' +  
 				CAST ( ( SELECT td = CUSTOMER_NAME, '',
+								td = STANDARD_TERMS_NAME, '',
 								td = format(CREDIT_LIMIT, 'c', 'en-us'), '',   
 								td = format(OUTSTANDING_AR, 'c', 'en-us'), '', 
 								td = format(RemainCreditAmt, 'c', 'en-us'), '', 
 								td = RemainingCreditPerc, ''
-						  FROM #tmp3  
+						  FROM #tmp2  
 						  FOR XML PATH('tr'), TYPE   
 				) AS NVARCHAR(MAX) ) +  
 				N'</table>'
@@ -183,7 +176,7 @@ SET @Message3 =
 			, @subject = 'ST JAX - Daily Credit Limit vs. A/R Report'
 
 --IES NVO
-select    ar.CUSTOMER_NAME
+select    ar.CUSTOMER_NAME, ct.STANDARD_TERMS_NAME
           , MAX(OVERALL_CREDIT_LIMIT) CREDIT_LIMIT
 		  , SUM(AMOUNT_DUE_REMAINING) OUTSTANDING_AR
 		  ,      CASE WHEN MAX(OVERALL_CREDIT_LIMIT) > 0 
@@ -199,7 +192,7 @@ from          tblOracleARData ar
 INNER join    tbloraclecustterms ct on ct.customer_id = bill_to_customer_ID
 WHERE INTERFACE_HEADER_CONTEXT IN ('IES') 
 	AND CUSTOMER_NUMBER LIKE '440%'  
-group by      ar.CUSTOMER_NAME
+group by      ar.CUSTOMER_NAME, ct.STANDARD_TERMS_NAME
 having			CASE WHEN MAX(OVERALL_CREDIT_LIMIT) > 0 
                      THEN   (MAX(OVERALL_CREDIT_LIMIT) - SUM(AMOUNT_DUE_REMAINING))/ MAX(OVERALL_CREDIT_LIMIT) * 100
                          ELSE MAX(OVERALL_CREDIT_LIMIT) * 100
@@ -215,13 +208,14 @@ DECLARE @Message4 VARCHAR(MAX)
 
 SET @Message4 =  
     N'<table align=''center'' border="1" bgcolor="#ffffe6">' +  
-	N'<tr bgcolor="#cceeff"><th>CUSTOMER_NAME</th><th>CREDIT_LIMIT</th><th>OUTSTANDING_AR</th><th>REMAIN_CREDIT_AMT</th><th>REMAINING_CREDIT_PERC</th>' +  
+	N'<tr bgcolor="#cceeff"><th>CUSTOMER_NAME</th><th>STANDARD_TERMS_NAME</th><th>CREDIT_LIMIT</th><th>OUTSTANDING_AR</th><th>REMAIN_CREDIT_AMT</th><th>REMAINING_CREDIT_PERC</th>' +  
 				CAST ( ( SELECT td = CUSTOMER_NAME, '',
+								td = STANDARD_TERMS_NAME, '',
 								td = format(CREDIT_LIMIT, 'c', 'en-us'), '',   
 								td = format(OUTSTANDING_AR, 'c', 'en-us'), '', 
 								td = format(RemainCreditAmt, 'c', 'en-us'), '', 
 								td = RemainingCreditPerc, ''
-						  FROM #tmp4
+						  FROM #tmp2  
 						  FOR XML PATH('tr'), TYPE   
 				) AS NVARCHAR(MAX) ) +  
 				N'</table>'
@@ -238,7 +232,7 @@ SET @Message4 =
 
 
 --IES Eagle
-select    ar.CUSTOMER_NAME
+select    ar.CUSTOMER_NAME, ct.STANDARD_TERMS_NAME
           , MAX(OVERALL_CREDIT_LIMIT) CREDIT_LIMIT
 		  , SUM(AMOUNT_DUE_REMAINING) OUTSTANDING_AR
 		  ,      CASE WHEN MAX(OVERALL_CREDIT_LIMIT) > 0 
@@ -254,7 +248,7 @@ from          tblOracleARData ar
 INNER join    tbloraclecustterms ct on ct.customer_id = bill_to_customer_ID
 WHERE INTERFACE_HEADER_CONTEXT IN ('IES') 
 	AND CUSTOMER_NUMBER LIKE '420%'  
-group by      ar.CUSTOMER_NAME
+group by      ar.CUSTOMER_NAME, ct.STANDARD_TERMS_NAME
 having			CASE WHEN MAX(OVERALL_CREDIT_LIMIT) > 0 
                      THEN   (MAX(OVERALL_CREDIT_LIMIT) - SUM(AMOUNT_DUE_REMAINING))/ MAX(OVERALL_CREDIT_LIMIT) * 100
                          ELSE MAX(OVERALL_CREDIT_LIMIT) * 100
@@ -270,13 +264,14 @@ DECLARE @Message5 VARCHAR(MAX)
 
 SET @Message5 =  
     N'<table align=''center'' border="1" bgcolor="#ffffe6">' +  
-	N'<tr bgcolor="#cceeff"><th>CUSTOMER_NAME</th><th>CREDIT_LIMIT</th><th>OUTSTANDING_AR</th><th>REMAIN_CREDIT_AMT</th><th>REMAINING_CREDIT_PERC</th>' +  
+	N'<tr bgcolor="#cceeff"><th>CUSTOMER_NAME</th><th>STANDARD_TERMS_NAME</th><th>CREDIT_LIMIT</th><th>OUTSTANDING_AR</th><th>REMAIN_CREDIT_AMT</th><th>REMAINING_CREDIT_PERC</th>' +  
 				CAST ( ( SELECT td = CUSTOMER_NAME, '',
+								td = STANDARD_TERMS_NAME, '',
 								td = format(CREDIT_LIMIT, 'c', 'en-us'), '',   
 								td = format(OUTSTANDING_AR, 'c', 'en-us'), '', 
 								td = format(RemainCreditAmt, 'c', 'en-us'), '', 
 								td = RemainingCreditPerc, ''
-						  FROM #tmp5
+						  FROM #tmp2  
 						  FOR XML PATH('tr'), TYPE   
 				) AS NVARCHAR(MAX) ) +  
 				N'</table>'
