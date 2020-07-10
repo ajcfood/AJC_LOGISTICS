@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendDailyCreditAREmail]    Script Date: 7/9/2020 08:30:13 AM ******/
+/****** Object:  StoredProcedure [dbo].[SendDailyCreditAREmail]    Script Date: 7/10/2020 05:19:51 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -52,7 +52,7 @@ SET @Message =
 								td = format(OUTSTANDING_AR, 'c', 'en-us'), '', 
 								td = format(RemainCreditAmt, 'c', 'en-us'), '', 
 								td = RemainingCreditPerc, ''
-						  FROM #tmp2  
+						  FROM #tmp  
 						  FOR XML PATH('tr'), TYPE   
 				) AS NVARCHAR(MAX) ) +  
 				N'</table>'
@@ -62,7 +62,7 @@ SET @Message =
 			  @profile_name = 'APTEST01SQLMail'  
 			, @from_address = 'DoNotReply@AJCLogistics.com'
 			, @reply_to = 'sali@ajclogistics.com' 
-			, @recipients = 'csr@ajclogistics.com;ajcltrucksales@ajc.local;lpantesco@ajclogistics.com;aalonso@ajclogistics.com;credit@ajclogistics.com;gberger@ajclogistics.com'
+			, @recipients = 'csr@ajclogistics.com;ajcltrucksales@ajc.local;lpantesco@ajclogistics.com;aalonso@ajclogistics.com;credit@ajclogistics.com;gberger@ajclogistics.com;seljamil@ajclogistics.com'
 			, @body = @Message
 			, @body_format = 'HTML'
 			, @subject = 'IES/ST ATL - Daily Credit Limit vs. A/R Report'
@@ -117,6 +117,15 @@ SET @Message2 =
 				) AS NVARCHAR(MAX) ) +  
 				N'</table>'
 
+			EXEC msdb.dbo.sp_send_dbmail 
+			  @profile_name = 'APTEST01SQLMail'  
+			, @from_address = 'DoNotReply@AJCLogistics.com'
+			, @reply_to = 'sali@ajclogistics.com' 
+			, @recipients = 'phinkle@seawideexpress.com;credit@seawideexpress.com;gberger@ajclogistics.com'
+			, @body = @Message2
+			, @body_format = 'HTML'
+			, @subject = 'SWE - Daily Credit Limit vs. A/R Report Seawide'
+
 
 --ST JAX
 
@@ -160,7 +169,7 @@ SET @Message3 =
 								td = format(OUTSTANDING_AR, 'c', 'en-us'), '', 
 								td = format(RemainCreditAmt, 'c', 'en-us'), '', 
 								td = RemainingCreditPerc, ''
-						  FROM #tmp2  
+						  FROM #tmp3  
 						  FOR XML PATH('tr'), TYPE   
 				) AS NVARCHAR(MAX) ) +  
 				N'</table>'
@@ -215,7 +224,7 @@ SET @Message4 =
 								td = format(OUTSTANDING_AR, 'c', 'en-us'), '', 
 								td = format(RemainCreditAmt, 'c', 'en-us'), '', 
 								td = RemainingCreditPerc, ''
-						  FROM #tmp2  
+						  FROM #tmp4  
 						  FOR XML PATH('tr'), TYPE   
 				) AS NVARCHAR(MAX) ) +  
 				N'</table>'
@@ -271,7 +280,7 @@ SET @Message5 =
 								td = format(OUTSTANDING_AR, 'c', 'en-us'), '', 
 								td = format(RemainCreditAmt, 'c', 'en-us'), '', 
 								td = RemainingCreditPerc, ''
-						  FROM #tmp2  
+						  FROM #tmp5  
 						  FOR XML PATH('tr'), TYPE   
 				) AS NVARCHAR(MAX) ) +  
 				N'</table>'
