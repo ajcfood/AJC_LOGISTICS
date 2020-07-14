@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 7/14/2020 08:24:11 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 7/14/2020 10:16:53 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -509,6 +509,11 @@ Update tblCommCalc
 set AUSTINComm = (GP * .04) / 2 -- change divisible amount by number of CSRs when needing to be updated
 where InvLOB = '10'
 */
+
+--Austin Miller Comm: $15 per load he books (where he is the dispatcher).  Request by Rachel on 7/14/20 via email
+Update tblCommCalc
+set AUSTINComm = 15 -- 
+where InvLOB = '10' and Dispatcher = 'austinm'
 
 -- Dana Beck Comm: 1% of team GP
 Update tblCommCalc
