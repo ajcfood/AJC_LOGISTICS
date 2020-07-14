@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 7/14/2020 10:16:53 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 7/14/2020 10:58:08 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -468,10 +468,15 @@ set JHComm = GP * .065
 where InvLOB = '10'
 and SalesPName = 'Jesse Higginbotham'
 
--- Nick Seney Comm: 8.5% of own GP in LOB 10
+-- Nick Seney Comm: 8.5% of own GP in LOB 10 and 4% of LOB 76
 Update tblCommCalc
 set NSComm = GP * .085
-where InvLOB IN ('10','76')
+where InvLOB = '10'
+and SalesPName = 'Nick Seney'
+
+Update tblCommCalc
+set NSComm = GP * .04
+where InvLOB = '76'
 and SalesPName = 'Nick Seney'
 
 -- Dalton Thomas Comm: 4% of team GP divided by number of CSR's.  As of 11/20/19, he is only CSR.  Austin Added in 2020
