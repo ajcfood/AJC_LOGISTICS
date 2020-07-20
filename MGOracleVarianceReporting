@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 7/16/2020 11:23:39 AM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 7/20/2020 09:02:59 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -93,7 +93,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 																
 											SELECT  REPLACE(LINE_ATTRIBUTE11,'MG','') OracleRefShippingOrder, SUM(OREVENUE) OracleRev, SUM(OCOST) OracleCost
 											FROM	ajcdw.[dbo].[tblOracleGLCleansed]
-											WHERE   LOB IN ('10','11')
+											WHERE   LOB IN ('9','10','11')
 											AND     REPLACE(LINE_ATTRIBUTE11,'MG','') NOT LIKE '%J'
 											AND     REPLACE(LINE_ATTRIBUTE11,'MG','') NOT LIKE '%A'
 											GROUP BY REPLACE(LINE_ATTRIBUTE11,'MG',''), LOB 
@@ -245,7 +245,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 																
 											SELECT  REPLACE(LINE_ATTRIBUTE11,'MG','') OracleRefShippingOrder, SUM(OREVENUE) OracleRev, SUM(OCOST) OracleCost
 											FROM	ajcdw.[dbo].[tblOracleGLCleansed]
-											WHERE   LOB IN ('10','11')
+											WHERE   LOB IN ('9','10','11')
 											AND     REPLACE(LINE_ATTRIBUTE11,'MG','') LIKE '%J'
 											GROUP BY REPLACE(LINE_ATTRIBUTE11,'MG',''), LOB 
 										) Z ON Z.OracleRefShippingOrder = COALESCE(v.RefShippingOrder, w.RefShippingOrder, x.RefShippingOrder)
@@ -395,7 +395,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 																
 											SELECT  REPLACE(LINE_ATTRIBUTE11,'MG','') OracleRefShippingOrder, SUM(OREVENUE) OracleRev, SUM(OCOST) OracleCost
 											FROM	ajcdw.[dbo].[tblOracleGLCleansed]
-											WHERE   LOB IN ('10','11')
+											WHERE   LOB IN ('9','10','11')
 											AND     REPLACE(LINE_ATTRIBUTE11,'MG','') LIKE '%A'
 											GROUP BY REPLACE(LINE_ATTRIBUTE11,'MG',''), LOB 
 										) Z ON Z.OracleRefShippingOrder = COALESCE(v.RefShippingOrder, w.RefShippingOrder, x.RefShippingOrder)
