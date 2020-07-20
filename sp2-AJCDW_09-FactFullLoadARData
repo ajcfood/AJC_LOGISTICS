@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp2-AJCDW_09-FactFullLoadARData]    Script Date: 12/26/2019 10:12:38 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp2-AJCDW_09-FactFullLoadARData]    Script Date: 7/20/2020 01:27:59 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -44,7 +44,7 @@ WHERE C.CUSTOMER_ID = CP.CUSTOMER_ID
 	AND CP.CUSTOMER_PROFILE_ID = PA.CUSTOMER_PROFILE_ID 
 	AND CP.STANDARD_TERMS_NAME = RT.NAME
 	AND C.STATUS = ''A''
-	AND SUBSTR(C.CUSTOMER_NUMBER, 1,3) IN (420,430,431,440,460) --420=Eagle, 430=Surf Trans, 431=Surf Trans JAX, 440=NVO, 460=Seawide
+	AND SUBSTR(C.CUSTOMER_NUMBER, 1,3) IN (420,430,431,432,440,460) --420=Eagle, 430=Surf Trans, 431=Surf Trans JAX, 432 = Surf Trans ATL 2, 440=NVO, 460=Seawide
 ORDER BY CUSTOMER_NAME
 ');
 
