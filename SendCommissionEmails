@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendCommissionEmails]    Script Date: 7/14/2020 11:03:14 AM ******/
+/****** Object:  StoredProcedure [dbo].[SendCommissionEmails]    Script Date: 7/20/2020 03:19:08 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1163,7 +1163,7 @@ BEGIN
 				  , @query_no_truncate = 0      
 				  , @query_result_no_padding = 1;  
 
-
+/*
 			-------------------------------
 			-----JESSE HIGGINBOTHAM EMAIL-----
 			-------------------------------
@@ -1227,7 +1227,7 @@ BEGIN
 				, @query_no_truncate = 0
 				, @query_result_no_padding = 1;
 
-
+*/
 			-------------------------------
 			-----RON RAIF EMAIL-----
 			-------------------------------
