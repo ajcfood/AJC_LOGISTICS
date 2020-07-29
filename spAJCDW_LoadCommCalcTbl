@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 7/14/2020 10:58:08 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 7/29/2020 05:09:33 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -100,7 +100,8 @@ SELECT ACCTYR
 	,Convert(decimal(18,2),0.00) as CLComm -- Crystal Lubin
 	,Convert(decimal(18,2),0.00) as AHComm -- Andrew Heavner
 	,Convert(decimal(18,2),0.00) as RRComm -- Ron Raif
-
+	,Convert(decimal(18,2),0.00) as CTComm -- Carleton Tokioka
+	,Convert(decimal(18,2),0.00) as CJComm -- Craig James
 into #tmp1
 from tblInvoice i
 JOIN tblShipment s on i.ShipmentID = s.ShipmentID
@@ -531,11 +532,24 @@ set CLComm = GP * .085
 where InvLOB = '10'
 and SalesPName = 'Crystal Lubin'
 
--- Andrew Heavner: 8.5% GP of her own GP
+-- Andrew Heavner: 8.5% GP of own GP
 Update tblCommCalc
 set AHComm = GP * .085
 where InvLOB = '10'
 and SalesPName = 'Andrew Heavner'
+
+-- Carleton Tokioka: 4% GP of own GP
+Update tblCommCalc
+set CTComm = GP * .04
+where InvLOB = '76'
+and SalesPName = 'Carleton Tokioka'
+
+--Craig James Calculation: 1% GP on Hawaii based accounts (Station codes = HON, MAU, HLO, KON, KAU, LAN, MOL, LOS)
+-- Updated to 2% as of October 2019
+update tblCommCalc
+set CJComm = GP*.01
+where InvLOB = '76'
+	AND CSAStation IN ('HON', 'MAU', 'HLO', 'KON', 'KAU', 'LAN', 'MOL', 'LOS')
 
 
 --SELECT * from #tmp1
