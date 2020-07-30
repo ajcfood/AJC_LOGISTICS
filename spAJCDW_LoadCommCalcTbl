@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 7/29/2020 05:16:19 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 7/30/2020 08:41:55 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -151,12 +151,34 @@ set QTComm = '200.00', BMComm = '200.00', JCComm = '200.00'
 where InvLOB = '12'
 	AND ACCTYR >= 2020
 
---Lee Pantesco Calculation: 0.5% of Surface Trans GP
+--Lee Pantesco Calculation: 0.5% of Surface Trans GP.
+-- Starting 8/3/20 team GP goes from 0.5% to 1%
 update tblCommCalc
 set LPComm = GP*.005
 where InvLOB = '11'
 	and InvCustName NOT LIKE 'SUK-EXPORT'
+	and ACCTYR < 2020
 
+update tblCommCalc
+set LPComm = GP*.005
+where InvLOB = '11'
+	and InvCustName NOT LIKE 'SUK-EXPORT'
+	and ACCTYR = 2020
+	and ACCTMONTH IN (1,2,3,4,5,6,7)
+
+update tblCommCalc
+set LPComm = GP*.01
+where InvLOB = '11'
+	and InvCustName NOT LIKE 'SUK-EXPORT'
+	and ACCTYR = 2020
+	and ACCTMONTH NOT IN (1,2,3,4,5,6,7)
+
+update tblCommCalc
+set LPComm = GP*.01
+where InvLOB = '11'
+	and InvCustName NOT LIKE 'SUK-EXPORT'
+	and ACCTYR >= 2021
+	
 --Michael Browder Calculation: 18% of Surface Trans GP where he is Sales Rep
 update tblCommCalc
 set MBComm = GP*.18
@@ -439,7 +461,22 @@ and ACCTYR = 2019
 update tblCommCalc
 set RCComm = GP *.01
 where InvLOB = '11'
-and ACCTYR >= 2020
+and ACCTMONTH IN (1,2,3,4,5,6,7)
+and ACCTYR = 2020
+
+--Ryan Click Comm: 10% on own loads for LOB 11 starting August 2020
+update tblCommCalc
+set RCComm = GP *.10
+where InvLOB = '11'
+and SalesPName = 'Ryan Click'
+and ACCTMONTH NOT IN (1,2,3,4,5,6,7)
+and ACCTYR = 2020
+
+update tblCommCalc
+set RCComm = GP *.10
+where InvLOB = '11'
+and SalesPName = 'Ryan Click'
+and ACCTYR >= 2021
 
 -- Ari Matsumura Comm: 7% of GP for his loads for SeaWide
 Update tblCommCalc
