@@ -590,7 +590,7 @@ where InvLOB = '76'
 -- Alex Gonzalez: 8% GP of own GP LOB 11 and 5% own GP in LOBs 41,43,25
 Update tblCommCalc
 set AGComm = GP * .08
-where InvLOB = '10'
+where InvLOB IN ('9','10','11')
 and SalesPName = 'Alex Gonzalez'
 
 Update tblCommCalc
