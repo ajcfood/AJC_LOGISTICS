@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_PopulatePowerBIReporting]    Script Date: 3/24/2020 5:28:52 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_PopulatePowerBIReporting]    Script Date: 8/5/2020 05:32:53 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -153,7 +153,7 @@ DELETE FROM RptBillingLagAnalysis WHERE [Invoice Date] >= DATEADD(MM,-13,CAST(GE
 INSERT INTO RptBillingLagAnalysis ([Cust Name], [File], LOB, [Sail Date], [Del Date], [Invoice Date], [Posted Date], [Billing Lag], [Invoice Rev], [Invoice Cost], [Invoice GP])
 SELECT		y.InvCustName, LTRIM(RTRIM(ts.RefNo)), ts.ShpLOB LOB, [Sail Date], [Del Date], [Invoice Date], 
 			[Posted Date], 
-			CASE WHEN ts.ShpLOB NOT IN (11, 43, 76) THEN DATEDIFF(dd,[Sail Date],[Posted Date]) 
+			CASE WHEN ts.ShpLOB NOT IN (9,10,11, 43, 76) THEN DATEDIFF(dd,[Sail Date],[Posted Date]) 
 				 ELSE DATEDIFF(dd,[Del Date],[Posted Date]) 
 				 END  [Billing Lag], 
 			[Invoice Rev], 
@@ -174,7 +174,9 @@ INNER JOIN	(
 				SELECT	 INTERFACE_HEADER_CONTEXT, INTERFACE_HEADER_ATTRIBUTE1, PURCHASE_ORDER, CAST(DATEADD(dd,-1,MIN(ARCREATEDATE)) AS DATE) [Posted Date]
 				FROM	 tblOracleARData tx 
 				GROUP BY PURCHASE_ORDER, INTERFACE_HEADER_CONTEXT, INTERFACE_HEADER_ATTRIBUTE1
-			) x ON 	CASE WHEN x.INTERFACE_HEADER_CONTEXT LIKE '%CSA%' THEN '70-' + INTERFACE_HEADER_ATTRIBUTE1 ELSE X.PURCHASE_ORDER END = ts.RefNo 
+			) x ON 	CASE WHEN x.INTERFACE_HEADER_CONTEXT LIKE '%CSA%' THEN '70-' + INTERFACE_HEADER_ATTRIBUTE1 
+					     WHEN x.INTERFACE_HEADER_CONTEXT LIKE '%MGATE%' THEN INTERFACE_HEADER_ATTRIBUTE1
+					ELSE X.PURCHASE_ORDER END = ts.RefNo 
 WHERE		ISNULL(ts.ShpLOB,'') <> ''
 AND			LTRIM(RTRIM(ts.ShpStatus)) <> 'Cancelled'
 
