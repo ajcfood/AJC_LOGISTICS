@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendTandEEmails]    Script Date: 2/12/2020 10:28:14 AM ******/
+/****** Object:  StoredProcedure [dbo].[SendTandEEmails]    Script Date: 8/10/2020 02:07:33 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -8,7 +8,7 @@ GO
 
 
 ALTER procedure [dbo].[SendTandEEmails] 
-@DefaultEmail BIT = 0 
+@DefaultEmail BIT = 1 
 as
 
 
@@ -30,8 +30,7 @@ BEGIN
 			--UNION SELECT 525, 'GENERAL OFFICE'			 ,'OFFICE','gberger@ajclogistics.com','igayle@ajclogistics.com' --excluded because there are no plan  $$s for this
 			UNION SELECT 535, 'HUMAN RESOURCES'			 ,'HR','tvanderlaan@ajcfood.com','cswartz@ajclogistics.com;gberger@ajclogistics.com;igayle@ajclogistics.com'
 			--UNION SELECT 700, 'GENERAL & ADMIN-CORPORATE','ADMIN','gberger@ajclogistics.com','igayle@ajclogistics.com'	--excluded because there are no plan  $$s for this
-
-
+			
 			IF OBJECT_ID ('TEMPDB..##TandE') IS NOT NULL  DROP TABLE ##TandE
 			Select  DPT, 0 Status into ##TandE from #DeptCode
 			DECLARE  @YEAR VARCHAR(4) =  YEAR(GETDATE())
