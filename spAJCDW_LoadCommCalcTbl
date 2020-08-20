@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 8/3/2020 09:18:16 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 8/20/2020 10:30:56 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -259,15 +259,49 @@ where InvLOB = '11'
 */
 	
 --Andres Alonso Calculation: 7% of his own GP, 0.5% of Surf Trans GP--
+-- per Rachel email on 8/20/2020, he only gets team commission now--
 update tblCommCalc
 set AAComm = GP*.07
 where salespname = 'Andres Alonso'
+AND ACCTYR < 2020
+
+update tblCommCalc
+set AAComm = GP*.07
+where salespname = 'Andres Alonso'
+AND ACCTYR =2020
+and ACCTMONTH IN (1,2,3,4,5,6,7)
 
 Update tblCommCalc
 set AAComm = GP*.005
 where InvLOB = '11'
 and SalesPName <> 'Andres Alonso'
 and InvCustName NOT LIKE 'SUK-EXPORT'
+
+Update tblCommCalc
+set AAComm = GP*.005
+where InvLOB = '11'
+and SalesPName <> 'Andres Alonso'
+and InvCustName NOT LIKE 'SUK-EXPORT'
+AND ACCTYR < 2020
+
+Update tblCommCalc
+set AAComm = GP*.005
+where InvLOB = '11'
+and SalesPName <> 'Andres Alonso'
+and InvCustName NOT LIKE 'SUK-EXPORT'
+AND ACCTYR = 2020
+and ACCTMONTH IN (1,2,3,4,5,6,7)
+
+Update tblCommCalc
+set AAComm = GP*.005
+where InvLOB = '11'
+AND ACCTYR = 2020
+and ACCTMONTH IN (8,9,10,11,12)
+
+Update tblCommCalc
+set AAComm = GP*.005
+where InvLOB = '11'
+AND ACCTYR >= 2020
 
 --Leo Serna Calculation:
 	--7% of ST GP assigned to LS
