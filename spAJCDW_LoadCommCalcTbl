@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 8/20/2020 10:30:56 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 8/20/2020 11:39:40 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -404,6 +404,12 @@ where InvLOB in ('41','31,33,43')
 		,'Andres Alonso'
 		,'Brawnson Walter')
 	AND InvCustName <> 'BALLESTER HERMANOS, INC'
+
+--3% of KEYSTONE loads no matter what LOB
+update tblCommCalc
+set RPComm = GP*.03
+where InvLOB IN ('9','10','11')
+	AND InvCustName LIKE 'KEYSTONE%'
 
 --Dale Yanagihara Calculation:
 	--4.2% of GP of own accounts in LOB 76 GP less 7% overhead
