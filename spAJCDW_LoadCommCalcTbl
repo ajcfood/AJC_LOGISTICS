@@ -381,15 +381,7 @@ where InvLOB = '25'
 update tblCommCalc
 set RPComm = GP*.03
 where InvLOB = '11'
-	AND SalesPName IN ('Carmen Colon'
-		,'Damaris Torres'
-		,'Tyler Clendenen'
-		,'Michael Browder'
-		,'Max Ritter'
-		,'Brett Rasmussen'
-		,'Missy Jensen'
-		,'Andres Alonso'
-		,'Brawnson Walter')
+	AND SalesPName <> ('Randolph Page')
 
 update tblCommCalc
 set RPComm = GP*.04
