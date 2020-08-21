@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 8/20/2020 11:39:40 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 8/21/2020 11:36:11 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -381,7 +381,28 @@ where InvLOB = '25'
 update tblCommCalc
 set RPComm = GP*.03
 where InvLOB = '11'
-	AND SalesPName <> ('Randolph Page')
+	AND SalesPName IN ('Carmen Colon'
+		,'Damaris Torres'
+		,'Tyler Clendenen'
+		,'Michael Browder'
+		,'Max Ritter'
+		,'Brett Rasmussen'
+		,'Missy Jensen'
+		,'Andres Alonso'
+		,'Brawnson Walter')
+
+update tblCommCalc --added August 2020
+set RPComm = GP*.03
+where InvLOB = '11'
+	AND SalesPName NOT IN ('Ricardo Monteiro', 'Randolph Page')
+	AND ACCTYR = 2020
+	AND ACCTMONTH IN (8,9,10,11,12)
+
+update tblCommCalc --added August 2020
+set RPComm = GP*.03
+where InvLOB = '11'
+	AND SalesPName NOT IN ('Ricardo Monteiro', 'Randolph Page')
+	AND ACCTYR >= 2021
 
 update tblCommCalc
 set RPComm = GP*.04
@@ -402,6 +423,15 @@ update tblCommCalc
 set RPComm = GP*.03
 where InvLOB IN ('9','10','11')
 	AND InvCustName LIKE 'KEYSTONE%'
+	AND ACCTYR = 2020
+	AND ACCTMONTH IN (8,9,10,11,12)
+
+--3% of KEYSTONE loads no matter what LOB
+update tblCommCalc
+set RPComm = GP*.03
+where InvLOB IN ('9','10','11')
+	AND InvCustName LIKE 'KEYSTONE%'
+	AND ACCTYR >= 2021
 
 --Dale Yanagihara Calculation:
 	--4.2% of GP of own accounts in LOB 76 GP less 7% overhead
