@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 8/24/2020 11:12:11 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 8/24/2020 01:37:25 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -113,6 +113,9 @@ SELECT ACCTYR
 	,Convert(decimal(18,2),0.00) as JACKComm -- Jack Cumiskey
 	,Convert(decimal(18,2),0.00) as PMComm -- Phil Mitchell
 	,Convert(decimal(18,2),0.00) as DWComm -- Dave Wire
+	,Convert(decimal(18,2),0.00) as TRComm -- Terrance Reed
+	,Convert(decimal(18,2),0.00) as SBComm -- Stephanie Butts
+	,Convert(decimal(18,2),0.00) as KCComm -- Kellan Chrisman
 into #tmp1
 from tblInvoice i
 JOIN tblShipment s on i.ShipmentID = s.ShipmentID
@@ -725,6 +728,31 @@ where InvLOB = '9'
 Update tblCommCalc
 set DWComm = GP * .04
 where InvLOB = '9'
+
+-- Kellan Chrisman, Stephanie Butts, Terrance Reed 0.25% of team GP.  Kellan effective 8/1/2020 and Stephanie & Terrance Effective 9/1/2020
+Update tblCommCalc
+set KCComm = GP * .0025
+where InvLOB = '11'
+and ACCTYR = 2020
+AND ACCTMONTH IN (8,9,10,11,12)
+
+Update tblCommCalc
+set KCComm = GP * .0025
+where InvLOB = '11'
+and ACCTYR = 2020
+and ACCTYR >= 2020
+
+Update tblCommCalc
+set TRComm = GP * .0025, SBComm = GP * .0025
+where InvLOB = '11'
+and ACCTYR = 2020
+AND ACCTMONTH IN (9,10,11,12)
+
+Update tblCommCalc
+set TRComm = GP * .0025, SBComm = GP * .0025
+where InvLOB = '11'
+and ACCTYR >= 2020
+
 
 
 --SELECT * from #tmp1
