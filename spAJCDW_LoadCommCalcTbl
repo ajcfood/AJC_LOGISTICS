@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 8/21/2020 11:36:11 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 8/24/2020 11:12:11 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -47,6 +47,8 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 -- Note #1: if we have a new commission agent in the future, we need to add them as a column to the current table and then add them to this procedure
 -- Note #2: update i.ACCTYR in where clause at the beginning of each year once accounting team confirms final integration is completed for current year 
 -- ====================================================================================================================================================
+
+
 SELECT ACCTYR
 	,ACCTMONTH
 	,ACCTPERIODNAME
@@ -103,6 +105,14 @@ SELECT ACCTYR
 	,Convert(decimal(18,2),0.00) as CTComm -- Carleton Tokioka
 	,Convert(decimal(18,2),0.00) as CJComm -- Craig James
 	,Convert(decimal(18,2),0.00) as AGComm -- Alex Gonzalez
+	,Convert(decimal(18,2),0.00) as JLComm -- Jason Lewter
+	,Convert(decimal(18,2),0.00) as GDComm -- Greg Deal
+	,Convert(decimal(18,2),0.00) as CCComm -- Colton Clements
+	,Convert(decimal(18,2),0.00) as JTComm -- Justin Taylor
+	,Convert(decimal(18,2),0.00) as CWComm -- Christian White
+	,Convert(decimal(18,2),0.00) as JACKComm -- Jack Cumiskey
+	,Convert(decimal(18,2),0.00) as PMComm -- Phil Mitchell
+	,Convert(decimal(18,2),0.00) as DWComm -- Dave Wire
 into #tmp1
 from tblInvoice i
 JOIN tblShipment s on i.ShipmentID = s.ShipmentID
@@ -659,6 +669,62 @@ Update tblCommCalc
 set AGComm = GP * .05
 where InvLOB IN ('41','43','25')
 and SalesPName = 'Alex Gonzalez'
+
+-- Jason Lewter: 4% of his team's GP (Greg Deal and Colton Clements)
+Update tblCommCalc
+set JLComm = GP * .04
+where InvLOB = '9'
+and SalesPName IN ('Greg Deal', 'Colton Clements')
+
+Update tblCommCalc
+set JLComm = GP * .05
+where InvLOB = '9'
+and SalesPName IN ('Jason Lewter')
+
+-- Justin Taylor: 4% of his team's GP (Christian White and Jack Cumiskey), also 5% on his own loads
+Update tblCommCalc
+set JTComm = GP * .04
+where InvLOB = '9'
+and SalesPName IN ('Christian White', 'Jack Cumiskey')
+
+Update tblCommCalc
+set JTComm = GP * .05
+where InvLOB = '9'
+and SalesPName IN ('Justin Taylor')
+
+-- Greg Deal: 8.5% of his own GP
+Update tblCommCalc
+set GDComm = GP * .085
+where InvLOB = '9'
+and SalesPName = 'Greg Deal'
+
+-- Colton Clements: 8.5% of his own GP
+Update tblCommCalc
+set CCComm = GP * .085
+where InvLOB = '9'
+and SalesPName = 'Colton Clements'
+
+-- Christian White: 8.5% of his own GP
+Update tblCommCalc
+set CWComm = GP * .085
+where InvLOB = '9'
+and SalesPName = 'Christian White'
+
+-- Jack Cumiskey: 8.5% of his own GP
+Update tblCommCalc
+set JACKComm = GP * .085
+where InvLOB = '9'
+and SalesPName = 'Jack Cumiskey'
+
+-- Phil Mitchell 4% of team GP
+Update tblCommCalc
+set PMComm = GP * .04
+where InvLOB = '9'
+
+-- Dave Wire 4% of team GP
+Update tblCommCalc
+set DWComm = GP * .04
+where InvLOB = '9'
 
 
 --SELECT * from #tmp1
