@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 6/18/2020 10:26:21 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 9/21/2020 12:11:05 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -59,7 +59,7 @@ select *
 into #tmp1
 FROM OPENQUERY(USDCFCSASQL01, '
 select ''70''+convert(varchar,s.PK_OrderNo) as PK_OrderNo, s.HandlingStation, s.ControllingStation, s.Housebill, s.FK_ControlCustomerNo
-	, 70 as Div, 76 as LOB, s.Carrier, '''' as Exporter, s.FK_ControlCustomerNo as Cons, s.FK_Salesperson, s.PODName as Controller 
+	, 70 as Div, 76 as LOB, s.Carrier, '''' as Exporter, s.FK_ControlCustomerNo as Cons, s.FK_Salesperson, s.AcctManager as Controller 
 	, CONVERT(VARCHAR(50), '''') as BLNum
 	, s.FK_ModeID as Mode
 	, '''' as Pier, '''' as Cont
