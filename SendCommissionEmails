@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendCommissionEmails]    Script Date: 9/21/2020 10:33:18 AM ******/
+/****** Object:  StoredProcedure [dbo].[SendCommissionEmails]    Script Date: 9/21/2020 01:42:58 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1302,7 +1302,68 @@ BEGIN
 				  , @exclude_query_output = 0      
 				  , @append_query_error = 1      
 				  , @query_no_truncate = 0      
-				  , @query_result_no_padding = 1;  
+				  , @query_result_no_padding = 1; 
+				  
+			-------------------------------
+			-----KELLAN CHRISMAN EMAIL-----
+			-------------------------------
+			--GO
+			--BEGIN  
+
+			--DECLARE @msg VARCHAR(250);  
+			--DECLARE @subj VARCHAR(250);  
+			--DECLARE @query varchar(2048);  
+			--DECLARE @column1name varchar(255);  
+			--DECLARE @tableHTML NVARCHAR(MAX) ;  
+			--DECLARE @PERIOD_NAME VARCHAR(50)    
+			SET @PERIOD_NAME = (
+								SELECT DISTINCT PERIOD_NAME  
+								FROM tblOracleCalendar  
+								WHERE cast(DATEADD(dd,-25,getdate()) as date) between START_DATE and END_DATE
+								)    
+
+			SET @tableHTML =      N'<H3 align=''left''>Please see your commission summary details in table below for '+ @PERIOD_NAME + '' +       
+								  N'<table align=''left'' border="1" bgcolor="#ffffe6">' +        
+								  N'<tr bgcolor="#cceeff"><th>Total GP</th><th>Commission</th></tr>' +  
+								  N'<tfoot>' +      
+								  CAST ( ( SELECT td = format(sum(c.GP), 'c', 'en-us'), ''
+											   ,  td = format(sum(c.KCComm), 'c', 'en-us')  --set to sales rep column for the correct sales person      
+											from tblCommCalc c      
+											INNER JOIN tblOracleCalendar on PERIOD_NAME = ACCTPERIODNAME      
+											WHERE cast(DATEADD(dd,-25,getdate()) as date) between START_DATE and END_DATE       
+											and KCComm <> 0  --use correct sales person name       
+											AND GP <> 0    --group by c.SalesPName with ROLLUP   
+											FOR XML PATH('tr'), TYPE) AS NVARCHAR(MAX)) + 
+								N'</table>'     
+					
+			SET @subj = 'Kellan Chrisman Commission Report for '+ @PERIOD_NAME;   -- update with correct sales person name  
+
+			/*  -- Create the column name with the instrucation in a variable  
+			SET @Column1Name = '[sep=,' + CHAR(13) + CHAR(10) + 'SalesPName]'   
+			SET @query='  DECLARE @today as date  SET @today = DATEADD(dd,-25,getdate())  
+			set nocount on;  
+			select SalesPName ' + @column1name + ', RefNo, CSAStation as LD_No, GP, LPComm, ACCTYR, ACCTMONTH, ACCTPERIODNAME --update with correct sales person commission column  , 
+			REPLACE(InvLOB,'','','''') as InvLOB  , REPLACE(InvCustName,'','','''') as Customer  , ShipType, Dispatcher  from tblCommCalc  JOIN tblOracleCalendar on PERIOD_NAME = ACCTPERIODNAME 
+			WHERE  @today between START_DATE and END_DATE  and LPComm <> 0  --use correct sales person name  AND GP <> 0;'  
+			*/  
+
+			EXEC msdb.dbo.sp_send_dbmail      
+					@profile_name = 'APTEST01SQLMail'     
+				  , @recipients = 'kchrisman@ajclogistics.com;rpage@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com' -- update email receipient      /*add aizquierdo@ajclogistics.com; back in*/
+				  , @subject = @subj      
+				  , @body= @tableHTML      
+				  , @body_format = 'HTML'  
+			--    , @query = @query      
+				  , @execute_query_database = 'AJCDW'    
+			--    , @attach_query_result_as_file = 1  
+			--    , @query_attachment_filename='lpantescocomm.csv'  --update with sales person name convention for file      
+				  , @query_result_header = 1      
+				  , @query_result_width = 32767      
+				  , @query_result_separator = ','      
+				  , @exclude_query_output = 0      
+				  , @append_query_error = 1      
+				  , @query_no_truncate = 0      
+				  , @query_result_no_padding = 1; 
 
 /*
 			-------------------------------
