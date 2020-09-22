@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 8/24/2020 01:37:25 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 9/22/2020 03:45:54 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -552,6 +552,49 @@ where InvLOB = '11'
 and SalesPName = 'Ryan Click'
 and ACCTYR >= 2021
 
+--Ryan Click Comm: 5% on own loads for LOB 25,41, & 31,33,43 starting August 2020
+update tblCommCalc
+set RCComm = GP *.05
+where InvLOB IN ('25','41','31,33,43')
+and SalesPName = 'Ryan Click'
+and ACCTMONTH NOT IN (1,2,3,4,5,6,7)
+and ACCTYR = 2020
+
+update tblCommCalc
+set RCComm = GP *.05
+where InvLOB IN ('25','41','31,33,43')
+and SalesPName = 'Ryan Click'
+and ACCTYR >= 2021
+
+--Ryan Click Comm: 5% on UPS Daily Harvest and UPS Spot loads for LOB 11 starting August 2020
+update tblCommCalc
+set RCComm = GP *.05
+where InvLOB = ('11')
+and InvCustName like 'UPS - Daily%'
+and ACCTMONTH NOT IN (1,2,3,4,5,6,7)
+and ACCTYR = 2020
+
+update tblCommCalc
+set RCComm = GP *.05
+where InvLOB = ('11')
+and InvCustName like 'UPS - Daily%'
+and ACCTYR >= 2021
+
+update tblCommCalc
+set RCComm = GP *.05
+where InvLOB = ('11')
+and ShipType = 'SPOT'
+and InvCustName like 'UPS%'
+and ACCTMONTH NOT IN (1,2,3,4,5,6,7)
+and ACCTYR = 2020
+
+update tblCommCalc
+set RCComm = GP *.05
+where InvLOB = ('11')
+and ShipType = 'SPOT'
+and InvCustName like 'UPS%'
+and ACCTYR >= 2021
+
 -- Ari Matsumura Comm: 7% of GP for his loads for SeaWide
 Update tblCommCalc
 set AMComm = (GP*.93) * .07
@@ -739,8 +782,7 @@ AND ACCTMONTH IN (8,9,10,11,12)
 Update tblCommCalc
 set KCComm = GP * .0025
 where InvLOB = '11'
-and ACCTYR = 2020
-and ACCTYR >= 2020
+and ACCTYR > 2020
 
 Update tblCommCalc
 set TRComm = GP * .0025, SBComm = GP * .0025
@@ -751,7 +793,7 @@ AND ACCTMONTH IN (9,10,11,12)
 Update tblCommCalc
 set TRComm = GP * .0025, SBComm = GP * .0025
 where InvLOB = '11'
-and ACCTYR >= 2020
+and ACCTYR > 2020
 
 
 
