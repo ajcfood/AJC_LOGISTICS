@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 9/24/2020 10:31:19 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 9/24/2020 11:45:02 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -528,16 +528,12 @@ where SalesPName = 'Manuel Yanez'
 update tblCommCalc
 set AIComm = (GP*.0025)
 where InvLOB = '11'
-and InvCustName NOT LIKE 'DYCINSA%'
-and InvCustName NOT LIKE 'SUK%'
 and ACCTMONTH NOT IN (1,2,3,4,5,6,7)
 and ACCTYR = 2019
 
 update tblCommCalc
 set AIComm = (GP*.0025)
 where InvLOB = '11'
-and InvCustName NOT LIKE 'DYCINSA%'
-and InvCustName NOT LIKE 'SUK%'
 and ACCTYR >= 2019
 
 --Courtney Gray Comm: 0.25% of Cargo Live WorldWide loads starting August 1 2019
