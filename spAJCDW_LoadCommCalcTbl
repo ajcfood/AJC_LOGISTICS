@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 9/22/2020 03:45:54 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 9/24/2020 10:31:19 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -230,6 +230,12 @@ set TCComm = GP*.10
 where SalesPName = 'Tyler Clendenen'
 	and InvLOB = '11'
 	and InvCustName = 'JB HUNT'
+
+update tblCommCalc
+set TCComm = GP*.10
+where SalesPName = 'Tyler Clendenen'
+	and InvLOB = '11'
+	and ACCTYR >= 2020
 
 update tblCommCalc
 set TCComm = GP*.05
@@ -522,12 +528,16 @@ where SalesPName = 'Manuel Yanez'
 update tblCommCalc
 set AIComm = (GP*.0025)
 where InvLOB = '11'
+and InvCustName NOT LIKE 'DYCINSA%'
+and InvCustName NOT LIKE 'SUK%'
 and ACCTMONTH NOT IN (1,2,3,4,5,6,7)
 and ACCTYR = 2019
 
 update tblCommCalc
 set AIComm = (GP*.0025)
 where InvLOB = '11'
+and InvCustName NOT LIKE 'DYCINSA%'
+and InvCustName NOT LIKE 'SUK%'
 and ACCTYR >= 2019
 
 --Courtney Gray Comm: 0.25% of Cargo Live WorldWide loads starting August 1 2019
@@ -626,10 +636,24 @@ set CARSONComm = GP * .02
 where InvLOB = '10'
 
 -- Mike Maroni Comm: 9% of own GP in LOB 10
+-- Effective September 2020 Mike M. will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
 Update tblCommCalc
 set MMComm = GP * .09
 where InvLOB = '10'
 and SalesPName = 'Mike Maroni'
+
+Update tblCommCalc
+set MMComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName = 'Mike Maroni'
+and ACCTMONTH IN (9,10,11,12)
+and ACCTYR = 2020
+
+Update tblCommCalc
+set MMComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName = 'Mike Maroni'
+and ACCTYR > 2020
 
 -- Jessie Higginbotham Comm: 6.5% of own GP in LOB 10
 Update tblCommCalc
@@ -638,6 +662,7 @@ where InvLOB = '10'
 and SalesPName = 'Jesse Higginbotham'
 
 -- Nick Seney Comm: 8.5% of own GP in LOB 10 and 4% of LOB 76
+-- Effective September 2020 Nick will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
 Update tblCommCalc
 set NSComm = GP * .085
 where InvLOB = '10'
@@ -647,6 +672,19 @@ Update tblCommCalc
 set NSComm = GP * .04
 where InvLOB = '76'
 and SalesPName = 'Nick Seney'
+
+Update tblCommCalc
+set NSComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName = 'Nick Seney'
+and ACCTMONTH IN (9,10,11,12)
+and ACCTYR = 2020
+
+Update tblCommCalc
+set NSComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName = 'Nick Seney'
+and ACCTYR > 2020
 
 -- Dalton Thomas Comm: 4% of team GP divided by number of CSR's.  As of 11/20/19, he is only CSR.  Austin Added in 2020
 -- Per Rachel email on 1/21/20 - set to 2.5% for Jan - Mar 2020, put him to 2% in April
@@ -695,16 +733,44 @@ set DBComm = GP * .01
 where InvLOB = '10'
 
 -- Crystal Lubin: 8.5% GP of her own GP
+-- Effective September 2020 Crystal will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
 Update tblCommCalc
 set CLComm = GP * .085
 where InvLOB = '10'
 and SalesPName = 'Crystal Lubin'
 
+Update tblCommCalc
+set CLComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName = 'Crystal Lubin'
+and ACCTMONTH IN (9,10,11,12)
+and ACCTYR = 2020
+
+Update tblCommCalc
+set CLComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName = 'Crystal Lubin'
+and ACCTYR > 2020
+
 -- Andrew Heavner: 8.5% GP of own GP
+-- Effective September 2020 Andrew will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
 Update tblCommCalc
 set AHComm = GP * .085
 where InvLOB = '10'
 and SalesPName = 'Andrew Heavner'
+
+Update tblCommCalc
+set AHComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName = 'Andrew Heavner'
+and ACCTMONTH IN (9,10,11,12)
+and ACCTYR = 2020
+
+Update tblCommCalc
+set AHComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName = 'Andrew Heavner'
+and ACCTYR > 2020
 
 -- Carleton Tokioka: 4% GP of own GP less 7% overhead
 Update tblCommCalc
@@ -731,6 +797,7 @@ where InvLOB IN ('41','43','25')
 and SalesPName = 'Alex Gonzalez'
 
 -- Jason Lewter: 4% of his team's GP (Greg Deal and Colton Clements)
+-- Effective September 2020 Jason will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
 Update tblCommCalc
 set JLComm = GP * .04
 where InvLOB = '9'
@@ -741,7 +808,21 @@ set JLComm = GP * .05
 where InvLOB = '9'
 and SalesPName IN ('Jason Lewter')
 
+Update tblCommCalc
+set JLComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Jason Lewter')
+and ACCTMONTH IN (9,10,11,12)
+and ACCTYR = 2020
+
+Update tblCommCalc
+set JLComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Jason Lewter')
+and ACCTYR > 2020
+
 -- Justin Taylor: 4% of his team's GP (Christian White and Jack Cumiskey), also 5% on his own loads
+-- Effective September 2020 Justin T. will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
 Update tblCommCalc
 set JTComm = GP * .04
 where InvLOB = '9'
@@ -752,29 +833,98 @@ set JTComm = GP * .05
 where InvLOB = '9'
 and SalesPName IN ('Justin Taylor')
 
+Update tblCommCalc
+set JTComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Justin Taylor')
+and ACCTMONTH IN (9,10,11,12)
+and ACCTYR = 2020
+
+Update tblCommCalc
+set JTComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Justin Taylor')
+and ACCTYR > 2020
+
 -- Greg Deal: 8.5% of his own GP
+-- Effective September 2020 Greg will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
 Update tblCommCalc
 set GDComm = GP * .085
 where InvLOB = '9'
 and SalesPName = 'Greg Deal'
 
+Update tblCommCalc
+set GDComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Greg Deal')
+and ACCTMONTH IN (9,10,11,12)
+and ACCTYR = 2020
+
+Update tblCommCalc
+set GDComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Greg Deal')
+and ACCTYR > 2020
+
 -- Colton Clements: 8.5% of his own GP
+-- Effective September 2020 Colton will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
 Update tblCommCalc
 set CCComm = GP * .085
 where InvLOB = '9'
 and SalesPName = 'Colton Clements'
 
+Update tblCommCalc
+set CCComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Colton Clements')
+and ACCTMONTH IN (9,10,11,12)
+and ACCTYR = 2020
+
+Update tblCommCalc
+set CCComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Colton Clements')
+and ACCTYR > 2020
+
 -- Christian White: 8.5% of his own GP
+-- Effective September 2020 Christian will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
 Update tblCommCalc
 set CWComm = GP * .085
 where InvLOB = '9'
 and SalesPName = 'Christian White'
 
+Update tblCommCalc
+set CWComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Christian White')
+and ACCTMONTH IN (9,10,11,12)
+and ACCTYR = 2020
+
+Update tblCommCalc
+set CWComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Christian White')
+and ACCTYR > 2020
+
 -- Jack Cumiskey: 8.5% of his own GP
+-- Effective September 2020 Jack will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
 Update tblCommCalc
 set JACKComm = GP * .085
 where InvLOB = '9'
 and SalesPName = 'Jack Cumiskey'
+
+Update tblCommCalc
+set JACKComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Jack Cumiskey')
+and ACCTMONTH IN (9,10,11,12)
+and ACCTYR = 2020
+
+Update tblCommCalc
+set JACKComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Jack Cumiskey')
+and ACCTYR > 2020
 
 -- Phil Mitchell 4% of team GP
 Update tblCommCalc
@@ -801,12 +951,16 @@ and ACCTYR > 2020
 Update tblCommCalc
 set TRComm = GP * .0025, SBComm = GP * .0025
 where InvLOB = '11'
+and InvCustName NOT LIKE 'DYCINSA%'
+and InvCustName NOT LIKE 'SUK%'
 and ACCTYR = 2020
 AND ACCTMONTH IN (9,10,11,12)
 
 Update tblCommCalc
 set TRComm = GP * .0025, SBComm = GP * .0025
 where InvLOB = '11'
+and InvCustName NOT LIKE 'DYCINSA%'
+and InvCustName NOT LIKE 'SUK%'
 and ACCTYR > 2020
 
 
