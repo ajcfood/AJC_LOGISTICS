@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendCommissionEmails]    Script Date: 10/13/2020 03:43:52 PM ******/
+/****** Object:  StoredProcedure [dbo].[SendCommissionEmails]    Script Date: 10/20/2020 10:06:35 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1208,7 +1208,7 @@ BEGIN
 			 FOR XML PATH('tr'), TYPE) AS NVARCHAR(MAX)) + N'</table>'
  
 			SET @subj = 'Missy Jensen Commission Report for '+ @PERIOD_NAME;   -- update with correct sales person name
-
+			/*
 			-- Create the column name with the instrucation in a variable
 			SET @Column1Name = '[sep=,' + CHAR(13) + CHAR(10) + 'SalesPName]'
 
@@ -1226,7 +1226,7 @@ BEGIN
 			@today between START_DATE and END_DATE
 			and MJComm <> 0  --use correct sales person name
 			AND GP <> 0;'
-
+			*/
 			EXEC msdb.dbo.sp_send_dbmail
 				@profile_name = 'APTEST01SQLMail'
 				, @recipients = 'mjensen@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;rpage@ajclogistics.com' -- update email receipient	/*add mjensen@ajclogistics.com; back in*/
