@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[sp2-AJCDW_09-FactFullLoadARData]    Script Date: 8/13/2020 10:35:04 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp2-AJCDW_09-FactFullLoadARData]    Script Date: 11/5/2020 10:13:39 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -140,8 +140,37 @@ FROM tblOracleARData
 WHERE INTERFACE_HEADER_CONTEXT = 'CSA'
 	--AND ShpBLNum <> ''  -- 3/6/19 Comment this out to remove random interface attribute 8 data for CSA files in Oracle AR table
 
+--------------------------
+-- LOAD ORACLE AR NOTES --
+--------------------------
+
+--Added by Salah on 11/5/2020 per Jenny Request in Oct 2020 for Credit Workspace in Power BI
+
+TRUNCATE TABLE [AJCDW].[dbo].[tblOracleARNotes];
+
+SELECT * 
+INTO #tmp3
+FROM OPENQUERY(ORACLEPROD, '
+		SELECT 
+		T.TRX_NUMBER 
+		,A.NOTE_ID
+		,A.LAST_UPDATE_DATE
+		,A.CREATION_DATE
+		,A.NOTE_TYPE
+		,A.TEXT
+		FROM AR_NOTES A 
+		JOIN RA_CUSTOMER_TRX_ALL T 
+		ON T.CUSTOMER_TRX_ID = A.CUSTOMER_TRX_ID
+		WHERE A.CREATION_DATE > ''1-JAN-19''
+		');
+
+insert into [dbo].[tblOracleARNotes]
+select * 
+from #tmp3; 
+
 DROP TABLE #tmp1;
 DROP TABLE #tmp2;
+DROP TABLE #tmp3;
 
 /*****************************************************End Logging*******************************************************/
 
