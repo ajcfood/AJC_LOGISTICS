@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendATL2MonthlyLoadEmails]    Script Date: 9/1/2020 10:49:44 AM ******/
+/****** Object:  StoredProcedure [dbo].[SendATL2MonthlyLoadEmails]    Script Date: 11/10/2020 03:01:48 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -13,7 +13,7 @@ GO
 ALTER procedure [dbo].[SendATL2MonthlyLoadEmails] as
 
 BEGIN 
-				----------------------------------------
+			----------------------------------------
 			-----COLTON CLEMENTS WEEKLY EMAIL-------
 			----------------------------------------
 			--GO
@@ -28,7 +28,7 @@ BEGIN
 
 			SET @PERIOD_NAME = (SELECT DISTINCT PERIOD_NAME
 			FROM tblOracleCalendar
-			WHERE cast(DATEADD(dd,-6,getdate()) as date) between START_DATE and END_DATE)
+			WHERE cast(DATEADD(dd,-10,getdate()) as date) between START_DATE and END_DATE)
 
 			SET @tableHTML =
 				N'<H3 align=''left''>Please see your attached previous accounting month DELIVERED load information for '+ @PERIOD_NAME + ' and summary details in table below:' + 
@@ -41,7 +41,7 @@ BEGIN
 								td = format(sum(c.GP), 'c', 'en-us')  
 							from tblCommCalc c
 							JOIN tblOracleCalendar on PERIOD_NAME = ACCTPERIODNAME
-							WHERE cast(DATEADD(dd,0-6,getdate()) as date) between START_DATE and END_DATE
+							WHERE cast(DATEADD(dd,0-10,getdate()) as date) between START_DATE and END_DATE
 								and CCComm <> 0  --use correct sales person name
 								AND GP <> 0
 					--group by c.SalesPName with ROLLUP
@@ -100,7 +100,7 @@ BEGIN
 
 			SET @PERIOD_NAME = (SELECT DISTINCT PERIOD_NAME
 			FROM tblOracleCalendar
-			WHERE cast(DATEADD(dd,-6,getdate()) as date) between START_DATE and END_DATE)
+			WHERE cast(DATEADD(dd,-10,getdate()) as date) between START_DATE and END_DATE)
 
 			SET @tableHTML =
 				N'<H3 align=''left''>Please see your attached previous accounting month DELIVERED load information for '+ @PERIOD_NAME + ' and summary details in table below:' + 
@@ -113,7 +113,7 @@ BEGIN
 								td = format(sum(c.GP), 'c', 'en-us')  
 							from tblCommCalc c
 							JOIN tblOracleCalendar on PERIOD_NAME = ACCTPERIODNAME
-							WHERE cast(DATEADD(dd,0-6,getdate()) as date) between START_DATE and END_DATE
+							WHERE cast(DATEADD(dd,0-10,getdate()) as date) between START_DATE and END_DATE
 								and GDComm <> 0  --use correct sales person name
 								AND GP <> 0
 					--group by c.SalesPName with ROLLUP
@@ -172,7 +172,7 @@ BEGIN
 
 			SET @PERIOD_NAME = (SELECT DISTINCT PERIOD_NAME
 			FROM tblOracleCalendar
-			WHERE cast(DATEADD(dd,-6,getdate()) as date) between START_DATE and END_DATE)
+			WHERE cast(DATEADD(dd,-10,getdate()) as date) between START_DATE and END_DATE)
 
 			SET @tableHTML =
 				N'<H3 align=''left''>Please see your attached previous accounting month DELIVERED load information for '+ @PERIOD_NAME + ' and summary details in table below:' + 
@@ -185,7 +185,7 @@ BEGIN
 								td = format(sum(c.GP), 'c', 'en-us')  
 							from tblCommCalc c
 							JOIN tblOracleCalendar on PERIOD_NAME = ACCTPERIODNAME
-							WHERE cast(DATEADD(dd,0-6,getdate()) as date) between START_DATE and END_DATE
+							WHERE cast(DATEADD(dd,0-10,getdate()) as date) between START_DATE and END_DATE
 								and JACKComm <> 0  --use correct sales person name
 								AND GP <> 0
 					--group by c.SalesPName with ROLLUP
@@ -244,7 +244,7 @@ BEGIN
 
 			SET @PERIOD_NAME = (SELECT DISTINCT PERIOD_NAME
 			FROM tblOracleCalendar
-			WHERE cast(DATEADD(dd,-6,getdate()) as date) between START_DATE and END_DATE)
+			WHERE cast(DATEADD(dd,-10,getdate()) as date) between START_DATE and END_DATE)
 
 			SET @tableHTML =
 				N'<H3 align=''left''>Please see your attached previous accounting month DELIVERED load information for '+ @PERIOD_NAME + ' and summary details in table below:' + 
@@ -257,7 +257,7 @@ BEGIN
 								td = format(sum(c.GP), 'c', 'en-us')  
 							from tblCommCalc c
 							JOIN tblOracleCalendar on PERIOD_NAME = ACCTPERIODNAME
-							WHERE cast(DATEADD(dd,0-6,getdate()) as date) between START_DATE and END_DATE
+							WHERE cast(DATEADD(dd,0-10,getdate()) as date) between START_DATE and END_DATE
 								and CWComm <> 0  --use correct sales person name
 								AND GP <> 0
 					--group by c.SalesPName with ROLLUP
@@ -316,7 +316,7 @@ BEGIN
 
 			SET @PERIOD_NAME = (SELECT DISTINCT PERIOD_NAME
 			FROM tblOracleCalendar
-			WHERE cast(DATEADD(dd,-6,getdate()) as date) between START_DATE and END_DATE)
+			WHERE cast(DATEADD(dd,-10,getdate()) as date) between START_DATE and END_DATE)
 
 			SET @tableHTML =
 				N'<H3 align=''left''>Please see your attached previous accounting month DELIVERED load information for '+ @PERIOD_NAME + ' and summary details in table below:' + 
@@ -329,7 +329,7 @@ BEGIN
 								td = format(sum(c.GP), 'c', 'en-us')  
 							from tblCommCalc c
 							JOIN tblOracleCalendar on PERIOD_NAME = ACCTPERIODNAME
-							WHERE cast(DATEADD(dd,0-6,getdate()) as date) between START_DATE and END_DATE
+							WHERE cast(DATEADD(dd,0-10,getdate()) as date) between START_DATE and END_DATE
 								and Dispatcher = 'mhiggins'  --use correct sales person name
 								AND GP <> 0
 					--group by c.SalesPName with ROLLUP
@@ -388,7 +388,7 @@ BEGIN
 
 			SET @PERIOD_NAME = (SELECT DISTINCT PERIOD_NAME
 			FROM tblOracleCalendar
-			WHERE cast(DATEADD(dd,-6,getdate()) as date) between START_DATE and END_DATE)
+			WHERE cast(DATEADD(dd,-10,getdate()) as date) between START_DATE and END_DATE)
 
 			SET @tableHTML =
 				N'<H3 align=''left''>Please see your attached previous accounting month DELIVERED load information for '+ @PERIOD_NAME + ' and summary details in table below:' + 
@@ -401,7 +401,7 @@ BEGIN
 								td = format(sum(c.GP), 'c', 'en-us')  
 							from tblCommCalc c
 							JOIN tblOracleCalendar on PERIOD_NAME = ACCTPERIODNAME
-							WHERE cast(DATEADD(dd,0-6,getdate()) as date) between START_DATE and END_DATE
+							WHERE cast(DATEADD(dd,0-10,getdate()) as date) between START_DATE and END_DATE
 								and Dispatcher = 'adavis'  --use correct sales person name
 								AND GP <> 0
 					--group by c.SalesPName with ROLLUP
@@ -460,7 +460,7 @@ BEGIN
 
 			SET @PERIOD_NAME = (SELECT DISTINCT PERIOD_NAME
 			FROM tblOracleCalendar
-			WHERE cast(DATEADD(dd,-6,getdate()) as date) between START_DATE and END_DATE)
+			WHERE cast(DATEADD(dd,-10,getdate()) as date) between START_DATE and END_DATE)
 
 			SET @tableHTML =
 				N'<H3 align=''left''>Please see your attached previous accounting month DELIVERED load information for '+ @PERIOD_NAME + ' and summary details in table below:' + 
@@ -473,7 +473,7 @@ BEGIN
 								td = format(sum(c.GP), 'c', 'en-us')  
 							from tblCommCalc c
 							JOIN tblOracleCalendar on PERIOD_NAME = ACCTPERIODNAME
-							WHERE cast(DATEADD(dd,0-6,getdate()) as date) between START_DATE and END_DATE
+							WHERE cast(DATEADD(dd,0-10,getdate()) as date) between START_DATE and END_DATE
 								and Dispatcher = 'wcrosse'  --use correct sales person name
 								AND GP <> 0
 					--group by c.SalesPName with ROLLUP
