@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 9/24/2020 11:45:02 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 11/10/2020 10:37:00 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -156,13 +156,15 @@ where InvLOB = '12'
 update tblCommCalc
 set QTComm = '200.00', BMComm = '200.00', JCComm = '200.00'
 where InvLOB = '12'
+	AND RefNo LIKE '10%'
 	AND ACCTMONTH IN (9,10,11,12)
-	AND ACCTYR >= 2019
+	AND ACCTYR = 2019
 
 --HSI Calculations 2020 and onward : FLAT $200 per month starting September 2019--
 update tblCommCalc
 set QTComm = '200.00', BMComm = '200.00', JCComm = '200.00'
 where InvLOB = '12'
+    AND RefNo LIKE '10%'
 	AND ACCTYR >= 2020
 
 --Lee Pantesco Calculation: 0.5% of Surface Trans GP.
@@ -472,6 +474,17 @@ update tblCommCalc
 set DYComm = (GP*.93)*.042
 where InvLOB = '76'
 	AND SalesPName = 'Dale Yanagihara'
+
+update tblCommCalc
+set DYComm = 0
+where InvLOB = '76'
+	AND ACCTMONTH IN (9,10,11,12)
+	AND ACCTYR = 2020
+
+update tblCommCalc
+set DYComm = 0
+where InvLOB = '76'
+	AND ACCTYR >= 2020
 
 --Jim Wyant Calculation:
 	--15% of GP of own accounts in LOB 76 GP less 7% overhead
