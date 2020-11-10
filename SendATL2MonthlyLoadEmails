@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendATL2MonthlyLoadEmails]    Script Date: 11/10/2020 03:01:48 PM ******/
+/****** Object:  StoredProcedure [dbo].[SendATL2MonthlyLoadEmails]    Script Date: 11/10/2020 03:24:52 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -403,7 +403,7 @@ BEGIN
 							JOIN tblOracleCalendar on PERIOD_NAME = ACCTPERIODNAME
 							WHERE cast(DATEADD(dd,0-10,getdate()) as date) between START_DATE and END_DATE
 								and Dispatcher = 'adavis'  --use correct sales person name
-								AND GP <> 0
+								AND GP >= 0
 					--group by c.SalesPName with ROLLUP
 			 FOR XML PATH('tr'), TYPE) AS NVARCHAR(MAX)) + N'</table>'
  
@@ -425,7 +425,7 @@ BEGIN
 			WHERE
 			@today between START_DATE and END_DATE
 			and Dispatcher = ''adavis''  --use correct sales person name
-			AND GP <> 0;'
+			AND GP >= 0;'
 
 			EXEC msdb.dbo.sp_send_dbmail
 				@profile_name = 'APTEST01SQLMail'
@@ -475,7 +475,7 @@ BEGIN
 							JOIN tblOracleCalendar on PERIOD_NAME = ACCTPERIODNAME
 							WHERE cast(DATEADD(dd,0-10,getdate()) as date) between START_DATE and END_DATE
 								and Dispatcher = 'wcrosse'  --use correct sales person name
-								AND GP <> 0
+								AND GP >= 0
 					--group by c.SalesPName with ROLLUP
 			 FOR XML PATH('tr'), TYPE) AS NVARCHAR(MAX)) + N'</table>'
  
@@ -497,7 +497,7 @@ BEGIN
 			WHERE
 			@today between START_DATE and END_DATE
 			and Dispatcher = ''wcrosse''  --use correct sales person name
-			AND GP <> 0;'
+			AND GP >= 0;'
 
 			EXEC msdb.dbo.sp_send_dbmail
 				@profile_name = 'APTEST01SQLMail'
@@ -516,6 +516,79 @@ BEGIN
 				, @append_query_error = 1
 				, @query_no_truncate = 0
 				, @query_result_no_padding = 1;
+			--END
+			
+			----------------------------------------
+			-----OPS LOSS LOADS FOR THE MONTH-------
+			----------------------------------------
+			--GO
+			--BEGIN
+			--DECLARE @msg VARCHAR(250);
+			--DECLARE @subj VARCHAR(250);
+			--DECLARE @query varchar(2048);
+			--DECLARE @column1name varchar(255);
+			--DECLARE @tableHTML NVARCHAR(MAX) ;
+			--DECLARE @PERIOD_NAME VARCHAR(50)
+
+			SET @PERIOD_NAME = (SELECT DISTINCT PERIOD_NAME
+			FROM tblOracleCalendar
+			WHERE cast(DATEADD(dd,-10,getdate()) as date) between START_DATE and END_DATE)
+
+			SET @tableHTML =
+				N'<H3 align=''left''>Please see your attached previous accounting month DELIVERED load information for '+ @PERIOD_NAME + ' and summary details in table below:' + 
+				N'<table align=''left'' border="1" bgcolor="#ffffe6">' +  
+				N'<tr bgcolor="#cceeff"><th>Load Count</th><th>Reveune</th><th>Cost</th><th>GP</th></tr>' +
+			N'<tfoot>' +
+				CAST ( ( SELECT td = count(c.RefNo), '',  
+								td = format(sum(c.Rev), 'c', 'en-us'), '', 
+								td = format(sum(c.Cost), 'c', 'en-us'), '',    
+								td = format(sum(c.GP), 'c', 'en-us')  
+							from tblCommCalc c
+							JOIN tblOracleCalendar on PERIOD_NAME = ACCTPERIODNAME
+							WHERE cast(DATEADD(dd,0-10,getdate()) as date) between START_DATE and END_DATE
+								and Dispatcher IN ('adavis','wcrosse')  --update with new ops members as they come on
+								AND GP < 0
+					--group by c.SalesPName with ROLLUP
+			 FOR XML PATH('tr'), TYPE) AS NVARCHAR(MAX)) + N'</table>'
+ 
+			SET @subj = 'Loads with Negative Margin for '+ @PERIOD_NAME;  
+
+			-- Create the column name with the instrucation in a variable
+			SET @Column1Name = '[sep=,' + CHAR(13) + CHAR(10) + 'SalesPName]'
+
+			SET @query='
+			DECLARE @today as date
+			SET @today = DATEADD(dd,-25,getdate())
+			set nocount on;
+			select SalesPName ' + @column1name + ', RefNo, CSAStation as LD_No, Rev, Cost, GP, ACCTYR, ACCTMONTH, ACCTPERIODNAME --update with correct sales person commission column
+			, REPLACE(InvLOB,'','','''') as InvLOB
+			, REPLACE(InvCustName,'','','''') as Customer
+			, ShipType, Dispatcher
+			from tblCommCalc
+			JOIN tblOracleCalendar on PERIOD_NAME = ACCTPERIODNAME
+			WHERE
+			@today between START_DATE and END_DATE
+			and Dispatcher IN (''adavis'', ''wcrosse'')  --update with new ops members as they come on
+			AND GP < 0;'
+
+			EXEC msdb.dbo.sp_send_dbmail
+				@profile_name = 'APTEST01SQLMail'
+				, @recipients = 'wcrosse@ajclogistics.com;adavis@ajclogistics.com' -- update with new ops members as they come on
+				, @subject = @subj
+				, @body= @tableHTML
+				, @body_format = 'HTML'
+				, @query = @query
+				, @execute_query_database = 'AJCDW'  
+				, @attach_query_result_as_file = 1
+				, @query_attachment_filename='negativemarginloads.csv'  --update with sales person name convention for file
+				, @query_result_header = 1
+				, @query_result_width = 32767
+				, @query_result_separator = ','
+				, @exclude_query_output = 0
+				, @append_query_error = 1
+				, @query_no_truncate = 0
+				, @query_result_no_padding = 1;
+			--END			
 			END
 END
 
