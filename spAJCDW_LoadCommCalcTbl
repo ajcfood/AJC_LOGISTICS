@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 11/10/2020 10:37:00 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 11/12/2020 04:14:21 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -204,6 +204,7 @@ where SalesPName = 'Michael Browder'
 	--15% of GP where he is Sales Rep not in line of business 31,33,43, or 76.  Changed to 10% starting March 2020
 	--6% of GP where he is Sales Rep in line of business 31,33,43, or 76
 	--5% GP on 25, 41, & 31,33,43 loads where he is sales rep
+	-- 11/12/20 advised by Rachel to remove 6% for Seawide starting for October 2020 commission
 update tblCommCalc
 set TCComm = GP*.15
 where SalesPName = 'Tyler Clendenen'
@@ -253,6 +254,21 @@ set TCComm = GP*.05
 where SalesPName = 'Tyler Clendenen'
 	and InvLOB IN ('25','41','31,33,43')
 	and ACCTYR >= 2021
+
+update tblCommCalc
+set TCComm = 0
+where SalesPName = 'Tyler Clendenen'
+	and InvLOB IN ('76')
+	and ACCTYR = 2020
+	and ACCTMONTH IN (10,11,12)
+
+update tblCommCalc
+set TCComm = 0
+where SalesPName = 'Tyler Clendenen'
+	and InvLOB IN ('76')
+	and ACCTYR >= 2021
+
+
 
 --Brawnson Walter Calculation: 15% of Surface Trans GP where he is Sales Rep
 update tblCommCalc
@@ -403,11 +419,25 @@ where SalesPName = 'Randolph Page'
 	--15% GP for LOB 25 where RP is sales rep, but not AJC INTERNATIONAL INC (DIRECT)
 	--3% GP on Surf Trans direct reports (not Ricardo): MB,TC,AA,BW,MR,MJ,CC,BR (INDIRECT)
 	--4% GP on LOB 41&43 files under DT,CC,Ricardo,TC,MJ,MB
+	-- 11/12/20 advised by Rachel to remove 6% for Seawide starting for October 2020 commission
 
 update tblCommCalc
 set RPComm = GP*.06
 where InvLOB IN ('11','21','41','31,33,43','76')
 	and SalesPName = 'Randolph Page'
+
+update tblCommCalc
+set RPComm = 0
+where InvLOB = '76'
+	and SalesPName = 'Randolph Page'
+	and ACCTMONTH in (10,11,12)
+	and ACCTYR = 2020
+
+update tblCommCalc
+set RPComm = 0
+where InvLOB = '76'
+	and SalesPName = 'Randolph Page'
+	and ACCTYR >= 2021
 
 update tblCommCalc
 set RPComm = GP*.15
