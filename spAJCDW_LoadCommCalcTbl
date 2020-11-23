@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 11/23/2020 09:45:49 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 11/23/2020 10:30:45 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -456,7 +456,8 @@ where InvLOB = '11'
 		,'Brett Rasmussen'
 		,'Missy Jensen'
 		,'Andres Alonso'
-		,'Brawnson Walter')
+		,'Brawnson Walter'
+		,'Alex Gonzalez')
 
 update tblCommCalc --added August 2020
 set RPComm = GP*.03
@@ -482,7 +483,8 @@ where InvLOB in ('41','31,33,43')
 		,'Brett Rasmussen'
 		,'Missy Jensen'
 		,'Andres Alonso'
-		,'Brawnson Walter')
+		,'Brawnson Walter'
+		,'Alex Gonzalez')
 	AND InvCustName <> 'BALLESTER HERMANOS, INC'
 
 --3% of KEYSTONE loads no matter what LOB
