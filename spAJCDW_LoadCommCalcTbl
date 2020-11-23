@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 11/12/2020 04:14:21 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 11/23/2020 09:45:49 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -836,6 +836,19 @@ Update tblCommCalc
 set AGComm = GP * .05
 where InvLOB IN ('41','43','25')
 and SalesPName = 'Alex Gonzalez'
+
+update tblCommCalc
+set SalesPName = 'Alex Gonzalzez', AGComm = GP * .05
+where InvLOB IN ('31,33,43','41')
+and InvCustName IN (
+'BALLESTER HERMANOS, INC',            
+'PLAZA FOOD SYSTEMS',                 
+'REFRIGERAMA INC',                    
+'ABLE SALES COMPANY',                 
+'BEST BENNER BUILDING CORP',          
+'JC TIRE',                            
+'IMPERIAL DADE PAPER',                
+'AMERICAN PAPER CORPORATION')         
 
 -- Jason Lewter: 4% of his team's GP (Greg Deal and Colton Clements)
 -- Effective September 2020 Jason will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
