@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendATL2WeeklyLoadEmails]    Script Date: 9/1/2020 10:50:01 AM ******/
+/****** Object:  StoredProcedure [dbo].[SendATL2WeeklyLoadEmails]    Script Date: 12/7/2020 08:27:39 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -53,7 +53,7 @@ BEGIN
 
 			SET @query='
 			DECLARE @today as date
-			SET @today = DATEADD(dd,-25,getdate())
+			SET @today = DATEADD(dd,00,getdate())
 			set nocount on;
 			select SalesPName ' + @column1name + ', RefNo, CSAStation as LD_No, Rev, Cost, GP, ACCTYR, ACCTMONTH, ACCTPERIODNAME --update with correct sales person commission column
 			, REPLACE(InvLOB,'','','''') as InvLOB
@@ -125,7 +125,7 @@ BEGIN
 
 			SET @query='
 			DECLARE @today as date
-			SET @today = DATEADD(dd,-25,getdate())
+			SET @today = DATEADD(dd,00,getdate())
 			set nocount on;
 			select SalesPName ' + @column1name + ', RefNo, CSAStation as LD_No, Rev, Cost, GP, ACCTYR, ACCTMONTH, ACCTPERIODNAME --update with correct sales person commission column
 			, REPLACE(InvLOB,'','','''') as InvLOB
@@ -197,7 +197,7 @@ BEGIN
 
 			SET @query='
 			DECLARE @today as date
-			SET @today = DATEADD(dd,-25,getdate())
+			SET @today = DATEADD(dd,00,getdate())
 			set nocount on;
 			select SalesPName ' + @column1name + ', RefNo, CSAStation as LD_No, Rev, Cost, GP, ACCTYR, ACCTMONTH, ACCTPERIODNAME --update with correct sales person commission column
 			, REPLACE(InvLOB,'','','''') as InvLOB
@@ -269,7 +269,7 @@ BEGIN
 
 			SET @query='
 			DECLARE @today as date
-			SET @today = DATEADD(dd,-25,getdate())
+			SET @today = DATEADD(dd,00,getdate())
 			set nocount on;
 			select SalesPName ' + @column1name + ', RefNo, CSAStation as LD_No, Rev, Cost, GP, ACCTYR, ACCTMONTH, ACCTPERIODNAME --update with correct sales person commission column
 			, REPLACE(InvLOB,'','','''') as InvLOB
@@ -341,7 +341,7 @@ BEGIN
 
 			SET @query='
 			DECLARE @today as date
-			SET @today = DATEADD(dd,-25,getdate())
+			SET @today = DATEADD(dd,00,getdate())
 			set nocount on;
 			select SalesPName ' + @column1name + ', RefNo, CSAStation as LD_No, Rev, Cost, GP, ACCTYR, ACCTMONTH, ACCTPERIODNAME --update with correct sales person commission column
 			, REPLACE(InvLOB,'','','''') as InvLOB
@@ -413,7 +413,7 @@ BEGIN
 
 			SET @query='
 			DECLARE @today as date
-			SET @today = DATEADD(dd,-25,getdate())
+			SET @today = DATEADD(dd,00,getdate())
 			set nocount on;
 			select SalesPName ' + @column1name + ', RefNo, CSAStation as LD_No, Rev, Cost, GP, ACCTYR, ACCTMONTH, ACCTPERIODNAME --update with correct sales person commission column
 			, REPLACE(InvLOB,'','','''') as InvLOB
@@ -485,7 +485,7 @@ BEGIN
 
 			SET @query='
 			DECLARE @today as date
-			SET @today = DATEADD(dd,-25,getdate())
+			SET @today = DATEADD(dd,00,getdate())
 			set nocount on;
 			select SalesPName ' + @column1name + ', RefNo, CSAStation as LD_No, Rev, Cost, GP, ACCTYR, ACCTMONTH, ACCTPERIODNAME --update with correct sales person commission column
 			, REPLACE(InvLOB,'','','''') as InvLOB
