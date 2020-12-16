@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 12/9/2020 09:09:31 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 12/16/2020 10:01:57 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -116,6 +116,7 @@ SELECT ACCTYR
 	,Convert(decimal(18,2),0.00) as TRComm -- Terrance Reed
 	,Convert(decimal(18,2),0.00) as SBComm -- Stephanie Butts
 	,Convert(decimal(18,2),0.00) as KCComm -- Kellan Chrisman
+	,Convert(decimal(18,2),0.00) as SRComm -- Shari Robinson
 into #tmp1
 from tblInvoice i
 JOIN tblShipment s on i.ShipmentID = s.ShipmentID
@@ -1019,8 +1020,12 @@ and InvCustName NOT LIKE 'DYCINSA%'
 and InvCustName NOT LIKE 'SUK%'
 and ACCTYR > 2020
 
-
-
+--Shari Robinson Calculation:  4% of GP of own accounts in LOB 76 GP less 7% overhead
+update tblCommCalc
+set SRComm = (GP*.93)*.04
+where InvLOB = '76'
+	AND SalesPName = 'Shari Robinson'
+	
 --SELECT * from #tmp1
 --drop table #tmp1
 /*****************************************************End Logging*******************************************************/
