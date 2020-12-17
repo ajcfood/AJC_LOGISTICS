@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansed]    Script Date: 3/12/2020 03:23:15 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansed]    Script Date: 12/17/2020 01:21:04 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -70,7 +70,7 @@ order by DELWEEK
 -- ==================================================================================================================
 -- Step #2
 -- Description: Result will show rows where there is an actual amount only if there is a plan amount for the customer
--- Note #1: Only Run for Surface Trans (InvLOB = 11) 
+-- Note #1: Only Run for Surface Trans (InvLOB = 9,10,11) 
 -- ==================================================================================================================
 
 SELECT CustName, CustMasterCode, rev, cost, gp
@@ -83,12 +83,12 @@ INTO #tmp2
 from #tmp7 t7
 RIGHT OUTER JOIN tblCustPlan c
 ON (c.CustName = t7.InvCustName AND c.TargetYear = t7.DELYEAR AND c.WkNum = t7.DELWEEK and t7.FK_SystemID = c.FK_SystemID)
-Where FK_LOBNum = '11'
+Where FK_LOBNum IN ('11','9','10')
 
 -- ==================================================================================================================
 -- Step #3
 -- Description: Result will show rows where there is a plan amount only if there is an actual amount for the customer
--- Note #1: Only Run for Surface Trans (InvLOB = 11)
+-- Note #1: Only Run for Surface Trans (InvLOB = 9,10,11)
 -- ==================================================================================================================
 
 SELECT InvCustName, CustMasterCode,REV, COST, GP, InvLOB, ACCTYR, wknum, monthnum,t7.ACCTMONTH
@@ -126,8 +126,8 @@ SELECT * from #tmp5
 
 -- ====================================================================================================================
 -- Step #5
--- Description: Pull Actuals and Group By for ALL LOB except Surface Trans [InvLOB 11] and Eagle [InvLOB 21]
--- Note #1: Run for lines of business other than 11 and 21
+-- Description: Pull Actuals and Group By for ALL LOB except Surface Trans [InvLOB 9,10,11] and Eagle [InvLOB 21]
+-- Note #1: Run for lines of business other than 9,10,11 and 21
 -- Note #2: Add lines of business to where clause as we get plan data from Accounting and import into tblCustPlan table
 -- ====================================================================================================================
 SELECT InvCustName, 
@@ -234,7 +234,7 @@ WHERE FK_LOBNum IS NULL
 UPDATE tblCustPlanCleansed
 SET wknum = delweek
 WHERE wknum IS NULL
-	AND InvLOB = '11'
+	AND InvLOB IN ('11','9','10')
 
 UPDATE tblCustPlanCleansed
 SET wknum = SHPWEEK
@@ -244,7 +244,7 @@ WHERE wknum IS NULL
 UPDATE tblCustPlanCleansed
 SET targetyear = delyear
 WHERE targetyear IS NULL
-	AND InvLOB = '11'
+	AND InvLOB IN ('11','9','10')
 
 UPDATE tblCustPlanCleansed
 SET targetyear = SHPYEAR
@@ -254,13 +254,13 @@ WHERE targetyear IS NULL
 UPDATE tblCustPlanCleansed
 SET DELWEEK = WkNum
 WHERE DELWEEk IS NULL
-	AND FK_LOBNum = '11'
+	AND FK_LOBNum IN ('11','9','10')
 
 
 UPDATE tblCustPlanCleansed
 SET DELYEAR = TargetYear
 WHERE DELYEAR IS NULL
-	AND FK_LOBNum = '11'
+	AND FK_LOBNum IN ('11','9','10')
 
 UPDATE tblCustPlanCleansed
 SET SHPWEEK = WkNum
