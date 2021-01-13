@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansedEAGLE]    Script Date: 3/17/2020 11:11:21 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansedEAGLE]    Script Date: 1/13/2021 10:06:14 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -230,9 +230,26 @@ UPDATE tblCustPlanCleansed
 SET ACCTMONTH = MonthNum
 WHERE ACCTMONTH IS NULL
 
+--UPDATE tblCustPlanCleansed
+--SET PlanGP = 0, GPVar = 0, PlanLoads = 0, LoadVar = 0
+--WHERE (ACCTMONTH <> MonthNum OR SHPYEAR <> TargetYear)
+
+--added by salah for year end on 1/12/2021--
+UPDATE tblCustPlanCleansed
+SET MonthNum = ACCTMONTH
+WHERE MonthNum IS NULL
+
 UPDATE tblCustPlanCleansed
 SET PlanGP = 0, GPVar = 0, PlanLoads = 0, LoadVar = 0
-WHERE ACCTMONTH <> MonthNum
+FROM tblCustPlanCleansed C
+JOIN(
+	SELECT CustMasterCode, WkNum,TargetYear
+	FROM tblCustPlanCleansed CP
+	GROUP BY custmastercode, WkNum,TargetYear
+	HAVING COUNT(*) > 1
+	)X
+ON (X.CustMasterCode = C.CustMasterCode and X.WkNum = C.WkNum and x.TargetYear = C.TargetYear)
+WHERE (ACCTMONTH <> MonthNum OR SHPYEAR <> C.TargetYear)
 
 /*
 --JOIN temp 6 and 5 for troublshooting --
