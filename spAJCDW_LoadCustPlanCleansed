@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansed]    Script Date: 12/17/2020 01:21:04 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCustPlanCleansed]    Script Date: 1/25/2021 10:57:17 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -143,7 +143,7 @@ from tblInvoice i
 JOIN tblFile f on i.ShipmentID = f.ShipmentID
 JOIN tblShipment s on f.ShipmentID = s.shipmentID
 where i.ACCTYR IN (YEAR(GETDATE()), YEAR(DATEADD(YY,-1,GETDATE())))	
-and InvLOB IN ('62','61')
+and InvLOB IN ('62','61','22','25','41') 
 Group By InvCustName, i.ACCTYR, InvLOB
 	,i.ACCTMONTH, i.InvOutofPeriod
 	,f.SHPWEEK,f.SHPYEAR
@@ -171,7 +171,7 @@ INTO #tmp5
 from #tmp8 t4
 RIGHT OUTER JOIN tblCustPlan c
 ON (c.CustName = t4.InvCustName AND c.TargetYear = t4.SHPYEAR AND c.WkNum = t4.SHPWEEK and t4.INVLob = c.FK_LOBNum)
-Where FK_LOBNum IN ('62','61') 
+Where FK_LOBNum IN ('62','61','22','25','41') 
 
 -- ==================================================================================================================
 -- Step #7
@@ -239,7 +239,7 @@ WHERE wknum IS NULL
 UPDATE tblCustPlanCleansed
 SET wknum = SHPWEEK
 WHERE wknum IS NULL
-	AND InvLOB IN ('21','62','61')
+	AND InvLOB IN ('62','61','22','25','41') 
 
 UPDATE tblCustPlanCleansed
 SET targetyear = delyear
@@ -249,7 +249,7 @@ WHERE targetyear IS NULL
 UPDATE tblCustPlanCleansed
 SET targetyear = SHPYEAR
 WHERE targetyear IS NULL
-	AND InvLOB IN ('21','62','61')
+	AND InvLOB IN ('62','61','22','25','41') 
 
 UPDATE tblCustPlanCleansed
 SET DELWEEK = WkNum
@@ -265,12 +265,12 @@ WHERE DELYEAR IS NULL
 UPDATE tblCustPlanCleansed
 SET SHPWEEK = WkNum
 WHERE SHPWEEK IS NULL
-	AND FK_LOBNum IN ('21','62','61')
+	AND FK_LOBNum IN ('62','61','22','25','41') 
 
 UPDATE tblCustPlanCleansed
 SET SHPYEAR = TargetYear
 WHERE SHPYEAR IS NULL
-	AND FK_LOBNum IN ('21','62','61')
+	AND FK_LOBNum IN ('62','61','22','25','41') 
 
 UPDATE tblCustPlanCleansed
 SET ACCTYR = TargetYear
@@ -282,7 +282,7 @@ WHERE ACCTMONTH IS NULL
 
 UPDATE tblCustPlanCleansed
 SET PlanGP = 0, GPVar = 0, PlanLoads = 0, LoadVar = 0
-WHERE ACCTMONTH <> MonthNum
+WHERE (ACCTMONTH <> MonthNum OR SHPYEAR <> TargetYear)
 
 /*
 Drop Table #tmp1
