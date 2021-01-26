@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 1/25/2021 9:47:52 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 1/26/2021 4:30:26 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -636,6 +636,7 @@ and SalesPName = 'Ryan Click'
 and ACCTYR >= 2021
 
 --Ryan Click Comm: 5% on UPS Daily Harvest and UPS Spot loads for LOB 11 starting August 2020
+-- Per Ginger Email on 1/26/2021 this is discontinued as of Jan 1, 2021
 update tblCommCalc
 set RCComm = GP *.05
 where InvLOB = ('11')
@@ -646,23 +647,10 @@ and ACCTYR = 2020
 update tblCommCalc
 set RCComm = GP *.05
 where InvLOB = ('11')
-and InvCustName like 'UPS - Daily%'
-and ACCTYR >= 2021
-
-update tblCommCalc
-set RCComm = GP *.05
-where InvLOB = ('11')
 and ShipType = 'SPOT'
 and InvCustName like 'UPS%'
 and ACCTMONTH NOT IN (1,2,3,4,5,6,7)
 and ACCTYR = 2020
-
-update tblCommCalc
-set RCComm = GP *.05
-where InvLOB = ('11')
-and ShipType = 'SPOT'
-and InvCustName like 'UPS%'
-and ACCTYR >= 2021
 
 -- Ari Matsumura Comm: 7% of GP for his loads for SeaWide
 Update tblCommCalc
