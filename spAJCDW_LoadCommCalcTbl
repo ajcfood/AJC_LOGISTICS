@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 1/26/2021 4:30:26 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 1/27/2021 8:51:48 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -59,6 +59,7 @@ SELECT ACCTYR
 	,s.ShpController as Dispatcher
 	,s.ShpMoveType as ShipType
 	,SalesPName
+	,CAST(NULL as VARCHAR(255)) as HOUSE_ACCOUNT -- added /27/2021 for Comm reassignment per Ginger
 	,InvCustName
 	,cast(sum(InvRevenue) as decimal(18,2)) as Rev
 	,cast(sum(InvCost) as decimal(18,2)) as Cost
@@ -125,7 +126,6 @@ join tblSalesP sp on s.FK_SalesPID = sp.SalesPID
 where i.ACCTYR >= LEFT(CONVERT(varchar, DATEADD(MM, -24, GetDate()),112),4)  -- needs to be modified to include ACCTMONTH when we start having commission changes.  Do not want to change historical calculations
 group by ACCTYR, ACCTMONTH, ACCTPERIODNAME,InvLOB,i.RefNo,SalesPName,InvCustName, i.ACCTQTR,s.ShpBkgNum, i.ShipmentID, s.ShpController, s.ShpMoveType
 
-
 -- =================================================================================================================================
 -- Step #2
 -- Description: Maintenance of tblCommCalc
@@ -139,6 +139,40 @@ where ACCTYR >= LEFT(CONVERT(varchar, DATEADD(MM, -24, GetDate()),112),4)
 INSERT INTO tblCommCalc
 SELECT * from #tmp1
 where ACCTYR >= LEFT(CONVERT(varchar, DATEADD(MM, -24, GetDate()),112),4) 
+
+--UPDATE HOUSE ACCOUNT COLUMN (1/27/2021)
+UPDATE tblCommCalc
+SET HOUSE_ACCOUNT = CASE
+		WHEN ( InvCustName IN (
+		'AJC BREAK BULK',
+		'AJC CARIBBEAN',
+		'AJC INTERNATIONAL',
+		'AJC MEXICO',
+		'AJC PAC ISLE',
+		'B & D',
+		'CALIFORNIA FRESH AND FROZEN INC',
+		'CARIBBEAN PRODUCE EXCHANGE',
+		'COYOTE LOGISTICS LLC',
+		'IMPEG SA DE CV',
+		'INTERNATIONAL MARKETING SYSTEM',
+		'OXBOW ANIMAL HEALTH',
+		'PUEBLO INC',
+		'PUERTO RICO SUPPLIES COMPANY',
+		'AJC - REPACK',
+		'BEC CORPORATION INC',
+		'AJC INTERNATIONAL INC',	 
+		'CARGO LIVE WORLDWIDE',	 
+		'EAGLE LOGISTICS',	 
+		'Sysco International Food',	 
+		'AJC - S AMERICA',
+		'AJC AFRICA',
+		'AJC CARCASS',
+		'AJC VEGGIES'
+		)
+		) THEN 'YES'
+		ELSE 'NO'
+	END	
+WHERE HOUSE_ACCOUNT IS NULL
 
 -- ====================================================================================================================================
 -- Step #3
@@ -636,7 +670,6 @@ and SalesPName = 'Ryan Click'
 and ACCTYR >= 2021
 
 --Ryan Click Comm: 5% on UPS Daily Harvest and UPS Spot loads for LOB 11 starting August 2020
--- Per Ginger Email on 1/26/2021 this is discontinued as of Jan 1, 2021
 update tblCommCalc
 set RCComm = GP *.05
 where InvLOB = ('11')
@@ -647,10 +680,23 @@ and ACCTYR = 2020
 update tblCommCalc
 set RCComm = GP *.05
 where InvLOB = ('11')
+and InvCustName like 'UPS - Daily%'
+and ACCTYR >= 2021
+
+update tblCommCalc
+set RCComm = GP *.05
+where InvLOB = ('11')
 and ShipType = 'SPOT'
 and InvCustName like 'UPS%'
 and ACCTMONTH NOT IN (1,2,3,4,5,6,7)
 and ACCTYR = 2020
+
+update tblCommCalc
+set RCComm = GP *.05
+where InvLOB = ('11')
+and ShipType = 'SPOT'
+and InvCustName like 'UPS%'
+and ACCTYR >= 2021
 
 -- Ari Matsumura Comm: 7% of GP for his loads for SeaWide
 Update tblCommCalc
