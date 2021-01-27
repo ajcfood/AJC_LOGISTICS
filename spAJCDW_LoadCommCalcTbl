@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 1/27/2021 8:51:48 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 1/27/2021 4:24:29 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -241,6 +241,7 @@ where SalesPName = 'Michael Browder'
 	--6% of GP where he is Sales Rep in line of business 31,33,43, or 76
 	--5% GP on 25, 41, & 31,33,43 loads where he is sales rep
 	-- 11/12/20 advised by Rachel to remove 6% for Seawide starting for October 2020 commission
+	-- 4% on LOB 11 House Accounts only where he is sales rep
 update tblCommCalc
 set TCComm = GP*.15
 where SalesPName = 'Tyler Clendenen'
@@ -277,6 +278,14 @@ set TCComm = GP*.10
 where SalesPName = 'Tyler Clendenen'
 	and InvLOB = '11'
 	and ACCTYR >= 2020
+	and HOUSE_ACCOUNT = 'NO' --added per 1/26/2021 email from Ginger - Category #1
+
+update tblCommCalc
+set TCComm = GP*.04
+where SalesPName = 'Tyler Clendenen'
+	and InvLOB = '11'
+	and ACCTYR >= 2021
+	and HOUSE_ACCOUNT = 'YES' --added per 1/26/2021 email from Ginger - Category #1
 
 update tblCommCalc
 set TCComm = GP*.05
@@ -641,7 +650,7 @@ where InvLOB = '11'
 and ACCTMONTH IN (1,2,3,4,5,6,7)
 and ACCTYR = 2020
 
---Ryan Click Comm: 10% on own loads for LOB 11 starting August 2020
+--Ryan Click Comm: 10% on own loads for LOB 11 starting August 2020, 4% only for HOUSE accounts
 update tblCommCalc
 set RCComm = GP *.10
 where InvLOB = '11'
@@ -653,6 +662,14 @@ update tblCommCalc
 set RCComm = GP *.10
 where InvLOB = '11'
 and SalesPName = 'Ryan Click'
+and HOUSE_ACCOUNT = 'NO' --added per 1/26/2021 email from Ginger - Category #1
+and ACCTYR >= 2021
+
+update tblCommCalc
+set RCComm = GP *.04
+where InvLOB = '11'
+and SalesPName = 'Ryan Click'
+and HOUSE_ACCOUNT = 'YES' --added per 1/26/2021 email from Ginger - Category #1
 and ACCTYR >= 2021
 
 --Ryan Click Comm: 5% on own loads for LOB 25,41, & 31,33,43 starting August 2020
@@ -670,18 +687,13 @@ and SalesPName = 'Ryan Click'
 and ACCTYR >= 2021
 
 --Ryan Click Comm: 5% on UPS Daily Harvest and UPS Spot loads for LOB 11 starting August 2020
+--Daily Harvest ends December of 2020 for Ryan per 1/26/2021 email from Ginger - Category #5
 update tblCommCalc
 set RCComm = GP *.05
 where InvLOB = ('11')
 and InvCustName like 'UPS - Daily%'
 and ACCTMONTH NOT IN (1,2,3,4,5,6,7)
 and ACCTYR = 2020
-
-update tblCommCalc
-set RCComm = GP *.05
-where InvLOB = ('11')
-and InvCustName like 'UPS - Daily%'
-and ACCTYR >= 2021
 
 update tblCommCalc
 set RCComm = GP *.05
@@ -864,11 +876,18 @@ set CJComm = GP*.01
 where InvLOB = '76'
 	AND CSAStation IN ('HON', 'MAU', 'HLO', 'KON', 'KAU', 'LAN', 'MOL', 'LOS')
 
--- Alex Gonzalez: 8% GP of own GP LOB 11 and 5% own GP in LOBs 41,43,25
+-- Alex Gonzalez: 8% GP of own GP LOB 11 and 5% own GP in LOBs 41,43,25.  4% only on LOB 11,9,10 HOUSE accounts.
 Update tblCommCalc
 set AGComm = GP * .08
 where InvLOB IN ('9','10','11')
 and SalesPName = 'Alex Gonzalez'
+and HOUSE_ACCOUNT = 'NO' --added per 1/26/2021 email from Ginger - Category #1
+
+Update tblCommCalc
+set AGComm = GP * .04
+where InvLOB IN ('9','10','11')
+and SalesPName = 'Alex Gonzalez'
+and HOUSE_ACCOUNT = 'YES' --added per 1/26/2021 email from Ginger - Category #1
 
 Update tblCommCalc
 set AGComm = GP * .05
