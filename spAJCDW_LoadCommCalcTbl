@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 1/27/2021 4:24:29 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 1/29/2021 9:14:28 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -118,7 +118,11 @@ SELECT ACCTYR
 	,Convert(decimal(18,2),0.00) as SBComm -- Stephanie Butts
 	,Convert(decimal(18,2),0.00) as KCComm -- Kellan Chrisman
 	,Convert(decimal(18,2),0.00) as SRComm -- Shari Robinson
-	,Convert(decimal(18,2),0.00) as OMComm -- Open Man Consulting ST ATL2 (Ginger email on 1/25/21
+	,Convert(decimal(18,2),0.00) as OMComm -- Open Man Consulting ST ATL2 (Ginger email on 1/25/21)
+	,Convert(decimal(18,2),0.00) as ABComm -- Adam Bretz
+	,Convert(decimal(18,2),0.00) as ADComm -- Aiken Davis
+	,Convert(decimal(18,2),0.00) as MHComm -- Matt Higgins
+	,Convert(decimal(18,2),0.00) as WCComm -- Winston Crosse
 into #tmp1
 from tblInvoice i
 JOIN tblShipment s on i.ShipmentID = s.ShipmentID
@@ -796,7 +800,6 @@ where InvLOB = '10'
 and ACCTYR = 2020
 and ACCTMONTH NOT IN (4,5)
 
-
 --Ron Raif
 Update tblCommCalc
 set RRComm = GP * .02
@@ -817,6 +820,7 @@ where InvLOB = '10'
 Update tblCommCalc
 set AUSTINComm = 15 -- 
 where InvLOB = '10' and Dispatcher = 'austinm'
+AND ACCTYR = 2020
 
 -- Dana Beck Comm: 1% of team GP
 Update tblCommCalc
@@ -1085,6 +1089,82 @@ update tblCommCalc
 set OMComm = GP*.3
 where InvLOB = '9'
 	AND SalesPName = 'Open Man Consulting'
+	
+--ST CSR Comm Calcs--
+---------------------
+
+--Matt Higgins: 5% of GP where he is the CSR Rep
+update tblCommCalc
+set MHComm = GP*.5
+where InvLOB IN ('9','10')
+	AND Dispatcher IN ('matth','mhiggins')
+	AND ACCTYR >= 2021
+
+--Adam Bretz: 2.75% of GP where he is the CSR Rep
+update tblCommCalc
+set ABComm = GP*.0275
+where InvLOB IN ('9')
+	AND Dispatcher IN ('abretz')
+	AND ACCTYR >= 2021
+
+--Austin Miller: 2.75% of GP where he is the CSR Rep
+update tblCommCalc
+set AUSTINComm = GP*.0275
+where InvLOB IN ('9')
+	AND Dispatcher IN ('austinm')
+	AND ACCTYR >= 2021
+
+--Aiken Davis 2021 and on: 2.75% of own GP where he is the CSR Rep & 1% GP where LOB = 9 and dispatcher is not Matt.
+update tblCommCalc
+set ADComm = GP*.0275
+where InvLOB IN ('9')
+	AND Dispatcher IN ('adavis')
+	AND ACCTYR >= 2021
+
+update tblCommCalc
+set ADComm = GP*.01
+where InvLOB IN ('9')
+	AND Dispatcher <> ('mhiggins')
+	AND ACCTYR >= 2021
+
+--Dalton Thomas 2021 and on: 2.75% of own GP where he is the CSR Rep & 1% GP where LOB = 9 and dispatcher is not Matt.
+update tblCommCalc
+set DTComm = GP*.0275
+where InvLOB IN ('10')
+	AND Dispatcher IN ('daltont')
+	AND ACCTYR >= 2021
+
+update tblCommCalc
+set DTComm = GP*.01
+where InvLOB IN ('10')
+	AND Dispatcher <> ('matth')
+	AND ACCTYR >= 2021
+
+--Ron Raif 2021 and on: 2.75% of own GP where he is the CSR Rep & 1% GP where LOB = 9 and dispatcher is not Matt.
+update tblCommCalc
+set RRComm = GP*.0275
+where InvLOB IN ('10')
+	AND Dispatcher IN ('rraif')
+	AND ACCTYR >= 2021
+
+update tblCommCalc
+set RRComm = GP*.01
+where InvLOB IN ('10')
+	AND Dispatcher <> ('matth')
+	AND ACCTYR >= 2021
+
+--Winston Crosse 2021 and on: 2.75% of own GP where he is the CSR Rep & 1% GP where LOB = 9 and dispatcher is not Matt.
+update tblCommCalc
+set WCComm = GP*.0275
+where InvLOB IN ('9')
+	AND Dispatcher IN ('wcrosse')
+	AND ACCTYR >= 2021
+
+update tblCommCalc
+set WCComm = GP*.01
+where InvLOB IN ('9')
+	AND Dispatcher <> ('mhiggins')
+	AND ACCTYR >= 2021
 	
 --SELECT * from #tmp1
 --drop table #tmp1
