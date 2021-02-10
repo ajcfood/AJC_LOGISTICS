@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 2/2/2021 1:24:53 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 2/10/2021 3:36:13 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -155,15 +155,15 @@ SET HOUSE_ACCOUNT = CASE
 		'AJC PAC ISLE',
 		'B & D',
 		'CALIFORNIA FRESH AND FROZEN INC',
-		'CARIBBEAN PRODUCE EXCHANGE',
+		--'CARIBBEAN PRODUCE EXCHANGE', -- Removed per Ginger on 2/8/2021
 		'COYOTE LOGISTICS LLC',
-		'IMPEG SA DE CV',
+		--'IMPEG SA DE CV', -- Removed per Ginger on 2/8/2021
 		'INTERNATIONAL MARKETING SYSTEM',
 		'OXBOW ANIMAL HEALTH',
-		'PUEBLO INC',
-		'PUERTO RICO SUPPLIES COMPANY',
+		--'PUEBLO INC', -- Removed per Ginger on 2/8/2021
+		--'PUERTO RICO SUPPLIES COMPANY', -- Removed per Ginger on 2/8/2021
 		'AJC - REPACK',
-		'BEC CORPORATION INC',
+		--'BEC CORPORATION INC', -- Removed per Ginger on 2/8/2021
 		'AJC INTERNATIONAL INC',	 
 		'CARGO LIVE WORLDWIDE',	 
 		'EAGLE LOGISTICS',	 
@@ -177,6 +177,11 @@ SET HOUSE_ACCOUNT = CASE
 		ELSE 'NO'
 	END	
 WHERE HOUSE_ACCOUNT IS NULL
+
+UPDATE tblCommCalc
+SET Dispatcher = 'UNASSIGNED'
+where Dispatcher IS NULL
+AND InvLOB in ('9','10','11')
 
 -- ====================================================================================================================================
 -- Step #3
