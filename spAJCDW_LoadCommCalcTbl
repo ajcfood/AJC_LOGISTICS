@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 2/10/2021 3:36:13 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 2/15/2021 11:02:19 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -461,6 +461,7 @@ where SalesPName = 'Randolph Page'
 	AND InvCustName NOT LIKE 'KEYSTONE%'
 	AND InvCustName NOT LIKE 'SANDERSON%'
 	AND InvCustName NOT LIKE 'GENERAL WORK%'
+	AND InvLOB <> '76' -- removed for 2021
 
 update tblCommCalc -- added this per 2/19/19 email from Rachel to exclude AJC INC for LOB 25
 set MJComm = 0
@@ -478,7 +479,8 @@ where SalesPName = 'Randolph Page'
 update tblCommCalc
 set RPComm = GP*.06
 where InvLOB IN ('11','21','41','31,33,43','76')
-	and SalesPName = 'Randolph Page'
+	AND SalesPName = 'Randolph Page'
+	AND RefNo NOT LIKE '30%'
 
 update tblCommCalc
 set RPComm = 0
@@ -512,6 +514,7 @@ where InvLOB = '11'
 		,'Andres Alonso'
 		,'Brawnson Walter'
 		,'Alex Gonzalez')
+	AND ACCTYR < 2021
 
 update tblCommCalc --added August 2020
 set RPComm = GP*.03
@@ -520,10 +523,14 @@ where InvLOB = '11'
 	AND ACCTYR = 2020
 	AND ACCTMONTH IN (8,9,10,11,12)
 
-update tblCommCalc --added August 2020
-set RPComm = GP*.03
+--RP ST Team commission starting 2021
+update tblCommCalc
+set RPComm = GP*.02
 where InvLOB = '11'
-	AND SalesPName NOT IN ('Ricardo Monteiro', 'Randolph Page')
+	AND SalesPName IN (
+		 'Tyler Clendenen'
+		,'Ryan Click'
+		,'Alex Gonzalez')
 	AND ACCTYR >= 2021
 
 update tblCommCalc
@@ -540,6 +547,20 @@ where InvLOB in ('41','31,33,43')
 		,'Brawnson Walter'
 		,'Alex Gonzalez')
 	AND InvCustName <> 'BALLESTER HERMANOS, INC'
+	AND ACCTYR < 2021
+
+update tblCommCalc
+set RPComm = GP*.03
+where InvLOB in ('31,33,43')
+	AND SalesPName <> 'Randolph Page'
+	AND RefNo NOT LIKE '30%'
+	AND ACCTYR >= 2021
+
+update tblCommCalc
+set RPComm = GP*.03
+where InvLOB in ('41')
+	AND SalesPName NOT IN ('Randolph Page','Chris Swartz')
+	AND ACCTYR >= 2021
 
 --3% of KEYSTONE loads no matter what LOB
 update tblCommCalc
