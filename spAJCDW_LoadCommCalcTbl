@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 2/15/2021 11:02:19 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 2/16/2021 11:01:55 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -554,6 +554,7 @@ set RPComm = GP*.03
 where InvLOB in ('31,33,43')
 	AND SalesPName <> 'Randolph Page'
 	AND RefNo NOT LIKE '30%'
+	and InvCustName NOT IN ('WAYNE FARMS LLC')
 	AND ACCTYR >= 2021
 
 update tblCommCalc
@@ -569,13 +570,6 @@ where InvLOB IN ('9','10','11')
 	AND InvCustName LIKE 'KEYSTONE%'
 	AND ACCTYR = 2020
 	AND ACCTMONTH IN (8,9,10,11,12)
-
---3% of KEYSTONE loads no matter what LOB
-update tblCommCalc
-set RPComm = GP*.03
-where InvLOB IN ('9','10','11')
-	AND InvCustName LIKE 'KEYSTONE%'
-	AND ACCTYR >= 2021
 
 --Dale Yanagihara Calculation:
 	--4.2% of GP of own accounts in LOB 76 GP less 7% overhead
@@ -925,7 +919,7 @@ where InvLOB IN ('41','31,33,43','25')
 and SalesPName = 'Alex Gonzalez'
 
 update tblCommCalc
-set SalesPName = 'Alex Gonzalzez', AGComm = GP * .05
+set SalesPName = 'Alex Gonzalez', AGComm = GP * .05
 where InvLOB IN ('31,33,43','41')
 and InvCustName IN (
 'BALLESTER HERMANOS, INC',            
@@ -967,7 +961,7 @@ and ACCTYR > 2020
 Update tblCommCalc
 set JTComm = GP * .04
 where InvLOB = '9'
-and SalesPName IN ('Christian White', 'Jack Cumiskey')
+and SalesPName IN ('Christian White', 'Jack Cumiskey','Justin Taylor')
 
 /* -- removed for 2021 and on per Rachel on 2/1/2021
 Update tblCommCalc
@@ -1124,8 +1118,8 @@ where InvLOB = '9'
 --Matt Higgins: 5% of GP where he is the CSR Rep
 update tblCommCalc
 set MHComm = GP*.05
-where InvLOB IN ('9','10')
-	AND Dispatcher IN ('matth','mhiggins')
+where InvLOB IN ('9','10','11')
+	AND Dispatcher IN ('matth','mhiggins','mattatl1')
 	AND ACCTYR >= 2021
 
 --Adam Bretz: 2.75% of GP where he is the CSR Rep
