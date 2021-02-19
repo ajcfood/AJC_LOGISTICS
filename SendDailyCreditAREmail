@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendDailyCreditAREmail]    Script Date: 7/29/2020 11:31:24 AM ******/
+/****** Object:  StoredProcedure [dbo].[SendDailyCreditAREmail]    Script Date: 2/19/2021 2:15:15 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -12,6 +12,7 @@ ALTER procedure [dbo].[SendDailyCreditAREmail] as
 BEGIN TRY
 BEGIN
 
+/*
 --IES & ST ATL
 select    ar.CUSTOMER_NAME, ct.STANDARD_TERMS_NAME
           , MAX(OVERALL_CREDIT_LIMIT) CREDIT_LIMIT
@@ -66,7 +67,7 @@ SET @Message =
 			, @body = @Message
 			, @body_format = 'HTML'
 			, @subject = 'IES/ST ATL - Daily Credit Limit vs. A/R Report'
-
+*/
 --Seawide Express
 select    ar.CUSTOMER_NAME, ct.STANDARD_TERMS_NAME
           , MAX(OVERALL_CREDIT_LIMIT) CREDIT_LIMIT
@@ -126,7 +127,7 @@ SET @Message2 =
 			, @body_format = 'HTML'
 			, @subject = 'SWE - Daily Credit Limit vs. A/R Report Seawide'
 
-
+/*
 --ST JAX
 
 
@@ -183,6 +184,7 @@ SET @Message3 =
 			, @body = @Message3
 			, @body_format = 'HTML'
 			, @subject = 'ST JAX - Daily Credit Limit vs. A/R Report'
+*/
 
 --IES NVO
 select    ar.CUSTOMER_NAME, ct.STANDARD_TERMS_NAME
@@ -294,7 +296,7 @@ SET @Message5 =
 			, @body = @Message5
 			, @body_format = 'HTML'
 			, @subject = 'Eagle - Daily Credit Limit vs. A/R Report'
-
+/*
 --ATL 2
 select    ar.CUSTOMER_NAME, ct.STANDARD_TERMS_NAME
           , MAX(OVERALL_CREDIT_LIMIT) CREDIT_LIMIT
@@ -345,10 +347,69 @@ SET @Message6 =
 			  @profile_name = 'APTEST01SQLMail'  
 			, @from_address = 'DoNotReply@AJCLogistics.com'
 			, @reply_to = 'seljamil@ajclogistics.com'
-			, @recipients = 'dwire@ajclogistics.com;pmitchell@ajclogistics.com;jlewter@ajclogistics.com;jtaylor@ajclogistics.com;jking@ajcfood.com;agarcia@ajclogistics.com;gberger@ajclogistics.com' 
+			, @recipients = 'credit@ajclogistics.com;dwire@ajclogistics.com;pmitchell@ajclogistics.com;jlewter@ajclogistics.com;jtaylor@ajclogistics.com;jking@ajcfood.com;agarcia@ajclogistics.com;gberger@ajclogistics.com' 
 			, @body = @Message6
 			, @body_format = 'HTML'
 			, @subject = 'ST ATL2 - Daily Credit Limit vs. A/R Report'
+*/
+
+--ALL SURFACE TRANSPORTATION
+select    ar.CUSTOMER_NAME, ct.STANDARD_TERMS_NAME
+          , MAX(OVERALL_CREDIT_LIMIT) CREDIT_LIMIT
+		  , SUM(AMOUNT_DUE_REMAINING) OUTSTANDING_AR
+		  ,      CASE WHEN MAX(OVERALL_CREDIT_LIMIT) > 0 
+                     THEN MAX(OVERALL_CREDIT_LIMIT) - SUM(AMOUNT_DUE_REMAINING)
+                         ELSE MAX(OVERALL_CREDIT_LIMIT) 
+                  END RemainCreditAmt
+          ,      CASE WHEN MAX(OVERALL_CREDIT_LIMIT) > 0 
+                     THEN   convert(varchar,convert(decimal(18,0),(MAX(OVERALL_CREDIT_LIMIT) - SUM(AMOUNT_DUE_REMAINING))/ MAX(OVERALL_CREDIT_LIMIT) * 100)) + '%'
+                         ELSE convert(varchar,convert(decimal(18,2),MAX(OVERALL_CREDIT_LIMIT) * 100))
+                  END RemainingCreditPerc
+into #tmp7
+from          tblOracleARData ar
+INNER join    tbloraclecustterms ct on ct.customer_id = bill_to_customer_ID
+WHERE INTERFACE_HEADER_CONTEXT IN ('IES', 'MGATE') 
+	AND CUSTOMER_NUMBER LIKE '432%'
+	OR CUSTOMER_NUMBER LIKE '430%'
+	OR CUSTOMER_NUMBER LIKE '431%'
+group by      ar.CUSTOMER_NAME, ct.STANDARD_TERMS_NAME
+having			CASE WHEN MAX(OVERALL_CREDIT_LIMIT) > 0 
+                     THEN   (MAX(OVERALL_CREDIT_LIMIT) - SUM(AMOUNT_DUE_REMAINING))/ MAX(OVERALL_CREDIT_LIMIT) * 100
+                         ELSE MAX(OVERALL_CREDIT_LIMIT) * 100
+                  END <= 20
+				  AND MAX(OVERALL_CREDIT_LIMIT) <> 0.00
+order by		CASE WHEN MAX(OVERALL_CREDIT_LIMIT) > 0 
+                     THEN MAX(OVERALL_CREDIT_LIMIT) - SUM(AMOUNT_DUE_REMAINING)
+                         ELSE MAX(OVERALL_CREDIT_LIMIT) 
+                  END
+
+
+DECLARE @Message7 VARCHAR(MAX)
+
+SET @Message7 =  
+    N'<table align=''center'' border="1" bgcolor="#ffffe6">' +  
+	N'<tr bgcolor="#cceeff"><th>CUSTOMER_NAME</th><th>STANDARD_TERMS_NAME</th><th>CREDIT_LIMIT</th><th>OUTSTANDING_AR</th><th>REMAIN_CREDIT_AMT</th><th>REMAINING_CREDIT_PERC</th>' +  
+				CAST ( ( SELECT td = CUSTOMER_NAME, '',
+								td = STANDARD_TERMS_NAME, '',
+								td = format(CREDIT_LIMIT, 'c', 'en-us'), '',   
+								td = format(OUTSTANDING_AR, 'c', 'en-us'), '', 
+								td = format(RemainCreditAmt, 'c', 'en-us'), '', 
+								td = RemainingCreditPerc, ''
+						  FROM #tmp7
+						  FOR XML PATH('tr'), TYPE   
+				) AS NVARCHAR(MAX) ) +  
+				N'</table>'
+
+
+			EXEC msdb.dbo.sp_send_dbmail 
+			  @profile_name = 'APTEST01SQLMail'  
+			, @from_address = 'DoNotReply@AJCLogistics.com'
+			, @reply_to = 'seljamil@ajclogistics.com'
+			, @recipients = 'credit@ajclogistics.com;dwire@ajclogistics.com;pmitchell@ajclogistics.com;jlewter@ajclogistics.com;jtaylor@ajclogistics.com;jking@ajcfood.com;gberger@ajclogistics.com;bstallings@ajclogistics.com;cmendez@ajclogistics.com;tclendenen@ajclogistics.com' 
+			, @body = @Message7
+			, @body_format = 'HTML'
+			, @subject = 'Consolidated Surface Trans Daily Credit Limit vs A/R Report'
+
 
 
 
@@ -372,3 +433,4 @@ BEGIN CATCH
 
 
 END CATCH
+
