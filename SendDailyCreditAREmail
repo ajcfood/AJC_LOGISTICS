@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendDailyCreditAREmail]    Script Date: 2/22/2021 12:38:35 PM ******/
+/****** Object:  StoredProcedure [dbo].[SendDailyCreditAREmail]    Script Date: 2/23/2021 9:53:06 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -431,9 +431,9 @@ from          tblOracleARData ar
 INNER join    tbloraclecustterms ct on ct.customer_id = bill_to_customer_ID
 WHERE INTERFACE_HEADER_CONTEXT IN ('IES') 
 	AND CUSTOMER_NUMBER LIKE '440%'  
-	AND CUSTOMER_NUMBER LIKE '420%'  
-	AND CUSTOMER_NUMBER LIKE '421%'  
-	AND CUSTOMER_NUMBER LIKE '425%'  
+	OR CUSTOMER_NUMBER LIKE '420%'  
+	OR CUSTOMER_NUMBER LIKE '421%'  
+	OR CUSTOMER_NUMBER LIKE '425%'  
 group by      ar.CUSTOMER_NAME, ct.CUSTOMER_NUMBER,ct.STANDARD_TERMS_NAME
 having			CASE WHEN MAX(OVERALL_CREDIT_LIMIT) > 0 
                      THEN   (MAX(OVERALL_CREDIT_LIMIT) - SUM(AMOUNT_DUE_REMAINING))/ MAX(OVERALL_CREDIT_LIMIT) * 100
@@ -450,7 +450,7 @@ DECLARE @Message8 VARCHAR(MAX)
 
 SET @Message8 =  
     N'<table align=''center'' border="1" bgcolor="#ffffe6">' +  
-	N'<tr bgcolor="#cceeff"><th>CUSTOMER_NAME</th><th>STANDARD_TERMS_NAME</th><th>CREDIT_LIMIT</th><th>OUTSTANDING_AR</th><th>REMAIN_CREDIT_AMT</th><th>REMAINING_CREDIT_PERC</th>' +  
+	N'<tr bgcolor="#cceeff"><th>CUSTOMER_NAME</th><th>CUSTOMER_NUMBER</th><th>STANDARD_TERMS_NAME</th><th>CREDIT_LIMIT</th><th>OUTSTANDING_AR</th><th>REMAIN_CREDIT_AMT</th><th>REMAINING_CREDIT_PERC</th>' +  
 				CAST ( ( SELECT td = CUSTOMER_NAME, '',
 								td = CUSTOMER_NUMBER, '',
 								td = STANDARD_TERMS_NAME, '',
@@ -472,8 +472,6 @@ SET @Message8 =
 			, @body = @Message8
 			, @body_format = 'HTML'
 			, @subject = 'Eagle & NVOCC - Daily Credit Limit vs. A/R Report'
-
-
 
 
 END
