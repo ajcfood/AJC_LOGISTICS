@@ -1,6 +1,6 @@
 USE [MGXMLProcessing]
 GO
-/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadOracleMGIntegration]    Script Date: 10/24/2019 10:59:07 AM ******/
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadOracleMGIntegration]    Script Date: 2/25/2021 11:10:57 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -145,10 +145,34 @@ and (
 		OR  locationcode like '%Remit' --Accounts for RMIS files
 	)
 
+
+
 --insert data into oracle staging
 insert into
 openquery(ORACLEPROD, 'select * from AJCL_MG_CARRIER_INTERFACE')
+
+-- As of 3/1/2021, this is updated so that all new carriers have a site of Triumph due to the Triumph Pay project go live date
+/*
 select UPPER([LocationCode]), UPPER([AddressLine1]), UPPER(ISNULL([AddressLine2],'')) [AddressLine2], UPPER([City]), UPPER([State]), [PostalCode], UPPER([CarrierLocationReferences]), UPPER([CarrierNum]), UPPER([CarrierName])
+from [MGXMLProcessing].[dbo].[tblOracleCarriers] 
+where ISNULL([Processed],0) = 0
+and  (
+			locationtype like '%Remit To%' -- changed to locationtype LIKE '%Remit To%' to include both location types with Remit to in them: Remit To and Carrier/Remit To
+		OR  locationtype like '%RemitTo%' --Accounts for RMIS files
+	  )
+and (
+			locationcode like 'CL%'
+		OR  locationcode like '%Remit' --Accounts for RMIS files
+	)
+*/
+
+select 'TRIUMPH'
+, 'PO BOX 840267'
+, ''
+, 'DALLAS'
+, 'TX' 
+, '75284'
+, UPPER([CarrierLocationReferences]), UPPER([CarrierNum]), UPPER([CarrierName])
 from [MGXMLProcessing].[dbo].[tblOracleCarriers] 
 where ISNULL([Processed],0) = 0
 and  (
@@ -161,7 +185,6 @@ and (
 	)
 
 update MGXMLProcessing..[tblOracleCarriers] set processed = 1 where filename = @filename and ISNULL(processed,0) = 0
-
 
 END
 
