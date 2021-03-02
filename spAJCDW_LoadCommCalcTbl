@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 2/16/2021 11:01:55 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 3/2/2021 10:11:17 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1119,7 +1119,7 @@ where InvLOB = '9'
 update tblCommCalc
 set MHComm = GP*.05
 where InvLOB IN ('9','10','11')
-	AND Dispatcher IN ('matth','mhiggins','mattatl1')
+	AND Dispatcher IN ('matth','mhiggins','mattatl1','mattadmin')
 	AND ACCTYR >= 2021
 
 --Adam Bretz: 2.75% of GP where he is the CSR Rep
@@ -1146,7 +1146,7 @@ where InvLOB IN ('9')
 update tblCommCalc
 set ADComm = GP*.01
 where InvLOB IN ('9')
-	AND Dispatcher NOT IN ('mhiggins','adavis')
+	AND Dispatcher NOT IN ('mhiggins','adavis','mattadmin')
 	AND ACCTYR >= 2021
 
 --Dalton Thomas 2021 and on: 2.75% of own GP where he is the CSR Rep & 1% GP where LOB = 9 and dispatcher is not Matt.
@@ -1159,7 +1159,7 @@ where InvLOB IN ('10')
 update tblCommCalc
 set DTComm = GP*.01
 where InvLOB IN ('10')
-	AND Dispatcher NOT IN ('matth','daltont')
+	AND Dispatcher NOT IN ('matth','daltont','mattadmin')
 	AND ACCTYR >= 2021
 
 --Ron Raif 2021 and on: 2.75% of own GP where he is the CSR Rep & 1% GP where LOB = 9 and dispatcher is not Matt.
@@ -1172,7 +1172,7 @@ where InvLOB IN ('10')
 update tblCommCalc
 set RRComm = GP*.01
 where InvLOB IN ('10')
-	AND Dispatcher NOT IN ('matth','rraif')
+	AND Dispatcher NOT IN ('matth','rraif','mattadmin')
 	AND ACCTYR >= 2021
 
 --Winston Crosse 2021 and on: 2.75% of own GP where he is the CSR Rep & 1% GP where LOB = 9 and dispatcher is not Matt.
@@ -1185,7 +1185,7 @@ where InvLOB IN ('9')
 update tblCommCalc
 set WCComm = GP*.01
 where InvLOB IN ('9')
-	AND Dispatcher NOT IN ('mhiggins','wcrosse')
+	AND Dispatcher NOT IN ('mhiggins','wcrosse','mattadmin')
 	AND ACCTYR >= 2021
 	
 --SELECT * from #tmp1
