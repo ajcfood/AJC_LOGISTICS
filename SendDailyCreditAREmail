@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendDailyCreditAREmail]    Script Date: 2/23/2021 9:53:06 AM ******/
+/****** Object:  StoredProcedure [dbo].[SendDailyCreditAREmail]    Script Date: 3/3/2021 4:57:30 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -68,7 +68,7 @@ SET @Message =
 			, @body = @Message
 			, @body_format = 'HTML'
 			, @subject = 'IES/ST ATL - Daily Credit Limit vs. A/R Report'
-*/
+
 --Seawide Express
 select    ar.CUSTOMER_NAME, ct.CUSTOMER_NUMBER,ct.STANDARD_TERMS_NAME
           , MAX(OVERALL_CREDIT_LIMIT) CREDIT_LIMIT
@@ -123,13 +123,13 @@ SET @Message2 =
 			EXEC msdb.dbo.sp_send_dbmail 
 			  @profile_name = 'APTEST01SQLMail'  
 			, @from_address = 'DoNotReply@AJCLogistics.com'
-			, @reply_to = 'sali@ajclogistics.com' 
-			, @recipients = 'phinkle@seawideexpress.com;credit@seawideexpress.com;gberger@ajclogistics.com;JennyKing@ajcfood.com'
+			, @reply_to = 'seljamil@ajclogistics.com' 
+			, @recipients = 'credit@seawideexpress.com;gberger@ajclogistics.com;JennyKing@ajcfood.com'
 			, @body = @Message2
 			, @body_format = 'HTML'
 			, @subject = 'SWE - Daily Credit Limit vs. A/R Report Seawide'
 
-/*
+
 --ST JAX
 
 
@@ -473,6 +473,69 @@ SET @Message8 =
 			, @body_format = 'HTML'
 			, @subject = 'Eagle & NVOCC - Daily Credit Limit vs. A/R Report'
 
+--SWE with On Account
+--Seawide Express
+select    ar.CUSTOMER_NAME, ct.CUSTOMER_NUMBER,ct.STANDARD_TERMS_NAME
+          , MAX(OVERALL_CREDIT_LIMIT) CREDIT_LIMIT
+		  , SUM(AMOUNT_DUE_REMAINING) OUTSTANDING_AR
+		  , MAX(ONACCOUNT) AS ON_ACCOUNT_RECEIPTS
+		  ,      CASE WHEN MAX(OVERALL_CREDIT_LIMIT) > 0 
+                     THEN MAX(OVERALL_CREDIT_LIMIT) - SUM(AMOUNT_DUE_REMAINING) + MAX(ONACCOUNT)
+                         ELSE MAX(OVERALL_CREDIT_LIMIT) 
+                  END RemainCreditAmt
+          ,      CASE WHEN MAX(OVERALL_CREDIT_LIMIT) > 0 
+                     THEN   convert(decimal(18,0),(MAX(OVERALL_CREDIT_LIMIT) - SUM(AMOUNT_DUE_REMAINING))/ MAX(OVERALL_CREDIT_LIMIT) * 100)
+                         ELSE convert(varchar,convert(decimal(18,2),MAX(OVERALL_CREDIT_LIMIT) * 100))
+                  END RemainingCreditPerc
+	
+into #tmp2
+from          tblOracleARData ar
+INNER join    tbloraclecustterms ct on ct.customer_id = bill_to_customer_ID
+WHERE INTERFACE_HEADER_CONTEXT IN ('CSA') 
+	AND CUSTOMER_NUMBER LIKE '460%'  
+group by      ar.CUSTOMER_NAME, ct.CUSTOMER_NUMBER,ct.STANDARD_TERMS_NAME
+having			CASE WHEN MAX(OVERALL_CREDIT_LIMIT) > 0 
+                     THEN   (MAX(OVERALL_CREDIT_LIMIT) - SUM(AMOUNT_DUE_REMAINING) + MAX(ONACCOUNT))/ MAX(OVERALL_CREDIT_LIMIT) * 100
+                         ELSE MAX(OVERALL_CREDIT_LIMIT) * 100
+                  END <= 20
+				  AND MAX(OVERALL_CREDIT_LIMIT) <> 0.00
+order by		CASE WHEN MAX(OVERALL_CREDIT_LIMIT) > 0 
+                     THEN   convert(decimal(18,0),(MAX(OVERALL_CREDIT_LIMIT) - SUM(AMOUNT_DUE_REMAINING) + MAX(ONACCOUNT))/ MAX(OVERALL_CREDIT_LIMIT) * 100)
+                         ELSE convert(varchar,convert(decimal(18,2),MAX(OVERALL_CREDIT_LIMIT) * 100))
+                  END
+
+
+alter table #tmp2 alter column RemainingCreditPerc VARCHAR(10)
+
+update #tmp2 set RemainingCreditPerc = RemainingCreditPerc + '%'
+
+
+DECLARE @Message2 VARCHAR(MAX)
+
+SET @Message2 =  
+    N'<table align=''center'' border="1" bgcolor="#ffffe6">' +  
+	N'<tr bgcolor="#cceeff"><th>CUSTOMER_NAME</th><th>CUSTOMER_NUMBER</th><th>STANDARD_TERMS_NAME</th><th>CREDIT_LIMIT</th><th>OUTSTANDING_AR</th><th>ON_ACCOUNT_RECEIPTS</th><th>REMAIN_CREDIT_AMT</th><th>REMAINING_CREDIT_PERC</th>' +  
+				CAST ( ( SELECT td = CUSTOMER_NAME, '',
+								td = CUSTOMER_NUMBER, '',
+								td = STANDARD_TERMS_NAME, '',
+								td = format(CREDIT_LIMIT, 'c', 'en-us'), '',   
+								td = format(OUTSTANDING_AR, 'c', 'en-us'), '', 
+								td = format(ON_ACCOUNT_RECEIPTS, 'c', 'en-us'), '', 
+								td = format(RemainCreditAmt, 'c', 'en-us'), '', 
+								td = RemainingCreditPerc, ''
+						  FROM #tmp2  
+						  FOR XML PATH('tr'), TYPE   
+				) AS NVARCHAR(MAX) ) +  
+				N'</table>'
+
+			EXEC msdb.dbo.sp_send_dbmail 
+			  @profile_name = 'APTEST01SQLMail'  
+			, @from_address = 'DoNotReply@AJCLogistics.com'
+			, @reply_to = 'seljamil@ajclogistics.com' 
+			, @recipients = 'credit@seawideexpress.com;gberger@ajclogistics.com;JennyKing@ajcfood.com'
+			, @body = @Message2
+			, @body_format = 'HTML'
+			, @subject = 'SWE - Daily Credit Limit vs. A/R Report Seawide'
 
 END
 
