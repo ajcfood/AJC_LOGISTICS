@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendDailyCreditAREmail]    Script Date: 3/5/2021 8:37:39 AM ******/
+/****** Object:  StoredProcedure [dbo].[SendDailyCreditAREmail]    Script Date: 3/8/2021 9:23:29 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -367,7 +367,7 @@ select    ar.CUSTOMER_NAME, ct.CUSTOMER_NUMBER,ct.STANDARD_TERMS_NAME
                          ELSE MAX(OVERALL_CREDIT_LIMIT) 
                   END RemainCreditAmt
           ,      CASE WHEN MAX(OVERALL_CREDIT_LIMIT) > 0 
-                     THEN   convert(decimal(18,0),(MAX(OVERALL_CREDIT_LIMIT) - SUM(AMOUNT_DUE_REMAINING))/ MAX(OVERALL_CREDIT_LIMIT) * 100)
+                     THEN   convert(decimal(18,0),(MAX(OVERALL_CREDIT_LIMIT) - SUM(AMOUNT_DUE_REMAINING)+ MAX(ONACCOUNT))/ MAX(OVERALL_CREDIT_LIMIT) * 100)
                          ELSE convert(varchar,convert(decimal(18,2),MAX(OVERALL_CREDIT_LIMIT) * 100))
                   END RemainingCreditPerc
 into #tmp7
@@ -431,7 +431,7 @@ select    ar.CUSTOMER_NAME, ct.CUSTOMER_NUMBER,ct.STANDARD_TERMS_NAME
                          ELSE MAX(OVERALL_CREDIT_LIMIT) 
                   END RemainCreditAmt
           ,      CASE WHEN MAX(OVERALL_CREDIT_LIMIT) > 0 
-                     THEN   convert(decimal(18,0),(MAX(OVERALL_CREDIT_LIMIT) - SUM(AMOUNT_DUE_REMAINING))/ MAX(OVERALL_CREDIT_LIMIT) * 100)
+                     THEN   convert(decimal(18,0),(MAX(OVERALL_CREDIT_LIMIT) - SUM(AMOUNT_DUE_REMAINING)+ MAX(ONACCOUNT))/ MAX(OVERALL_CREDIT_LIMIT) * 100)
                          ELSE convert(varchar,convert(decimal(18,2),MAX(OVERALL_CREDIT_LIMIT) * 100))
                   END RemainingCreditPerc
 into #tmp4
@@ -496,7 +496,7 @@ select    ar.CUSTOMER_NAME, ct.CUSTOMER_NUMBER,ct.STANDARD_TERMS_NAME
                          ELSE MAX(OVERALL_CREDIT_LIMIT) 
                   END RemainCreditAmt
           ,      CASE WHEN MAX(OVERALL_CREDIT_LIMIT) > 0 
-                     THEN   convert(decimal(18,0),(MAX(OVERALL_CREDIT_LIMIT) - SUM(AMOUNT_DUE_REMAINING))/ MAX(OVERALL_CREDIT_LIMIT) * 100)
+                     THEN   convert(decimal(18,0),(MAX(OVERALL_CREDIT_LIMIT) - SUM(AMOUNT_DUE_REMAINING)+ MAX(ONACCOUNT))/ MAX(OVERALL_CREDIT_LIMIT) * 100)
                          ELSE convert(varchar,convert(decimal(18,2),MAX(OVERALL_CREDIT_LIMIT) * 100))
                   END RemainingCreditPerc
 	
