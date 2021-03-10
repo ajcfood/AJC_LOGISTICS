@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 7/20/2020 09:02:59 AM ******/
+/****** Object:  StoredProcedure [dbo].[MGOracleVarianceReporting]    Script Date: 3/10/2021 4:08:58 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -96,6 +96,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 											WHERE   LOB IN ('9','10','11')
 											AND     REPLACE(LINE_ATTRIBUTE11,'MG','') NOT LIKE '%J'
 											AND     REPLACE(LINE_ATTRIBUTE11,'MG','') NOT LIKE '%A'
+											AND HEADER_NAME NOT LIKE 'QP%'
 											GROUP BY REPLACE(LINE_ATTRIBUTE11,'MG',''), LOB 
 										) Z ON Z.OracleRefShippingOrder = COALESCE(v.RefShippingOrder, w.RefShippingOrder)
 					WHERE		(
@@ -151,8 +152,8 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 
 									EXEC msdb.dbo.sp_send_dbmail 
 										@profile_name = 'APTEST01SQLMail'  
-									,@recipients = 'lpantesco@ajclogistics.com;rclick@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
-									,@copy_recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
+									,@recipients = 'lpantesco@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
+									,@copy_recipients = 'seljamil@ajclogistics.com' 
 									,@body = @Message
 									,@body_format = 'HTML'
 									,@subject = 'Daily MG-BI-Oracle Variance Report for ST ATL'
@@ -174,8 +175,8 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 
 									EXEC msdb.dbo.sp_send_dbmail 
 										@profile_name = 'APTEST01SQLMail'  
-									,@recipients = 'lpantesco@ajclogistics.com;rclick@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
-									,@copy_recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
+									,@recipients = 'lpantesco@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
+									,@copy_recipients = 'seljamil@ajclogistics.com' 
 									,@body = @Message
 									,@body_format = 'HTML'
 									,@subject = 'Daily MG-BI-Oracle Variance Report for ST ATL'
@@ -247,6 +248,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 											FROM	ajcdw.[dbo].[tblOracleGLCleansed]
 											WHERE   LOB IN ('9','10','11')
 											AND     REPLACE(LINE_ATTRIBUTE11,'MG','') LIKE '%J'
+											AND HEADER_NAME NOT LIKE 'QP%'
 											GROUP BY REPLACE(LINE_ATTRIBUTE11,'MG',''), LOB 
 										) Z ON Z.OracleRefShippingOrder = COALESCE(v.RefShippingOrder, w.RefShippingOrder, x.RefShippingOrder)
 					WHERE		(
@@ -301,8 +303,8 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 
 									EXEC msdb.dbo.sp_send_dbmail 
 										@profile_name = 'APTEST01SQLMail'  
-									,@recipients = 'lpantesco@ajclogistics.com;cmendez@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
-									,@copy_recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
+									,@recipients = 'cmendez@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
+									,@copy_recipients = 'seljamil@ajclogistics.com' 
 									,@body = @Message
 									,@body_format = 'HTML'
 									,@subject = 'Daily MG-BI-Oracle Variance Report for ST JAX'
@@ -324,8 +326,8 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 
 									EXEC msdb.dbo.sp_send_dbmail 
 										@profile_name = 'APTEST01SQLMail'  
-									,@recipients = 'lpantesco@ajclogistics.com;cmendez@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
-									,@copy_recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
+									,@recipients = 'cmendez@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
+									,@copy_recipients = 'seljamil@ajclogistics.com' 
 									,@body = @Message
 									,@body_format = 'HTML'
 									,@subject = 'Daily MG-BI-Oracle Variance Report for ST JAX'
@@ -397,6 +399,7 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 											FROM	ajcdw.[dbo].[tblOracleGLCleansed]
 											WHERE   LOB IN ('9','10','11')
 											AND     REPLACE(LINE_ATTRIBUTE11,'MG','') LIKE '%A'
+											AND HEADER_NAME NOT LIKE 'QP%'
 											GROUP BY REPLACE(LINE_ATTRIBUTE11,'MG',''), LOB 
 										) Z ON Z.OracleRefShippingOrder = COALESCE(v.RefShippingOrder, w.RefShippingOrder, x.RefShippingOrder)
 					WHERE		(
@@ -451,8 +454,8 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 
 									EXEC msdb.dbo.sp_send_dbmail 
 										@profile_name = 'APTEST01SQLMail'  
-									,@recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
-									,@copy_recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
+									,@recipients = 'seljamil@ajclogistics.com' 
+									,@copy_recipients = 'seljamil@ajclogistics.com' 
 									,@body = @Message
 									,@body_format = 'HTML'
 									,@subject = 'Daily MG-BI-Oracle Variance Report for ST ORBIT'
@@ -474,8 +477,8 @@ DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
 
 									EXEC msdb.dbo.sp_send_dbmail 
 										@profile_name = 'APTEST01SQLMail'  
-									,@recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
-									,@copy_recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
+									,@recipients = 'seljamil@ajclogistics.com' 
+									,@copy_recipients = 'seljamil@ajclogistics.com' 
 									,@body = @Message
 									,@body_format = 'HTML'
 									,@subject = 'Daily MG-BI-Oracle Variance Report for ST ORBIT'
@@ -616,8 +619,8 @@ BEGIN
 
 				EXEC msdb.dbo.sp_send_dbmail 
 					@profile_name = 'APTEST01SQLMail'  
-			    ,@recipients = 'lpantesco@ajclogistics.com;rclick@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
-			    ,@copy_recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
+			    ,@recipients = 'lpantesco@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
+			    ,@copy_recipients = 'seljamil@ajclogistics.com' 
 				,@body = @Message
 				,@body_format = 'HTML'
 				,@subject = 'MG-BI-Oracle Variance for 7 Days or More for ST ATL'
@@ -638,8 +641,8 @@ SET @Message =
 
 				EXEC msdb.dbo.sp_send_dbmail 
 					@profile_name = 'APTEST01SQLMail'  
-				,@recipients = 'lpantesco@ajclogistics.com;rclick@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
-				,@copy_recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
+				,@recipients = 'lpantesco@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
+				,@copy_recipients = 'seljamil@ajclogistics.com' 
 				,@body = @Message
 				,@body_format = 'HTML'
 				,@subject = 'MG-BI-Oracle Variance for 7 Days or More for ST ATL'
@@ -793,8 +796,8 @@ BEGIN
 
 				EXEC msdb.dbo.sp_send_dbmail 
 					@profile_name = 'APTEST01SQLMail'  
-				,@recipients = 'lpantesco@ajclogistics.com;cmendez@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
-				,@copy_recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
+				,@recipients = 'cmendez@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
+				,@copy_recipients = 'seljamil@ajclogistics.com' 
 				,@body = @Message
 				,@body_format = 'HTML'
 				,@subject = 'MG-BI-Oracle Variance for 7 Days or More for ST JAX'
@@ -816,8 +819,8 @@ SET @Message =
 
 				EXEC msdb.dbo.sp_send_dbmail 
 					@profile_name = 'APTEST01SQLMail'  
-				,@recipients = 'lpantesco@ajclogistics.com;cmendez@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
-				,@copy_recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
+				,@recipients = 'cmendez@ajclogistics.com;igayle@ajclogistics.com;rtierney@ajclogistics.com;gberger@ajclogistics.com' 
+				,@copy_recipients = 'seljamil@ajclogistics.com' 
 				,@body = @Message
 				,@body_format = 'HTML'
 				,@subject = 'MG-BI-Oracle Variance for 7 Days or More for ST JAX'
@@ -972,8 +975,8 @@ BEGIN
 
 				EXEC msdb.dbo.sp_send_dbmail 
 					@profile_name = 'APTEST01SQLMail'  
-				,@recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
-				,@copy_recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
+				,@recipients = 'seljamil@ajclogistics.com' 
+				,@copy_recipients = 'seljamil@ajclogistics.com' 
 				,@body = @Message
 				,@body_format = 'HTML'
 				,@subject = 'MG-BI-Oracle Variance for 7 Days or More for ST ORBIT'
@@ -995,8 +998,8 @@ SET @Message =
 
 				EXEC msdb.dbo.sp_send_dbmail 
 					@profile_name = 'APTEST01SQLMail'  
-				,@recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
-				,@copy_recipients = 'sali@ajclogistics.com;seljamil@ajclogistics.com' 
+				,@recipients = 'seljamil@ajclogistics.com' 
+				,@copy_recipients = 'seljamil@ajclogistics.com' 
 				,@body = @Message
 				,@body_format = 'HTML'
 				,@subject = 'MG-BI-Oracle Variance for 7 Days or More for ST ORBIT'
