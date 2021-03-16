@@ -1,0 +1,46 @@
+USE [AJCDW]
+GO
+
+/****** Object:  Trigger [dbo].[AlertEmail]    Script Date: 3/16/2021 10:08:37 AM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+ALTER TRIGGER [dbo].[AlertEmail]
+ON [dbo].[tblProcedureErrorLog]
+AFTER INSERT
+AS
+
+BEGIN
+
+DECLARE @Message VARCHAR(MAX), @ProcedureName VARCHAR(MAX), @ErrorMessage VARCHAR(MAX), @ErrorLine INT, @ErrorDate DATETIME
+
+SET			@ProcedureName = (SELECT ProcedureName FROM inserted)
+SET			@ErrorMessage = (SELECT ErrorMessage FROM inserted) 
+SET			@ErrorLine = (SELECT ErrorLine FROM inserted)
+SET			@ErrorDate = (SELECT ErrorDate FROM inserted)
+ 
+
+SET @Message = 
+	+ char(10)
+	+ 'The stored procedure named ''''' + @ProcedureName +  ''''''
+	+ ' errored out. The reason for the error was due to: ''''' + @ErrorMessage + ''''''
+	+ ' . The error ocurred in the proc on line ' + CAST(@ErrorLine AS VARCHAR(MAX)) +
+	+ ' @ ' + CONVERT(varchar(max),@ErrorDate,100) +
+	+ '. Please research root cause.</font></span>' 
+	; 
+
+EXEC msdb.dbo.sp_send_dbmail 
+	@profile_name = 'APTEST01SQLMail'  
+,@recipients = 'mcesario@ajclogistics.com;seljamil@ajclogistics.com' 
+,@body = @Message
+,@body_format = 'HTML'
+,@subject = 'Process Error Alert!!!'
+,@Importance = 'HIGH';  
+
+END
+GO
