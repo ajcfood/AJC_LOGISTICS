@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 3/2/2021 10:11:17 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 3/17/2021 2:31:19 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -123,6 +123,7 @@ SELECT ACCTYR
 	,Convert(decimal(18,2),0.00) as ADComm -- Aiken Davis
 	,Convert(decimal(18,2),0.00) as MHComm -- Matt Higgins
 	,Convert(decimal(18,2),0.00) as WCComm -- Winston Crosse
+	,Convert(decimal(18,2),0.00) as THComm -- Tina Henley
 into #tmp1
 from tblInvoice i
 JOIN tblShipment s on i.ShipmentID = s.ShipmentID
@@ -552,7 +553,7 @@ where InvLOB in ('41','31,33,43')
 update tblCommCalc
 set RPComm = GP*.03
 where InvLOB in ('31,33,43')
-	AND SalesPName <> 'Randolph Page'
+	AND SalesPName NOT IN ('Randolph Page','Chris Swartz')
 	AND RefNo NOT LIKE '30%'
 	and InvCustName NOT IN ('WAYNE FARMS LLC')
 	AND ACCTYR >= 2021
@@ -1111,6 +1112,12 @@ update tblCommCalc
 set OMComm = GP*.3
 where InvLOB = '9'
 	AND SalesPName = 'Open Man Consulting'
+
+--Tina Henley: 8.5% of GP on own accounts in LOB 9
+update tblCommCalc
+set THComm = GP*.085
+where InvLOB = '9'
+	AND SalesPName = 'Tina Henley'
 	
 --ST CSR Comm Calcs--
 ---------------------
@@ -1125,8 +1132,8 @@ where InvLOB IN ('9','10','11')
 --Adam Bretz: 2.75% of GP where he is the CSR Rep
 update tblCommCalc
 set ABComm = GP*.0275
-where InvLOB IN ('9')
-	AND Dispatcher IN ('abretz')
+where InvLOB IN ('9','10')
+	AND Dispatcher IN ('abretz','adamjax')
 	AND ACCTYR >= 2021
 
 --Austin Miller: 2.75% of GP where he is the CSR Rep
@@ -1178,8 +1185,8 @@ where InvLOB IN ('10')
 --Winston Crosse 2021 and on: 2.75% of own GP where he is the CSR Rep & 1% GP where LOB = 9 and dispatcher is not Matt.
 update tblCommCalc
 set WCComm = GP*.0375
-where InvLOB IN ('9')
-	AND Dispatcher IN ('wcrosse')
+where InvLOB IN ('9','10')
+	AND Dispatcher IN ('wcrosse','winstonjax')
 	AND ACCTYR >= 2021
 
 update tblCommCalc
