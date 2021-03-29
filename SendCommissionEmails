@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendCommissionEmails]    Script Date: 2/16/2021 10:33:11 AM ******/
+/****** Object:  StoredProcedure [dbo].[SendCommissionEmails]    Script Date: 3/29/2021 4:49:52 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -169,7 +169,7 @@ BEGIN
 
 			EXEC msdb.dbo.sp_send_dbmail
 				@profile_name = 'APTEST01SQLMail'
-				, @recipients = 'tclendenen@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;rpage@ajclogistics.com' -- update email receipient /add tclendenen@ajclogistics.com; back in*/
+				, @recipients = 'tclendenen@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;rpage@ajclogistics.com;dwire@ajclogistics.com' -- update email receipient /add tclendenen@ajclogistics.com; back in*/
 				, @subject = @subj
 				, @body= @tableHTML
 				, @body_format = 'HTML'
@@ -240,7 +240,7 @@ BEGIN
 			*/
 			EXEC msdb.dbo.sp_send_dbmail
 				@profile_name = 'APTEST01SQLMail'
-				, @recipients = 'aalonso@ajclogistiscs.com;rtierney@ajclogistics.com;rpage@ajclogistics.com' -- update email receipient /*add aalonso@ajclogistics.com; back in*/
+				, @recipients = 'aalonso@ajclogistiscs.com;rtierney@ajclogistics.com;dwire@ajclogistics.com' -- update email receipient /*add aalonso@ajclogistics.com; back in*/
 				, @subject = @subj
 				, @body= @tableHTML
 				, @body_format = 'HTML'
@@ -311,7 +311,7 @@ BEGIN
 			*/
 			EXEC msdb.dbo.sp_send_dbmail
 				@profile_name = 'APTEST01SQLMail'
-				, @recipients = 'lpantesco@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;rpage@ajclogistics.com' -- update email receipient /*add lpantesco@ajclogistics.com; back in*/
+				, @recipients = 'lpantesco@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;dwire@ajclogistics.com' -- update email receipient /*add lpantesco@ajclogistics.com; back in*/
 				, @subject = @subj
 				, @body= @tableHTML
 				, @body_format = 'HTML'
@@ -382,7 +382,7 @@ BEGIN
 			*/
 			EXEC msdb.dbo.sp_send_dbmail
 				@profile_name = 'APTEST01SQLMail'
-				, @recipients = 'sbutts@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;rpage@ajclogistics.com' -- update email receipient /*add lpantesco@ajclogistics.com; back in*/
+				, @recipients = 'sbutts@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;dwire@ajclogistics.com' -- update email receipient /*add lpantesco@ajclogistics.com; back in*/
 				, @subject = @subj
 				, @body= @tableHTML
 				, @body_format = 'HTML'
@@ -453,7 +453,7 @@ BEGIN
 			*/
 			EXEC msdb.dbo.sp_send_dbmail
 				@profile_name = 'APTEST01SQLMail'
-				, @recipients = 'treed@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;rpage@ajclogistics.com' -- update email receipient /*add lpantesco@ajclogistics.com; back in*/
+				, @recipients = 'treed@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;dwire@ajclogistics.com' -- update email receipient /*add lpantesco@ajclogistics.com; back in*/
 				, @subject = @subj
 				, @body= @tableHTML
 				, @body_format = 'HTML'
@@ -1496,18 +1496,27 @@ BEGIN
 					
 			SET @subj = 'Ryan Click Commission Report for '+ @PERIOD_NAME;   -- update with correct sales person name  
 
-			/*  -- Create the column name with the instrucation in a variable  
-			SET @Column1Name = '[sep=,' + CHAR(13) + CHAR(10) + 'SalesPName]'   
-			SET @query='  DECLARE @today as date  SET @today = DATEADD(dd,-25,getdate()) 
-			set nocount on;  
-			select SalesPName ' + @column1name + ', RefNo, CSAStation as LD_No, GP, LPComm, ACCTYR, ACCTMONTH, ACCTPERIODNAME --update with correct sales person commission column  , 
-			REPLACE(InvLOB,'','','''') as InvLOB  , REPLACE(InvCustName,'','','''') as Customer  , ShipType, Dispatcher  from tblCommCalc  JOIN tblOracleCalendar on PERIOD_NAME = ACCTPERIODNAME 
-			WHERE  @today between START_DATE and END_DATE  and LPComm <> 0  --use correct sales person name  AND GP <> 0;'  
-			*/  
+			-- Create the column name with the instrucation in a variable  
+			SET @Column1Name = '[sep=,' + CHAR(13) + CHAR(10) + 'SalesPName]'
+
+			SET @query='
+			DECLARE @today as date
+			SET @today = DATEADD(dd,-25,getdate())
+			set nocount on;
+			select SalesPName ' + @column1name + ', RefNo, CSAStation as LD_No, GP, SFComm, ACCTYR, ACCTMONTH, ACCTPERIODNAME --update with correct sales person commission column
+			, REPLACE(InvLOB,'','','''') as InvLOB
+			, REPLACE(InvCustName,'','','''') as Customer
+			, ShipType, Dispatcher
+			from tblCommCalc
+			JOIN tblOracleCalendar on PERIOD_NAME = ACCTPERIODNAME
+			WHERE
+			@today between START_DATE and END_DATE
+			and RCComm <> 0  --use correct sales person name
+			AND GP <> 0;'
 
 			EXEC msdb.dbo.sp_send_dbmail      
 					@profile_name = 'APTEST01SQLMail'     
-				  , @recipients = 'rclick@ajclogistics.com;rpage@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com' -- update email receipient      /*add rclick@ajclogistics.com; back in*/
+				  , @recipients = 'rclick@ajclogistics.com;rpage@ajclogistics.com;dwire@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com' -- update email receipient      /*add rclick@ajclogistics.com; back in*/
 				  , @subject = @subj      
 				  , @body= @tableHTML      
 				  , @body_format = 'HTML'  
@@ -1571,7 +1580,7 @@ BEGIN
 
 			EXEC msdb.dbo.sp_send_dbmail      
 					@profile_name = 'APTEST01SQLMail'     
-				  , @recipients = 'aizquierdo@ajclogistics.com;rpage@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com' -- update email receipient      /*add aizquierdo@ajclogistics.com; back in*/
+				  , @recipients = 'aizquierdo@ajclogistics.com;dwire@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com' -- update email receipient      /*add aizquierdo@ajclogistics.com; back in*/
 				  , @subject = @subj      
 				  , @body= @tableHTML      
 				  , @body_format = 'HTML'  
@@ -1632,7 +1641,7 @@ BEGIN
 
 			EXEC msdb.dbo.sp_send_dbmail      
 					@profile_name = 'APTEST01SQLMail'     
-				  , @recipients = 'kchrisman@ajclogistics.com;rpage@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com' -- update email receipient      /*add aizquierdo@ajclogistics.com; back in*/
+				  , @recipients = 'kchrisman@ajclogistics.com;dwire@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com' -- update email receipient      /*add aizquierdo@ajclogistics.com; back in*/
 				  , @subject = @subj      
 				  , @body= @tableHTML      
 				  , @body_format = 'HTML'  
@@ -1808,7 +1817,7 @@ BEGIN
 
 			EXEC msdb.dbo.sp_send_dbmail
 				@profile_name = 'APTEST01SQLMail'
-				, @recipients = 'AHeavner@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;bstallings@ajclogistics.com' -- update email receipient	
+				, @recipients = 'AHeavner@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;dwire@ajclogistics.com;bstallings@ajclogistics.com' -- update email receipient	
 				, @subject = @subj
 				, @body= @tableHTML
 				, @body_format = 'HTML'
@@ -1871,7 +1880,7 @@ BEGIN
 
 			EXEC msdb.dbo.sp_send_dbmail
 				@profile_name = 'APTEST01SQLMail'
-				, @recipients = 'nseney@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;bstallings@ajclogistics.com' -- update email receipient	
+				, @recipients = 'nseney@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;dwire@ajclogistics.com;bstallings@ajclogistics.com' -- update email receipient	
 				, @subject = @subj
 				, @body= @tableHTML
 				, @body_format = 'HTML'
@@ -1935,7 +1944,7 @@ BEGIN
 
 			EXEC msdb.dbo.sp_send_dbmail
 				@profile_name = 'APTEST01SQLMail'
-				, @recipients = 'mmaroni@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;bstallings@ajclogistics.com' -- update email receipient	
+				, @recipients = 'mmaroni@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;dwire@ajclogistics.com;bstallings@ajclogistics.com' -- update email receipient	
 				, @subject = @subj
 				, @body= @tableHTML
 				, @body_format = 'HTML'
@@ -1979,7 +1988,7 @@ BEGIN
 
 			EXEC msdb.dbo.sp_send_dbmail      
 					@profile_name = 'APTEST01SQLMail'     
-				  , @recipients = 'dbeck@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;cmendez@ajclogistics.com' -- update email receipient      /*add aizquierdo@ajclogistics.com; back in*/
+				  , @recipients = 'dbeck@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;dwire@ajclogistics.com;cmendez@ajclogistics.com' -- update email receipient      /*add aizquierdo@ajclogistics.com; back in*/
 				  , @subject = @subj      
 				  , @body= @tableHTML      
 				  , @body_format = 'HTML'  
@@ -2141,7 +2150,7 @@ BEGIN
 
 			EXEC msdb.dbo.sp_send_dbmail      
 					@profile_name = 'APTEST01SQLMail'     
-				  , @recipients = 'clubin@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;bstallings@ajclogistics.com' -- update email receipient      
+				  , @recipients = 'clubin@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;dwire@ajclogistics.com;bstallings@ajclogistics.com' -- update email receipient      
 				  --, @recipients = 'seljamil@ajclogistics.com'
 				  , @subject = @subj      
 				  , @body= @tableHTML      
