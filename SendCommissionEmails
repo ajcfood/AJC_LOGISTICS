@@ -240,7 +240,7 @@ BEGIN
 			*/
 			EXEC msdb.dbo.sp_send_dbmail
 				@profile_name = 'APTEST01SQLMail'
-				, @recipients = 'aalonso@ajclogistiscs.com;rtierney@ajclogistics.com;dwire@ajclogistics.com' -- update email receipient /*add aalonso@ajclogistics.com; back in*/
+				, @recipients = 'aalonso@ajclogistics.com;rtierney@ajclogistics.com;dwire@ajclogistics.com' -- update email receipient /*add aalonso@ajclogistics.com; back in*/
 				, @subject = @subj
 				, @body= @tableHTML
 				, @body_format = 'HTML'
