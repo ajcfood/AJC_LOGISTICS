@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 4/13/2021 3:22:05 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 4/21/2021 11:00:02 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -464,11 +464,26 @@ where SalesPName = 'Randolph Page'
 	AND InvCustName NOT LIKE 'GENERAL WORK%'
 	AND InvLOB <> '76' -- removed for 2021
 
-update tblCommCalc -- added this per 2/19/19 email from Rachel to exclude AJC INC for LOB 25
+update tblCommCalc -- added this per 2/19/19 email from Rachel to exclude AJC INC for LOB 25.  as of 4/14/2021, remove from NVOCC as well any AJC INC)
 set MJComm = 0
 where SalesPName = 'Randolph Page'
-	AND InvLOB = '25'
+	AND InvLOB IN ('25')
 	AND InvCustName = 'AJC INTERNATIONAL INC'
+
+update tblCommCalc 
+set MJComm = 0
+where SalesPName = 'Randolph Page'
+	AND InvLOB IN ('31,33,43')
+	AND InvCustName = 'AJC INTERNATIONAL INC'
+	AND ACCTMONTH NOT IN (1,2)
+	AND ACCTYR = 2021
+
+update tblCommCalc 
+set MJComm = 0
+where SalesPName = 'Randolph Page'
+	AND InvLOB IN ('31,33,43')
+	AND InvCustName = 'AJC INTERNATIONAL INC'
+	AND ACCTYR > 2021
 
 --Randolph Page Commission Calculation:
 	--6% GP for LOB 11, 21, 41, 43,76 where RP is sales rep (DIRECT)
@@ -1075,6 +1090,8 @@ set DWComm = GP * .04
 where InvLOB = '9'
 
 -- Kellan Chrisman, Stephanie Butts, Terrance Reed 0.25% of team GP.  Kellan effective 8/1/2020 and Stephanie & Terrance Effective 9/1/2020
+-- 4/15/2021 Rachel Email: Stephanie and Terrance get 2.75% GP where they are the dispatcher on any loads in ST JAX or ATL 2.  Effective May 2021
+
 Update tblCommCalc
 set KCComm = GP * .0025
 where InvLOB = '11'
@@ -1100,6 +1117,32 @@ where InvLOB = '11'
 and InvCustName NOT LIKE 'DYCINSA%'
 and InvCustName NOT LIKE 'SUK%'
 and ACCTYR > 2020
+
+Update tblCommCalc
+set SBComm = GP * .0275
+where InvLOB IN ('9','10')
+and Dispatcher IN ('sbutts','sbuttsadmin')
+and ACCTMONTH > 5
+and ACCTYR = 2021
+
+Update tblCommCalc
+set SBComm = GP * .0275
+where InvLOB IN ('9','10')
+and Dispatcher IN ('sbutts','sbuttsadmin')
+and ACCTYR > 2021
+
+Update tblCommCalc
+set TRComm = GP * .0275
+where InvLOB IN ('9','10')
+and Dispatcher IN ('treed','treedadmin')
+and ACCTMONTH > 5
+and ACCTYR = 2021
+
+Update tblCommCalc
+set TRComm = GP * .0275
+where InvLOB IN ('9','10')
+and Dispatcher IN ('treed','treedadmin')
+and ACCTYR > 2021
 
 --Shari Robinson Calculation:  4% of GP of own accounts in LOB 76 GP less 7% overhead
 update tblCommCalc
