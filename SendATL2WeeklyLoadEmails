@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendATL2WeeklyLoadEmails]    Script Date: 5/7/2021 3:20:49 PM ******/
+/****** Object:  StoredProcedure [dbo].[SendATL2WeeklyLoadEmails]    Script Date: 5/7/2021 3:32:12 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -644,7 +644,7 @@ BEGIN
 
 			EXEC msdb.dbo.sp_send_dbmail
 				@profile_name = 'APTEST01SQLMail'
-				, @recipients = 'sbutts@ajclogistics.com,adavis@ajclogistics.com'--'aalonso@ajclogistiscs.com;rtierney@ajclogistics.com;rpage@ajclogistics.com' -- update email receipient /*add aalonso@ajclogistics.com; back in*/
+				, @recipients = 'sbutts@ajclogistics.com'--'aalonso@ajclogistiscs.com;rtierney@ajclogistics.com;rpage@ajclogistics.com' -- update email receipient /*add aalonso@ajclogistics.com; back in*/
 				, @subject = @subj
 				, @body= @tableHTML
 				, @body_format = 'HTML'
@@ -715,7 +715,7 @@ BEGIN
 
 			EXEC msdb.dbo.sp_send_dbmail
 				@profile_name = 'APTEST01SQLMail'
-				, @recipients = 'treed@ajclogistics.com,adavis@ajclogistics.com'--'aalonso@ajclogistiscs.com;rtierney@ajclogistics.com;rpage@ajclogistics.com' -- update email receipient /*add aalonso@ajclogistics.com; back in*/
+				, @recipients = 'treed@ajclogistics.com'--'aalonso@ajclogistiscs.com;rtierney@ajclogistics.com;rpage@ajclogistics.com' -- update email receipient /*add aalonso@ajclogistics.com; back in*/
 				, @subject = @subj
 				, @body= @tableHTML
 				, @body_format = 'HTML'
