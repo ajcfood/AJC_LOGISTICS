@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendATL2MonthlyLoadEmails]    Script Date: 5/7/2021 3:18:23 PM ******/
+/****** Object:  StoredProcedure [dbo].[SendATL2MonthlyLoadEmails]    Script Date: 5/7/2021 3:55:28 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -497,7 +497,7 @@ BEGIN
 			JOIN tblOracleCalendar on PERIOD_NAME = ACCTPERIODNAME
 			WHERE
 			@today between START_DATE and END_DATE
-			and Dispatcher = IN (''adavis'',''aikenat1'',''adavisadmin'') --use correct sales person name
+			and Dispatcher IN (''adavis'',''aikenat1'',''adavisadmin'') --use correct sales person name
 			AND GP >= 0;'
 
 			EXEC msdb.dbo.sp_send_dbmail
@@ -857,7 +857,7 @@ BEGIN
 			JOIN tblOracleCalendar on PERIOD_NAME = ACCTPERIODNAME
 			WHERE
 			@today between START_DATE and END_DATE
-			and Dispatcher IN IN (''adavis'',''aikenatl1'',''adavisadmin'',''wcrosse'',''wcrossadmin'',''winstonjax'')  --update with new ops members as they come on
+			and Dispatcher IN (''adavis'',''aikenatl1'',''adavisadmin'',''wcrosse'',''wcrossadmin'',''winstonjax'')  --update with new ops members as they come on
 			AND GP < 0;'
 
 			EXEC msdb.dbo.sp_send_dbmail
