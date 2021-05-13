@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 5/13/2021 1:16:54 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 5/13/2021 3:12:46 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -271,7 +271,14 @@ where InvLOB = '11'
 update tblCommCalc
 set LPComm = GP*.007
 where InvLOB = '10'
-	
+	and ACCTMONTH > 5
+	and ACCTYR = 2021
+
+update tblCommCalc
+set LPComm = GP*.007
+where InvLOB = '10'
+	and ACCTYR > 2021
+		
 --Michael Browder Calculation: 18% of Surface Trans GP where he is Sales Rep
 update tblCommCalc
 set MBComm = GP*.18
