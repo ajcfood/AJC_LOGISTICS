@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 4/28/2021 10:22:30 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 5/13/2021 1:16:54 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -239,7 +239,38 @@ where InvLOB = '11'
 update tblCommCalc
 set LPComm = GP*.01
 where InvLOB = '11'
-	and ACCTYR >= 2021
+	and ACCTMONTH IN (1,2,3,4)
+	and ACCTYR = 2021
+
+update tblCommCalc
+set LPComm = GP*.01
+where InvLOB = '11'
+	and InvCustName IN ('SUKARNE','SUK - NORTH BOUND','SUK-EXPORT')
+	and ACCTMONTH > 5
+	and ACCTYR = 2021
+
+update tblCommCalc
+set LPComm = GP*.01
+where InvLOB = '11'
+	and InvCustName IN ('SUKARNE','SUK - NORTH BOUND','SUK-EXPORT')
+	and ACCTYR > 2021
+
+update tblCommCalc
+set LPComm = GP*.01
+where InvLOB = '11'
+	and InvCustName IN ('UPS - Green Chef','UPS - HELLO FRESH')
+	and ACCTMONTH > 5
+	and ACCTYR = 2021
+
+update tblCommCalc
+set LPComm = GP*.01
+where InvLOB = '11'
+	and InvCustName IN ('UPS - Green Chef','UPS - HELLO FRESH')
+	and ACCTYR > 2021
+
+update tblCommCalc
+set LPComm = GP*.007
+where InvLOB = '10'
 	
 --Michael Browder Calculation: 18% of Surface Trans GP where he is Sales Rep
 update tblCommCalc
@@ -627,11 +658,26 @@ where InvLOB = '76'
 	AND SalesPName = 'Monica Thornton'
 
 --Christine McVay Calculation: 1% GP on ANG & SEA Stations LOB 76
--- Updated to 2% as of October 2019
+-- As of May 2021, changed from 2% to 1.25%
 update tblCommCalc
 set CMComm = GP*.02
 where InvLOB = '76'
 	AND CSAStation IN ('ANG','SEA')
+	AND ACCTYR < 2021
+
+update tblCommCalc
+set CMComm = GP*.02
+where InvLOB = '76'
+	AND CSAStation IN ('ANG','SEA')
+	AND ACCTMONTH < 5
+	AND ACCTYR = 2021
+
+update tblCommCalc
+set CMComm = GP*.0125
+where InvLOB = '76'
+	AND CSAStation IN ('ANG','SEA')
+	AND ACCTMONTH >= 5
+	AND ACCTYR >= 2021
 
 update tblCommCalc
 set CMComm = GP*.01
@@ -910,11 +956,46 @@ where InvLOB = '76'
 and SalesPName = 'Carleton Tokioka'
 
 --Craig James Calculation: 1% GP on Hawaii based accounts (Station codes = HON, MAU, HLO, KON, KAU, LAN, MOL, LOS)
--- Updated to 2% as of October 2019
+-- May 2021 and forward =  0.75% of the Hawaii market and 0.25% of the Alaska market.
 update tblCommCalc
 set CJComm = GP*.01
 where InvLOB = '76'
 	AND CSAStation IN ('HON', 'MAU', 'HLO', 'KON', 'KAU', 'LAN', 'MOL', 'LOS')
+	AND ACCTYR < 2021
+
+update tblCommCalc
+set CJComm = GP*.01
+where InvLOB = '76'
+	AND CSAStation IN ('HON', 'MAU', 'HLO', 'KON', 'KAU', 'LAN', 'MOL', 'LOS')
+	AND ACCTMONTH < 5 
+	AND ACCTYR = 2021
+
+update tblCommCalc
+set CJComm = GP*.0075
+where InvLOB = '76'
+	AND CSAStation IN ('HON', 'MAU', 'HLO', 'KON', 'KAU', 'LAN', 'MOL', 'LOS')
+	AND ACCTMONTH >= 5
+	AND ACCTYR = 2021
+
+update tblCommCalc
+set CJComm = GP*.0075
+where InvLOB = '76'
+	AND CSAStation IN ('HON', 'MAU', 'HLO', 'KON', 'KAU', 'LAN', 'MOL', 'LOS')
+	AND ACCTYR > 2021
+
+update tblCommCalc
+set CJComm = GP*.0025
+where InvLOB = '76'
+	AND CSAStation IN ('ANG','JUN')
+	AND ACCTMONTH >= 5
+	AND ACCTYR = 2021
+
+update tblCommCalc
+set CJComm = GP*.0025
+where InvLOB = '76'
+	AND CSAStation IN ('ANG','JUN')
+	AND ACCTYR > 2021
+
 
 -- Alex Gonzalez: 8% GP of own GP LOB 11 and 5% own GP in LOBs 41,43,25.  4% only on LOB 11,9,10 HOUSE accounts.
 Update tblCommCalc
@@ -1193,6 +1274,7 @@ where InvLOB IN ('9')
 	AND ACCTYR >= 2021
 
 --Aiken Davis 2021 and on: 2.75% of own GP where he is the CSR Rep & 1% GP where LOB = 9 and dispatcher is not Matt.
+
 update tblCommCalc
 set ADComm = GP*.0375
 where InvLOB IN ('9')
@@ -1203,7 +1285,28 @@ update tblCommCalc
 set ADComm = GP*.01
 where InvLOB IN ('9')
 	AND Dispatcher NOT IN ('mhiggins','adavis','adavisadmin','mattadmin')
-	AND ACCTYR >= 2021
+	AND ACCTMONTH < 5
+	AND ACCTYR = 2021
+
+update tblCommCalc
+set ADComm = GP*.01
+where InvLOB IN ('9')
+	AND Dispatcher NOT IN ('mhiggins','adavis','adavisadmin','mattadmin')
+	AND ACCTYR < 2021
+
+-- May 2021 and forward = 1.5% team GP instead of 1%
+update tblCommCalc
+set ADComm = GP*.015
+where InvLOB IN ('9')
+	AND Dispatcher NOT IN ('mhiggins','adavis','adavisadmin','mattadmin')
+	AND ACCTMONTH >= 5
+	AND ACCTYR = 2021
+
+update tblCommCalc
+set ADComm = GP*.015
+where InvLOB IN ('9')
+	AND Dispatcher NOT IN ('mhiggins','adavis','adavisadmin','mattadmin')
+	AND ACCTYR > 2021
 
 --Dalton Thomas 2021 and on: 2.75% of own GP where he is the CSR Rep & 1% GP where LOB = 9 and dispatcher is not Matt.
 update tblCommCalc
