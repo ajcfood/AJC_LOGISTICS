@@ -1,0 +1,121 @@
+USE [MGXMLProcessing]
+GO
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadDWShipmentRecs]    Script Date: 6/22/2020 1:52:17 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+
+ALTER PROCEDURE [dbo].[sp-MGXML-LoadDWShipmentRecs]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+DECLARE @RecIDs TABLE
+(RecID int);
+
+
+INSERT INTO @RecIDs
+select cr.RecID
+from 
+(
+select *
+from [MGXMLProcessing].[dbo].[tblXML_DWLoadRecs]
+where RecType = 'CU' and Processed = 0
+)cu
+inner join
+(
+select *
+from [MGXMLProcessing].[dbo].[tblXML_DWLoadRecs]
+where RecType = 'CR'  and Processed = 0
+)cr
+on cu.ShippingOrder = cr.ShippingOrder;
+
+INSERT INTO @RecIDs
+select cu.RecID
+from 
+(
+select *
+from [MGXMLProcessing].[dbo].[tblXML_DWLoadRecs]
+where RecType = 'CU' and Processed = 0
+)cu
+inner join
+(
+select *
+from [MGXMLProcessing].[dbo].[tblXML_DWLoadRecs]
+where RecType = 'CR'  and Processed = 0
+)cr
+on cu.ShippingOrder = cr.ShippingOrder;
+
+
+update [MGXMLProcessing].[dbo].[tblXML_DWLoadRecs]
+set Status = 'TONU'
+where ShipDate is null and DelivDate is not null and RecType = 'CR';
+
+
+insert into [AJCDW].[dbo].[tblShipment]
+select CASE WHEN cu.ShippingOrder LIKE '%J' THEN cast('201910'+cast(cu.ShipmentID as varchar(50)) as bigint) 
+			WHEN cu.ShippingOrder LIKE '%A' THEN cast('202007'+cast(cu.ShipmentID as varchar(50)) as bigint) 
+			ELSE cast('201807'+cast(cu.ShipmentID as varchar(50)) as bigint) END as ShipmentID
+	, cu.ShippingOrder, cr.LoadID, cu.PONumber, cu.EnterpriseAccntNum, cr.DivID, cr.LOB, cr.CarrierID
+	, cu.OriginName, cu.DestinationName, cu.ShpSalesP
+	, cr.ShpController, cr.ReleaseNumber, cr.ShpMaster, cr.FreightCategory, cr.TractorNumber, cr.TrailerNumber
+	, cu.OriginCity, cu.OriginState, cu.DestinationCity, cu.DestinationState
+	, cr.ShpPortofDchg, cr.ShpPortofLoad, cr.EquipDesc, cr.ShpPntOrigin, cr.ShpAES_ITN, cr.ShpAES_Status, cr.ShpTEU
+	, cu.Revenue
+	, cr.Cost, cr.FreightCost
+	, cu.Revenue - cr.Cost as GP
+	, 0 as ShpGPPerc
+	, cr.CreateDate, cr.DelivDate, cr.ShipDate, cr.UpdtDate, cr.LoadedDateTime, cr.[Status]
+	, 4, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+from 
+(
+select *
+from [MGXMLProcessing].[dbo].[tblXML_DWLoadRecs]
+where RecType = 'CU' and Processed = 0
+)cu
+inner join
+(
+select *
+from [MGXMLProcessing].[dbo].[tblXML_DWLoadRecs]
+where RecType = 'CR'  and Processed = 0
+)cr
+on cu.ShippingOrder = cr.ShippingOrder;
+
+
+update [MGXMLProcessing].[dbo].[tblXML_DWLoadRecs]
+set Processed = 1
+where RecID in (select RecID from @RecIDs);
+
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp-MGXML-LoadDWShipmentRecs]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

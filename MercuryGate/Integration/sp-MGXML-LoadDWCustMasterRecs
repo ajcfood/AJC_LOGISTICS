@@ -1,0 +1,101 @@
+USE [MGXMLProcessing]
+GO
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadDWCustMasterRecs]    Script Date: 8/2/2019 12:43:26 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+
+ALTER PROCEDURE [dbo].[sp-MGXML-LoadDWCustMasterRecs]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+DECLARE @RecIDs TABLE
+(RecID int);
+
+
+INSERT INTO @RecIDs
+select cu.CustMasterID
+from 
+(
+select *
+from [MGXMLProcessing].[dbo].[tblXML_DWCustMaster]
+where Processed = 0 
+	--and CustMasterCode not in
+	--(select CustMasterCode from [AJCDW].[dbo].[tblCustMaster] where FK_SystemID = 4)
+)cu;
+
+
+-- Insert New Customers --
+insert into [AJCDW].[dbo].[tblCustMaster]
+select distinct CustMasterNum, CustMasterCode, CustType, CustName
+	, '' as CustAddr1, '' as CustAddr2, '' as CustCity, '' as CustState, '' as CustZip, '' as CustCountry
+	, '' as CustPhone, '' as CustFax, '' as CustContact, '' as CustEmail
+	, Salesman, Active, FK_SystemID
+from [MGXMLProcessing].[dbo].[tblXML_DWCustMaster] 
+where Processed = 0 and CustMasterCode not in
+	(select CustMasterCode from [AJCDW].[dbo].[tblCustMaster] where FK_SystemID = 4)
+order by CustMasterCode;
+
+
+-- Update existing customer's sales person --
+update [AJCDW].[dbo].[tblCustMaster]
+set [AJCDW].[dbo].[tblCustMaster].Salesman = dcm.Salesman
+--select cm.CustMasterID, cm.CustMasterCode, cm.CustName, cm.Salesman, dcm.Salesman
+from [AJCDW].[dbo].[tblCustMaster] cm
+inner join (
+				select dw1.*
+				from [MGXMLProcessing].[dbo].[tblXML_DWCustMaster] dw1
+				inner join  ( 
+								select CustMasterCode, MAX(CustMasterID) CustMasterID
+								from [MGXMLProcessing].[dbo].[tblXML_DWCustMaster] 
+								where CustMasterCode IS NOT NULL 
+								group by CustMasterCode
+
+							) dw2 on dw2.CustMasterID = dw1.CustMasterID
+										
+			) dcm on cm.CustMasterCode = dcm.CustMasterCode
+where  dcm.Processed = 0 
+	and cm.FK_SystemID = 4
+	and dcm.Salesman is not null
+	and isnull(convert(varchar(5),cm.Salesman), '') <> dcm.Salesman;
+
+
+update [MGXMLProcessing].[dbo].[tblXML_DWCustMaster]
+set Processed = 1
+where CustMasterID in (select RecID from @RecIDs);
+
+
+END
+
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp-MGXML-LoadDWCustMasterRecs]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

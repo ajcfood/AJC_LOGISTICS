@@ -1,0 +1,367 @@
+USE [MGXMLProcessing]
+GO
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadDWRouteRecs]    Script Date: 6/21/2019 2:30:32 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+
+
+ALTER PROCEDURE [dbo].[sp-MGXML-LoadDWRouteRecs]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+DECLARE @ProcName VARCHAR(100) = (SELECT OBJECT_SCHEMA_NAME(qt.objectid,qt.dbid) + '.' + OBJECT_NAME(qt.objectid, qt.dbid) FROM sys.dm_exec_requests er CROSS APPLY sys.dm_exec_sql_text(er.sql_handle) AS qt)
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+-- Carrier --
+-------------
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+select distinct dbo.udf_GetNumeric(ref.[Shipping Order]) as ShipmentID, ref.[Shipping Order], ref.[Load ID], ref.[PO Number]
+	, ref.[Customer Acct Number]--ent.[EnterpriseAccntNum]
+	, '10' as DivID, '11' as LOB
+	, carr.CarrierID, carr.CarrierType
+	, ref.[Release Number], ref.[Freight Category], ref.[Tractor Number], ref.[Trailer Number], ref.[AssignedTo], ref.[Status], ref.[CreateDate]
+	, carr.EquipDesc
+	, pri.PriceSheetTotal as Cost, pri.PriceSheetTotal - pri.PriceSheetAccTotal as FreightCost
+	, dt.[DateCategory], dt.[Pickup], dt.[Drop]
+	, GetDate() as LoadedDateTime
+	, pri.[FileName]
+	, pri.[FileCreatedDate]
+into #tmp1
+from (
+  select * from (
+    select [RefType],[RefValue]
+    from [MGXMLProcessing].[dbo].[tblRouteXML_Ref]
+  ) t
+  pivot (
+    max([RefValue]) for [RefType] in ([Shipment ID], [PO Number], [Release Number], [Shipping Order], [Load ID], [SCAC], [Customer Acct Number], [Freight Category], [Tractor Number], [Trailer Number], [Status], [AssignedTo], [CreateDate])
+  ) p
+) ref
+--inner join
+--(
+--SELECT DISTINCT
+--      [EnterpriseName]
+--      ,[EnterpriseParentName]
+--      ,[EnterpriseType]
+--      ,[EnterpriseAccntNum]
+--  FROM [MGXMLProcessing].[dbo].[tblRouteXML_Enterprise]
+--) ent
+--on ref.[Customer Acct Number] = ent.EnterpriseAccntNum
+
+inner join [MGXMLProcessing].[dbo].[tblRouteXML_PriceSheet] pri
+on ref.[Load ID] = pri.TransportID
+
+inner join
+(
+  select * from (
+    select [TransportID], [DateCategory], [DateType], [DateTime]
+    from [MGXMLProcessing].[dbo].[tblRouteXML_Dates]
+  ) t
+  pivot (
+    max([DateTime]) for [DateType] in ([Pickup], [Drop] )
+  ) p
+) dt
+on pri.TransportID = dt.TransportID
+
+left outer join --[MGXMLProcessing].[dbo].[tblRouteXML_CarrierDetails] carr
+(
+SELECT distinct [CarrierID]
+      ,[CarrierType]
+      ,[CarrierName]
+      ,[SCAC]
+      ,[Mode]
+      ,Min([EquipCode]) as EquipCode
+      ,Min([EquipDesc]) as EquipDesc
+      ,[LoadID]
+      ,[PriceSheetID]
+FROM [MGXMLProcessing].[dbo].[tblRouteXML_CarrierDetails]
+GROUP BY
+	[CarrierID]
+      ,[CarrierType]
+      ,[CarrierName]
+      ,[SCAC]
+      ,[Mode]
+      ,[LoadID]
+      ,[PriceSheetID]
+) carr
+on ref.[Load ID] = carr.LoadID and pri.PriceSheetID = carr.PriceSheetID;
+
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+-- Filter Out Vendor PriceSheet
+select distinct ShipmentID, [Shipping Order], [Load ID]
+	, [PO Number]
+	, [Customer Acct Number]--EnterpriseAccntNum
+	, DivID, LOB, CarrierID, CarrierType, [Release Number]
+	, [Freight Category], [Tractor Number], [Trailer Number], [AssignedTo], [Status], [CreateDate]
+	, EquipDesc
+	, DateCategory, Pickup, [Drop], LoadedDateTime, FileName, FileCreatedDate
+into #tmp1a
+from #tmp1
+where CarrierType = 'Responsible';
+
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 3, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+-- Aggregate Costs (Including Vendor)
+select distinct ShipmentID
+	, SUM(Cost) as Cost, SUM (FreightCost) as FreightCost
+into #tmp1b
+from #tmp1
+group by ShipmentID;
+
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 3, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+-- Customer --
+--------------
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 4, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+select distinct ref.[Shipping Order], ref.[Load ID], ref.[PO Number], ref.[Customer PO Number]
+	, ref.[Customer Acct Number]--ent.[EnterpriseAccntNum]
+	, '10' as DivID, '11' as LOB
+	, case when loc.LocationType = 'Pickup' Then loc.LocationName
+		end as OriginName
+	, case when loc.LocationType = 'Pickup' Then loc.LocationCity
+		end as OriginCity
+	, case when loc.LocationType = 'Pickup' Then loc.LocationState
+		end as OriginState
+	, case when loc.LocationType = 'Drop' Then loc.LocationName
+		end as DestinationName
+	, case when loc.LocationType = 'Drop' Then loc.LocationCity
+		end as DestinationCity
+	, case when loc.LocationType = 'Drop' Then loc.LocationState
+		end as DestinationState
+	, ref.[Release Number]
+	, dt.[DateCategory], dt.[Pickup], dt.[Drop]
+	, pri.PriceSheetTotal as Revenue
+	, GetDate() as LoadedDateTime
+	, pri.[FileName]
+	, pri.[FileCreatedDate]
+into #tmp2
+from (
+  select * from (
+    select [RefType],[RefValue]
+    from [MGXMLProcessing].[dbo].[tblRouteXML_Ref]
+  ) t
+  pivot (
+    max([RefValue]) for [RefType] in ([Shipment ID], [PO Number], [Release Number], [Shipping Order], [Load ID], [SCAC], [Customer Acct Number], [Customer PO Number] )
+  ) p
+) ref
+
+--inner join
+--(
+--SELECT DISTINCT [EnterpriseID]
+--      ,[EnterpriseName]
+--      ,[EnterpriseParentName]
+--      ,[EnterpriseType]
+--      ,[EnterpriseAccntNum]
+--  FROM [MGXMLProcessing].[dbo].[tblRouteXML_Enterprise]
+--) ent
+--on ref.[Customer Acct Number] = ent.EnterpriseAccntNum
+
+inner join [MGXMLProcessing].[dbo].[tblRouteXML_PriceSheet] pri
+on ref.[Shipping Order] = pri.TransportID
+
+inner join
+(
+  select * from (
+    select [TransportID], [DateCategory], [DateType], [DateTime]
+    from [MGXMLProcessing].[dbo].[tblRouteXML_Dates]
+  ) t
+  pivot (
+    max([DateTime]) for [DateType] in ([Pickup], [Drop] )
+  ) p
+) dt
+on pri.TransportID = dt.TransportID
+
+inner join [MGXMLProcessing].[dbo].[tblRouteXML_Locations] loc
+on ref.[Shipping Order] = loc.SOID;
+
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 4, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+--Combine Cust Recs
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 5, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+select distinct [Shipping Order], [Load ID], [PO Number], [Customer PO Number]
+	, [Customer Acct Number]--EnterpriseAccntNum
+	, DivID, LOB, OriginName, OriginCity, OriginState
+	, DestinationName, DestinationCity, DestinationState, [Release Number], DateCategory, Pickup, [Drop]
+		, Revenue, LoadedDateTime, [FileName], FileCreatedDate
+into #tmp2a
+from #tmp2
+where OriginName is not null;
+
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 5, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 6, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+select distinct [Shipping Order], DestinationName, DestinationCity, DestinationState
+into #tmp2b
+from #tmp2
+where DestinationName is not null;
+
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 6, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+
+-- Combine Results --
+---------------------
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 7, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+insert into [MGXMLProcessing].[dbo].[tblXML_DWLoadRecs]
+select t1a.ShipmentID, t1a.[Shipping Order], t1a.[Load ID]
+	, t2.[Customer PO Number]
+	, t1a.[Customer Acct Number]--EnterpriseAccntNum
+	, t1a.DivID, t1a.LOB, t1a.CarrierID
+	, t2.OriginName, t2.DestinationName
+	, '' as ShpSalesP
+	, t1a.AssignedTo
+	, t1a.[Release Number]
+	, '' as ShpMaster
+	, t1a.[Freight Category], t1a.[Tractor Number], t1a.[Trailer Number]
+	, t2.OriginCity, t2.OriginState
+	, t2.DestinationCity, t2.DestinationState
+	, '' as ShpPortofDchg, '' as ShpPortofLoad
+	, t1a.EquipDesc
+	, '' as ShpPntOrigin, '' as ShpAES_ITN, '' as ShpAES_Status, '' as ShpTEU
+	, t2.Revenue
+	, convert(Numeric,t1b.Cost) as Cost
+	, convert(Numeric,t1b.FreightCost) as FreightCost
+	, t2.Revenue-t1b.Cost as GP
+	, t1a.CreateDate
+	, t1a.[Drop] as DelivDate, t1a.Pickup as ShipDate
+	, t1a.CreateDate as UpdtDate
+	, t1a.LoadedDateTime
+	, t1a.[Status]
+	, 'RR' as RecType
+	, 0 as Processed
+from #tmp1a t1a
+inner join #tmp1b t1b
+	on t1a.ShipmentID = t1b.ShipmentID
+left outer join 
+(
+select t2a.[Shipping Order], t2a.[Load ID], t2a.[PO Number], t2a.[Customer PO Number]
+	, t2a.[Customer Acct Number]--EnterpriseAccntNum
+	, t2a.DivID, t2a.LOB, t2a.OriginName, t2a.OriginCity, t2a.OriginState
+	, t2b.DestinationName, t2b.DestinationCity, t2b.DestinationState, t2a.[Release Number], t2a.DateCategory, t2a.[Pickup], t2a.[Drop]
+		, t2a.Revenue, t2a.LoadedDateTime, t2a.[FileName], t2a.FileCreatedDate
+from #tmp2a t2a
+inner join #tmp2b t2b
+	on t2a.[Shipping Order] = t2b.[Shipping Order]
+)t2
+	on t1a.[Shipping Order] = t2.[Shipping Order];
+
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 7, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 8, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+-- Cleanup --
+drop table #tmp1;
+drop table #tmp1a;
+drop table #tmp1b;
+drop table #tmp2;
+drop table #tmp2a;
+drop table #tmp2b;
+
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 8, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp-MGXML-LoadDWRouteRecs]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

@@ -1,0 +1,234 @@
+USE [MGXMLProcessing]
+GO
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadRoute]    Script Date: 6/21/2019 2:29:09 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+
+ALTER PROCEDURE [dbo].[sp-MGXML-LoadRoute]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+DECLARE @ProcName VARCHAR(100) = (SELECT OBJECT_SCHEMA_NAME(qt.objectid,qt.dbid) + '.' + OBJECT_NAME(qt.objectid, qt.dbid) FROM sys.dm_exec_requests er CROSS APPLY sys.dm_exec_sql_text(er.sql_handle) AS qt)
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+
+insert into [MGXMLProcessing].[dbo].[tblRouteXML_TransportLoadRecs]
+
+-- Customer Transport
+---------------------
+select distinct ref.[Shipping Order], pri.[OtherID] as [Load ID], ref.[Release Number], ref.[PO Number], ref.[SCAC]
+	, NULL as CarrierID, NULL as CarrierName
+	, ref.[Customer Acct Number], ref.[Customer Name]--ent.EnterpriseName
+	, pri.[PriceSheetType], pri.[PriceSheetCurrency], pri.[PriceSheetCreatedBy], pri.[PriceSheetUpdatedBy]
+	, dt.[DateCategory], dt.[Pickup], dt.[Drop]
+	, chrgs.ChargesType, chrgs.ChargesSeqNum, left(chrgs.ChargesEDICode, 6) as ChargesEDICode, chrgs.ChargesDesc, chrgs.ChargesAmount
+	, GetDate() as LoadedDateTime
+	, pri.[FileName]
+	, pri.[FileCreatedDate]
+	, 0
+from (
+  select * from (
+    select [RefType],[RefValue]
+    from [MGXMLProcessing].[dbo].[tblRouteXML_Ref]
+	where [TransportType] = 'Customer Load'
+  ) t
+  pivot (
+    max([RefValue]) for [RefType] in ([Shipment ID], [PO Number], [Release Number], [Shipping Order], [Load ID], [SCAC], [Customer Acct Number], [Customer Name] )
+  ) p
+) ref
+--inner join
+--(
+--SELECT DISTINCT
+--      [EnterpriseName]
+--      ,[EnterpriseParentName]
+--      ,[EnterpriseType]
+--      ,[EnterpriseAccntNum]
+--  FROM [MGXMLProcessing].[dbo].[tblRouteXML_Enterprise]
+--) ent
+--on ref.[Customer Acct Number] = ent.EnterpriseAccntNum
+
+inner join
+(
+  select * from (
+    select [TransportID], [DateCategory], [DateType], [DateTime], [TransportType]
+    from [MGXMLProcessing].[dbo].[tblRouteXML_Dates]
+	where [TransportType] = 'Customer Load'
+  ) t
+  pivot (
+    max([DateTime]) for [DateType] in ([Pickup], [Drop] )
+  ) p
+) dt
+on ref.[Shipping Order] = dt.TransportID
+
+inner join 
+(
+SELECT [PriceSheetID]
+      ,[PriceSheetType]
+      ,[TransportType]
+      ,[PriceSheetCurrency]
+      ,[PriceSheetCreatedBy]
+      ,[PriceSheetUpdatedBy]
+      ,[PriceSheetAccTotal]
+      ,[PriceSheetSubTotal]
+      ,[PriceSheetTotal]
+      ,[PriceSheetLaneID]
+      ,[TransportID]
+	  ,[OtherID]
+      ,[FileName]
+      ,[FileCreatedDate]
+  FROM [MGXMLProcessing].[dbo].[tblRouteXML_PriceSheet]
+  WHERE [TransportType] = 'Customer Load'
+) pri
+on ref.[Shipping Order] = pri.TransportID
+
+inner join
+(
+SELECT [ChargesID]
+      ,[TransportType]
+      ,[ChargesType]
+      ,[ChargesSeqNum]
+      ,[ChargesEDICode]
+      ,[ChargesDesc]
+      ,[ChargesAmount]
+      ,[PriceSheetType]
+      ,[TransportID]
+      ,[FileName]
+  FROM [MGXMLProcessing].[dbo].[tblRouteXML_Charges]
+  WHERE [TransportType] = 'Customer Load'
+) chrgs
+on (pri.TransportID = chrgs.TransportID and pri.[TransportType] = chrgs.[TransportType])
+
+
+UNION ALL
+
+-- Execution Transport
+----------------------
+select distinct pri.[OtherID] as [Shipping Order], ref.[Load ID], ref.[Release Number], ref.[PO Number], ref.[SCAC]
+	, carr.CarrierID, carr.CarrierName
+	, ref.[Customer Acct Number], ref.[Customer Name]--, ent.EnterpriseName
+	, pri.[PriceSheetType], pri.[PriceSheetCurrency], pri.[PriceSheetCreatedBy], pri.[PriceSheetUpdatedBy]
+	, dt.[DateCategory], dt.[Pickup], dt.[Drop]
+	, chrgs.ChargesType, chrgs.ChargesSeqNum, left(chrgs.ChargesEDICode, 6) as ChargesEDICode, chrgs.ChargesDesc, chrgs.ChargesAmount
+	, GetDate() as LoadedDateTime
+	, pri.[FileName]
+	, pri.[FileCreatedDate]
+	, 0
+from (
+  select * from (
+    select [RefType],[RefValue]
+    from [MGXMLProcessing].[dbo].[tblRouteXML_Ref]
+	where [TransportType] = 'Execution Load'
+  ) t
+  pivot (
+    max([RefValue]) for [RefType] in ([Shipment ID], [PO Number], [Release Number], [Shipping Order], [Load ID], [SCAC], [Customer Acct Number], [Customer Name] )
+  ) p
+) ref
+--inner join
+--(
+--SELECT DISTINCT
+--      [EnterpriseName]
+--      ,[EnterpriseParentName]
+--      ,[EnterpriseType]
+--      ,[EnterpriseAccntNum]
+--  FROM [MGXMLProcessing].[dbo].[tblRouteXML_Enterprise]
+--) ent
+--on ref.[Customer Acct Number] = ent.EnterpriseAccntNum
+
+inner join
+(
+  select * from (
+    select [TransportID], [DateCategory], [DateType], [DateTime], [TransportType]
+    from [MGXMLProcessing].[dbo].[tblRouteXML_Dates]
+	where [TransportType] = 'Execution Load'
+  ) t
+  pivot (
+    max([DateTime]) for [DateType] in ([Pickup], [Drop] )
+  ) p
+) dt
+on ref.[Load ID] = dt.[TransportID]
+
+inner join 
+(
+SELECT [PriceSheetID]
+      ,[PriceSheetType]
+      ,[TransportType]
+      ,[PriceSheetCurrency]
+      ,[PriceSheetCreatedBy]
+      ,[PriceSheetUpdatedBy]
+      ,[PriceSheetAccTotal]
+      ,[PriceSheetSubTotal]
+      ,[PriceSheetTotal]
+      ,[PriceSheetLaneID]
+      ,[TransportID]
+	  ,[OtherID]
+      ,[FileName]
+      ,[FileCreatedDate]
+  FROM [MGXMLProcessing].[dbo].[tblRouteXML_PriceSheet]
+  WHERE [TransportType] = 'Execution Load'
+) pri
+on ref.[Load ID] = pri.TransportID
+
+inner join
+(
+SELECT [ChargesID]
+      , [PriceSheetID]
+      ,[TransportType]
+      ,[ChargesType]
+      ,[ChargesSeqNum]
+      ,[ChargesEDICode]
+      ,[ChargesDesc]
+      ,[ChargesAmount]
+      ,[PriceSheetType]
+      ,[TransportID]
+      ,[FileName]
+  FROM [MGXMLProcessing].[dbo].[tblRouteXML_Charges]
+  WHERE [TransportType] = 'Execution Load'
+) chrgs
+on pri.TransportID = chrgs.TransportID and pri.[TransportType] = chrgs.[TransportType] and chrgs.PriceSheetID = pri.PriceSheetID
+
+inner join [MGXMLProcessing].[dbo].[tblRouteXML_CarrierDetails] carr
+on ref.[Load ID] = carr.[LoadID] and pri.PriceSheetID = carr.PriceSheetID
+
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+END
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp-MGXML-LoadRoute]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

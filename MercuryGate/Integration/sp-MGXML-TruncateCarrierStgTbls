@@ -1,0 +1,63 @@
+USE [MGXMLProcessing]
+GO
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-TruncateCarrierStgTbls]    Script Date: 6/21/2019 2:21:22 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+ALTER PROCEDURE [dbo].[sp-MGXML-TruncateCarrierStgTbls]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+DECLARE @ProcName VARCHAR(100) = (SELECT OBJECT_SCHEMA_NAME(qt.objectid,qt.dbid) + '.' + OBJECT_NAME(qt.objectid, qt.dbid) FROM sys.dm_exec_requests er CROSS APPLY sys.dm_exec_sql_text(er.sql_handle) AS qt)
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+/*****************************************************Begin Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+truncate table tblCarrierXML_Enterprise;
+truncate table tblCarrierXML_Ref;
+truncate table tblCarrierXML_PriceSheet;
+truncate table tblCarrierXML_Charges;
+truncate table tblCarrierXML_Dates;
+truncate table tblCarrierXML_CarrierDetails;
+
+/*****************************************************End Logging*******************************************************/
+
+EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp-MGXML-TruncateCarrierStgTbls]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

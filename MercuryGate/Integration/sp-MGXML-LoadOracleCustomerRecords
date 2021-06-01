@@ -1,0 +1,111 @@
+USE [MGXMLProcessing]
+GO
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadOracleCustomerRecords]    Script Date: 1/15/2020 10:54:59 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+
+
+ ALTER PROCEDURE [dbo].[sp-MGXML-LoadOracleCustomerRecords](@ORCLENV CHAR(15), @ORCLTBL CHAR(30))
+
+ AS
+BEGIN TRY
+BEGIN
+
+ SET NOCOUNT ON;
+
+ /*
+05/17/2019 - SA - Added Error Logging
+
+ */
+
+ --Change ChargeCodes for AJCL Satellite before sending to Oracle so we can define separate LOB from Surf Trans
+UPDATE	IL
+SET		ChargesType = 'ACCESSORIAL', ChargesEDICode = 'SITEM'
+FROM	[MGXMLProcessing].[dbo].[tblCustomerXML_InvoiceLoadRecs] IL
+WHERE	[SentToOracle] = 0
+AND		EnterpriseParentName = 'AJC Logistics Satellite'
+AND		ChargesType = 'ITEM'
+AND		ChargesEDICode IS NULL
+
+UPDATE	IL
+SET		ChargesType = 'ACCESSORIAL', ChargesEDICode = 'SFUE'
+FROM	[MGXMLProcessing].[dbo].[tblCustomerXML_InvoiceLoadRecs] IL
+WHERE	[SentToOracle] = 0
+AND		EnterpriseParentName = 'AJC Logistics Satellite'
+AND		ChargesType = 'ACCESSORIAL_FUEL'
+AND		ChargesEDICode = 'FUE'
+
+UPDATE	IL
+SET		ChargesEDICode = 'SDSC'
+FROM	[MGXMLProcessing].[dbo].[tblCustomerXML_InvoiceLoadRecs] IL
+WHERE	[SentToOracle] = 0
+AND		EnterpriseParentName = 'AJC Logistics Satellite'
+AND		ChargesType = 'DISCOUNT'
+AND		ChargesEDICode = 'DSC'
+
+ DECLARE @SQL1 NVARCHAR(MAX);
+
+
+ SET @SQL1 = '
+insert into
+openquery(' + @ORCLENV + ', ''select * from ' + @ORCLTBL + ''')
+select [RefShippingOrder]
+      ,[RefLoadID]
+      ,[RefReleaseNum]
+      ,[RefPONum]
+      ,[RefSCAC]
+      ,[EnterpriseName]
+      ,[EnterpriseParentName]
+      ,[EnterpriseType]
+      ,[EnterpriseAccntNum]
+      ,[PriceSheetType]
+      ,[PriceSheetCurrency]
+      ,[PriceSheetCreatedBy]
+      ,[PriceSheetUpdatedBy]
+      ,[PriceSheetDateCategory]
+      ,[PriceSheetPickupDate]
+      ,[PriceSheetDropDate]
+      ,[ChargesType]
+      ,[ChargesSeqNum]
+      ,[ChargesEDICode]
+      ,[ChargesDesc]
+      ,[ChargesAmount]
+      ,LEFT([InvNum],19) [InvNum]
+      ,[InvDate]
+      ,[LoadedDateTime]
+      ,[FileName]
+      ,[FileCreatedDate]
+from [MGXMLProcessing].[dbo].[tblCustomerXML_InvoiceLoadRecs] where [SentToOracle] = 0';
+
+ EXEC sp_executesql @SQL1;
+
+
+ update [MGXMLProcessing].[dbo].[tblCustomerXML_InvoiceLoadRecs]
+set [SentToOracle] = 1
+where [SentToOracle] = 0;
+
+
+ END
+End Try
+
+
+
+ BEGIN CATCH
+
+
+               DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+
+               SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+
+               Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp-MGXML-LoadOracleCustomerRecords]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+ END CATCH

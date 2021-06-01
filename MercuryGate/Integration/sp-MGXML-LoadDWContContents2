@@ -1,0 +1,77 @@
+USE [MGXMLProcessing]
+GO
+/****** Object:  StoredProcedure [dbo].[sp-MGXML-LoadDWContContents2]    Script Date: 5/21/2019 2:39:15 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+
+
+
+ALTER PROCEDURE [dbo].[sp-MGXML-LoadDWContContents2]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+
+DECLARE @RecIDs TABLE
+(RecID int);
+
+INSERT INTO @RecIDs
+select ContentsID
+from [MGXMLProcessing].[dbo].[tblXML_DW_LoadRItems]
+where Processed = 0 and FileNo in 
+	(select ShipmentID 
+	from [AJCDW].[dbo].[tblShipment]
+	where FK_SystemID = 4);
+
+
+insert into [AJCDW].[dbo].[tblContainerContents]
+select ContentsNum, ContConWeight, ContConPieces, ContConPieceType
+	, ContConValue, ContConUnits, ContConUnitType
+	, ContConDesc, FileNo, ContRateAs, ContUnitPack
+	, FK_SystemID
+from [MGXMLProcessing].[dbo].[tblXML_DW_LoadRItems]
+where Processed = 0 and FileNo in 
+	(select ShipmentID 
+	from [AJCDW].[dbo].[tblShipment]
+	where FK_SystemID = 4
+	);
+
+
+update [MGXMLProcessing].[dbo].[tblXML_DW_LoadRItems]
+set Processed = 1
+where ContentsID in (select RecID from @RecIDs);
+
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp-MGXML-LoadDWContContents2]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

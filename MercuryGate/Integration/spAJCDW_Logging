@@ -1,0 +1,44 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[spAJCDW_Logging]    Script Date: 6/21/2019 2:17:11 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[spAJCDW_Logging] 
+
+
+				@StepID INT 
+			  , @BeginOREnd BIT = 0
+			  , @RecordsProcessed INT = NULL
+			  , @ProcName VARCHAR(100)
+
+AS
+
+
+BEGIN
+
+
+IF @BeginOREnd = 0
+		BEGIN
+
+				INSERT INTO AJCDW.DBO.tblTimeTracking ([ProcName], [StepID], [StartDate])
+				SELECT @ProcName, @StepID, GETDATE()
+
+		END
+
+ELSE
+
+		BEGIN 
+
+				UPDATE ttt 
+				SET EndDate = GETDATE(),  RecordsProcessed = @RecordsProcessed
+				FROM	AJCDW.DBO.tblTimeTracking ttt
+				WHERE	ProcName = @ProcName
+				AND		StepID = @StepID
+				AND		EndDate IS NULL
+
+		END
+	
+
+END
