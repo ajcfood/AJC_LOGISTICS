@@ -1,0 +1,147 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[sp2-AJCDW_06-FactFullOutofPeriod]    Script Date: 12/26/2019 10:09:45 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[sp2-AJCDW_06-FactFullOutofPeriod]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+-----------------------------
+-- Update OUTOFPERIOD Flag --
+-----------------------------
+
+-- Initialize All Records --
+----------------------------
+update tblInvoice
+set InvOutofPeriod = 0;
+
+
+-- Get Min Dates per File --
+----------------------------
+select distinct ogl.LINE_ATTRIBUTE11, min(oc.START_DATE) as minstartdate, min(oc.END_DATE) as minenddate
+into #tmp1
+from tblOracleGL ogl
+inner join tblOracleCalendar oc
+	on ogl.PERIOD_NAME = oc.PERIOD_NAME
+group by ogl.LINE_ATTRIBUTE11
+order by ogl.LINE_ATTRIBUTE11;
+
+
+-- Update CSA and BP Out of Period --
+-------------------------------------
+update tblInvoice
+set InvOutofPeriod = 1
+from tblInvoice i
+	inner join #tmp1 t1
+		on i.RefNo = t1.LINE_ATTRIBUTE11
+where ((cast(i.InvDate as date) not between cast(t1.minstartdate as date) AND cast(t1.minenddate as date))
+	or (cast(i.DelivDate as date) not between cast(t1.minstartdate as date) AND cast(t1.minenddate as date)))
+	and i.FK_SystemID <> 2;
+
+
+-- Update IES Period --
+-----------------------
+
+-- Imports --
+-------------
+update tblInvoice
+set InvOutofPeriod = 1
+from tblInvoice i
+	inner join #tmp1 t1
+		on i.RefNo = t1.LINE_ATTRIBUTE11
+	inner join tblShipment s
+		on i.ShipmentID = s.ShipmentID
+	inner join tblShipmentType st
+		on s.FK_ShipmentTypeID = st.ShipmentType_ID
+where (i.InvDate not between t1.minstartdate AND t1.minenddate)
+	or (i.DelivDate not between t1.minstartdate AND t1.minenddate)
+	and i.FK_SystemID = 2
+	and st.ShpTypeDesc = 'Import';
+
+
+-- Exports --
+-------------
+update tblInvoice
+set InvOutofPeriod = 1
+from tblInvoice i
+	inner join #tmp1 t1
+		on i.RefNo = t1.LINE_ATTRIBUTE11
+	inner join tblShipment s
+		on i.ShipmentID = s.ShipmentID
+	inner join tblShipmentType st
+		on s.FK_ShipmentTypeID = st.ShipmentType_ID
+where (s.ShpShipDate not between t1.minstartdate AND t1.minenddate)
+	and i.FK_SystemID = 2
+	and st.ShpTypeDesc = 'Export';
+
+
+drop table #tmp1;
+
+
+-- Update Adjustments Flag --
+-----------------------------
+
+-- Initialize All Records --
+----------------------------
+update tblInvoice
+set InvIsADJ = 0;
+
+
+Update tblInvoice
+Set InvIsADJ = 1
+where RIGHT(LTRIM(RTRIM(InvVendInvNo)),3) = 'ADJ';
+
+
+---------------------------
+--    Update GP%         --
+---------------------------
+UPDATE tblShipment
+SET ShpGPPerc = [ShpGP]/[ShpREVENUE] * 100
+WHERE ShpREVENUE <> 0;
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+END
+
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp2-AJCDW_06-FactFullOutofPeriod]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

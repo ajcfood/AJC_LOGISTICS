@@ -1,0 +1,237 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadWMSData]    Script Date: 9/26/2019 11:53:54 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER procedure [dbo].[spAJCDW_LoadWMSData]
+as
+
+BEGIN TRY
+BEGIN
+
+
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+
+--#WAREHOUS_DAT.ShipmentID = #PO_PALLT_DAT."WHS:UID" = #PO_INVIT_DAT."WHS:UID"
+
+--Copy IES data into tmp tables
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+SELECT "WHS:ShipperReference", BuyerCode, VendorCode, PO_InvoiceItem_UID, PartNumber, PartDescription, QuantityAssigned, QuantityOnHand, Weight, WeightUnit, "WHS:UID", "PPL:UID", QuantityReceived
+INTO  #PO_INVIT_DAT
+FROM [IES].[IES]..PO_INVIT_DAT WITH (NOLOCK)
+WHERE "WHS:UID" > '210050070131' -- this is 1/1/19 start
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+SELECT SHIPMENT_ID,  WHSE_RECEIPT_NO,  WAREHOUSE,  EXPORTER,  EXPORTER_REF_NO,  CONSIGNEE,  SUPPLIER,  SUPPLIER_REF_NO,  CONTROLLER,  DATEFILEOPEN,  RECEIVEDDATE,  LASTCHGDATE,  TOT_LBS,  TOTAL_PIECES
+,  QuantityAssigned,  QuantityOnHand,  REMARKS
+INTO  #WAREHOUS_DAT
+FROM [IES].[IES]..WAREHOUS_DAT WITH (NOLOCK)
+WHERE WHSE_RECEIPT_NO > '071970' -- this is 1/1/19 start
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 3, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+SELECT UID,  Status,  Pallet_Lbs,  Payload_Lbs,  Payload_Quantity,  Warehouse,  Load_Date,  Load_Time,  Container_UID,  File_No,  InDate,  OutDate,  "WHS:UID",  MarksNumbers,  BuyerID,  Payload_Gross_Lbs
+,  Section_,  Row_,  Rack_,  Bin_
+INTO  #PO_PALLT_DAT
+FROM  [IES].[IES]..PO_PALLT_DAT WITH (NOLOCK)
+WHERE "WHS:UID" > '210050070131' -- this is 1/1/19 start
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 3, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 4, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+--Update Customers that dont match what is in IES/WMS
+
+UPDATE		X 
+SET			BuyerCode = y.BuyerID
+FROM		#PO_INVIT_DAT x
+INNER JOIN  #PO_PALLT_DAT y on x."WHS:UID" = y."WHS:UID" and x."PPL:UID" = y.UID
+WHERE		x."WHS:UID" > '210050070131'
+AND			y."WHS:UID" > '210050070131'
+AND			x.BuyerCode <> y.BuyerID
+
+UPDATE		Y
+SET			Consignee = X.BuyerID 
+FROM		#WAREHOUS_DAT y
+INNER JOIN  #PO_PALLT_DAT x on x."WHS:UID" = y.SHIPMENT_ID 
+WHERE		x."WHS:UID" > '210050070131'
+AND			y.WHSE_RECEIPT_NO > '071970'
+AND			x.BuyerID <> y.Consignee
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 4, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 5, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+--Load tblWMSInv
+DELETE ajcdw..tblWMSInv
+WHERE RECEIVEDDATE > '01-01-2019'
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 5, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 6, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+insert into ajcdw..tblWMSInv ([PO_InvoiceItem_UID], [PONumber], [PartNumber], [PartDescription], [WHSE_RECEIPT_NO], [Status], [RECEIVEDDATE], [WHSRCPTDATE], [WRLASTCHGDATE], [CUSTOMER], [SUPPLIER], [WAREHOUSE], [CONTROLLER], 
+[QuantityReceived], [QuantityOnHand], [QuantityAssigned], [ItemWeight], [WeightUnit], [TotalItemWeight], [TempZone], [RCVR], [FileNo], [WHSUID], [OverPackID], [Section], [Row], [Rack], [Bin] )
+
+select DISTINCT CAST (z.PO_InvoiceItem_UID as varchar(250))/*as PO_InvoiceItem_UID*/,CAST (z."WHS:ShipperReference" as varchar(250))/*as PONumber*/,CAST (z.PartNumber as varchar(250))/*as PartNumber*/
+,CAST (z.PartDescription as varchar(250))/*as PartDescription*/,CAST (y.WHSE_RECEIPT_NO as varchar(50))/*as WHSE_RECEIPT_NO*/,CAST (x.Status as varchar(50))/*as Status*/,CAST (y.RECEIVEDDATE as date)/*as RECEIVEDDATE*/
+,CAST (y.DATEFILEOPEN as date)/*as WHSRCPTDATE*/,CAST (y.LASTCHGDATE as date)/*as WRLASTCHGDATE*/,CAST (z.BuyerCode as varchar(250))/*as CUSTOMER*/,CAST (z.VendorCode as varchar(250))/*as SUPPLIER*/
+,CAST (y.WAREHOUSE as varchar(20))/*as WAREHOUSE*/,CAST (y.CONTROLLER as varchar(250))/*as CONTROLLER*/,CAST (z.QuantityReceived as decimal(18,2))/*as QuantityReceived*/,CAST (z.QuantityOnHand as decimal(18,2))/*as QuantityOnHand*/
+,CAST (z.QuantityAssigned as decimal(18,2))/*as QuantityAssigned*/,CAST (z.Weight as decimal(18,2))/*as ItemWeight*/,CAST (z.WeightUnit as varchar(50))/*as WeightUnit*/
+,CAST (z.Weight * z.QuantityReceived as decimal(18,2))/*as TotalItemWeight*/,CAST (x.MarksNumbers as varchar(100))/*as TempZone*/,CAST (y.REMARKS as varchar(100))/*as RCVR*/, CAST (x.File_No as bigint)/*as FileNo*/
+,CAST (z.[WHS:UID] as bigint)/*as WHSUID*/,CAST (z.[PPL:UID] as bigint)/*as OverPackID*/,CAST (x.Section_ as varchar(50))/*as Section*/,CAST (x.Row_ as varchar(50))/*as Row*/,CAST (x.Rack_ as varchar(50))/*as Rack*/
+,CAST (x.Bin_ as varchar(50))/*as Bin*/
+from #PO_PALLT_DAT x
+inner join #WAREHOUS_DAT y on y.shipment_id = x."WHS:UID"
+inner join #PO_INVIT_DAT z on z."WHS:UID" = x."WHS:UID" and z."PPL:UID" = x.UID
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 6, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 7, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+--Load tblWMSLoads
+DELETE ajcdw..tblWMSLoads
+WHERE ShpShipDate > '2019-01-01'
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 7, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 8, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+SELECT * 
+INTO #tmp7
+FROM OPENQUERY(IES, '
+	Select FILE_NO, TEMP_MIN, TEMP_MAX, TEMP_UNIT from CONTAINE_DAT
+	--WHERE FILE_NO >= ''210020272909'' -- this is 1/1/18 start
+	WHERE FILE_NO >= ''210020294307''  -- this is 1/1/19 start
+	')
+
+INSERT INTO ajcdw..tblWMSLoads ([PO_InvoiceItem_UID], [PONumber], [PartNumber], [PartDescription], [WHSE_RECEIPT_NO], [Status], [RECEIVEDDATE], [WHSRCPTDATE], [WRLASTCHGDATE], [CUSTOMER], [SUPPLIER], [WAREHOUSE], [CONTROLLER], 
+[QuantityReceived], [QuantityOnHand], [QuantityAssigned], [ItemWeight], [WeightUnit], [TotalItemWeight], [TempZone], [RCVR], [FileNo], [WHSUID], [OverPackID], [Section], [Row], [Rack], [Bin], [RefNo], [ShpPortofLoad], [ShpPortofDchg], 
+[ShpCarrier], [ShpVessel_Equipment], [ShpBkgNum], [ShpShipDate], [ContainerNo], [ContainerType], [ContainerSeal], [ContTempMin], [ContTempMax], [ContTempUnit])
+
+SELECT CAST (z.PO_InvoiceItem_UID as varchar(250))as PO_InvoiceItem_UID,CAST (z."WHS:ShipperReference" as varchar(250))as PONumber,CAST (z.PartNumber as varchar(250))as PartNumber,CAST (z.PartDescription as varchar(250))as PartDescription
+,CAST (y.WHSE_RECEIPT_NO as varchar(50))as WHSE_RECEIPT_NO,CAST (x.Status as varchar(50))as Status,CAST (y.RECEIVEDDATE as date)as RECEIVEDDATE,CAST (y.DateFileOpen as date)as WHSRCPTDATE,CAST (y.LASTCHGDATE as date)as WRLASTCHGDATE
+,CAST (z.BuyerCode as varchar(250))as CUSTOMER,CAST (z.VendorCode as varchar(250))as SUPPLIER,CAST (y.WAREHOUSE as varchar(20))as WAREHOUSE,CAST (y.CONTROLLER as varchar(250))as CONTROLLER,CAST (z.QuantityReceived as decimal(18,2))as QuantityReceived
+,CAST (y.QuantityOnHand as decimal(18,2))as QuantityOnHand,CAST (y.QuantityAssigned as decimal(18,2))as QuantityAssigned,CAST (z.Weight as decimal(18,2))as ItemWeight,CAST (z.WeightUnit as varchar(50))as WeightUnit
+,CAST (z.Weight * z.QuantityReceived as decimal(18,2))as TotalItemWeight,CAST (x.MarksNumbers as varchar(100))as TempZone,CAST (y.REMARKS as varchar(100))as RCVR,CAST (x.File_No as bigint)as FileNo,CAST (z.[WHS:UID] as bigint)as WHSUID
+,CAST (z.[PPL:UID] as bigint)as OverPackID,CAST (x.Section_ as varchar(50))as Section,CAST (x.Row_ as varchar(50))as Row,CAST (x.Rack_ as varchar(50))as Rack,CAST (x.Bin_ as varchar(50))as Bin,CAST (RefNo as varchar(50))as RefNo
+,CAST (ShpPortofLoad as varchar(MAX))as ShpPortofLoad,CAST (ShpPortofDchg as varchar(MAX))as ShpPortofDchg,CAST (ShpCarrier as varchar(MAX))as ShpCarrier,CAST (ShpVessel_Equipmnt as varchar(MAX))as ShpVessel_Equipment
+,CAST (ShpBkgNum as varchar(MAX))as ShpBkgNum,CAST (ShpShipDate as varchar(MAX))as ShpShipDate,CAST (c.ContNum as varchar(50))as ContainerNo,CAST (c.ContType as varchar(50))as ContainerType,CAST (c.ContSeal1 as varchar(50))as ContainerSeal
+,CAST (cd.TEMP_MIN as varchar(50))as ContTempMin,CAST (cd.TEMP_MAX as varchar(50))as ContTempMax,CAST (cd.TEMP_UNIT as varchar(50))as ContTempUnit
+from #PO_PALLT_DAT x
+inner join #WAREHOUS_DAT y on y.shipment_id = x."WHS:UID"
+inner join #PO_INVIT_DAT z on z."WHS:UID" = x."WHS:UID" and z."PPL:UID" = x.UID
+inner JOIN ajcdw..tblshipment s ON x.File_No = s.ShipmentID
+inner JOIN ajcdw..tblContainer c on s.ShipmentID = c.FileNo
+inner JOIN #tmp7 cd  on c.FileNo = cd.FILE_NO
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 8, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+--Populate WHSE Capacity Profitability Report
+exec ajcdw.dbo.[LSCCapacityProfitability] 
+
+
+--Populate WHSE Capacity Profitability Report
+exec ajcdw.dbo.[LSCCustomerProfitability] 
+
+
+--Populate WHSE Capacity Profitability Report
+exec ajcdw.dbo.[LSCCustomerPerPalletProfitability] 
+
+--Populate WHSE Space Utilization Report
+exec ajcdw.[dbo].[LSCSpaceReporting]
+
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[spAJCDW_LoadWMSData]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

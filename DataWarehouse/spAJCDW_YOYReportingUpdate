@@ -1,0 +1,66 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[spAJCDW_YOYReportingUpdate]    Script Date: 12/26/2019 10:24:23 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER procedure [dbo].[spAJCDW_YOYReportingUpdate] as
+
+BEGIN TRY
+BEGIN
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+
+TRUNCATE TABLE AJCDW.DBO.tblYOYReporting
+
+INSERT INTO tblYOYReporting ([InvCustName], [invLOB], [Month], [Year], [TotalCost], [TotalRevenue], [TotalGP], [Total # Of Shipments in ACCT Month & YR], [Total_GP_Per_Load], [YOY_Cost], [YOY_Revenue], [YOY_GP], [YOY_GP_Per_Load], [YOY_Volume])
+SELECT	InvCustName, invLOB, Month, Year, TotalCost, TotalRevenue, TotalGP, ShipmentCount [Total # Of Shipments in ACCT Month & YR]
+	   , GP_Per_Load Total_GP_Per_Load
+       , ISNULL((TotalCost - LAG(TotalCost) over(partition by InvCustName, InvLOB, Month order by InvCustName, month, year)),0) as YOY_Cost
+       , ISNULL((TotalRevenue - LAG(TotalRevenue) over(partition by InvCustName, InvLOB, Month order by InvCustName, month, year)),0) as YOY_Revenue
+       , ISNULL((TotalGP - LAG(TotalGP) over(partition by InvCustName, InvLOB, month order by InvCustName, month, year)),0) as YOY_GP
+       , ISNULL((GP_Per_Load - LAG(GP_Per_Load) over(partition by InvCustName, InvLOB, month order by InvCustName, month, year)),0) as YOY_GP_Per_Load
+       , ISNULL((ShipmentCount - LAG(ShipmentCount) over(partition by InvCustName, InvLOB, month order by InvCustName, month, year)),0) as YOY_Volume
+from  (
+			select InvCustName, invLOB, acctmonth Month, acctyr Year, sum(invcost) as TotalCost, sum(invrevenue) TotalRevenue, sum(InvGP) TotalGP
+			, (SELECT COUNT(DISTINCT SHIPMENTID) FROM tblInvoice WHERE InvCustName = ti.InvCustName and AcctMonth = ti.AcctMonth and AcctYr = ti.AcctYr and InvLOB = ti.invLOB and InvOutOfPeriod = 0) ShipmentCount
+			, CONVERT(DECIMAL(10,2),CASE WHEN (SELECT COUNT(DISTINCT SHIPMENTID) FROM tblInvoice WHERE InvCustName = ti.InvCustName and AcctMonth = ti.AcctMonth and AcctYr = ti.AcctYr and InvOutOfPeriod = 0) = 0 THEN 0 
+											ELSE sum(InvGP) / (SELECT COUNT(DISTINCT SHIPMENTID) FROM tblInvoice WHERE InvCustName = ti.InvCustName and AcctMonth = ti.AcctMonth and AcctYr = ti.AcctYr and InvOutOfPeriod = 0) END) GP_Per_Load
+			from tblInvoice ti
+			where ISNULL(InvCustName,'') <> ''
+			group by InvCustName, invLOB, acctmonth, acctyr
+	  ) annual
+order by InvCustName ASC, invLOB, month, year  
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+END
+END TRY
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[spAJCDW_YOYReportingUpdate]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

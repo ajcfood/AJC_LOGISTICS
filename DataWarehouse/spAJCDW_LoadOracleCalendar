@@ -1,0 +1,58 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadOracleCalendar]    Script Date: 3/25/2020 10:37:33 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[spAJCDW_LoadOracleCalendar]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+-------------------------------
+-- LOAD ORACLE CALENDAR DATA --
+-------------------------------
+
+TRUNCATE TABLE tblOracleCalendar
+
+INSERT INTO tblOracleCalendar
+SELECT * 
+FROM OPENQUERY(ORACLEPROD, '
+	SELECT ENTERED_PERIOD_NAME,USER_PERIOD_TYPE,PERIOD_YEAR,QUARTER_NUM,PERIOD_NUM,START_DATE,END_DATE,PERIOD_NAME,ADJUSTMENT_PERIOD_FLAG
+FROM GL_PERIODS_V 
+WHERE PERIOD_SET_NAME = ''CALENDAR YEAR'' AND PERIOD_SET_NAME=''CALENDAR YEAR'' AND ADJUSTMENT_PERIOD_FLAG = ''N''
+ORDER BY PERIOD_YEAR DESC, USER_PERIOD_TYPE, PERIOD_NUM
+	');
+
+update tblOracleCalendar set END_DATE = DATEADD(ss,-1,DATEADD(dd,1,End_Date))
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[spAJCDW_LoadOracleCalendar]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

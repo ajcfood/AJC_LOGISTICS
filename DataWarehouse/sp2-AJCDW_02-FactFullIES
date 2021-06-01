@@ -1,0 +1,295 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[sp2-AJCDW_02-FactFullIES]    Script Date: 5/21/2019 11:09:35 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[sp2-AJCDW_02-FactFullIES]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+---------
+-- IES --
+---------
+
+--IES Status					IES Status Code
+-------------					---------------
+--Booked						205
+--Pickup Requested				210
+--On Hand						215
+--HBL Printed					220
+--Consolidated					225
+--Manifest Printed				230
+--Cargo Tendered				235
+--Prealert Sent					240
+--Confirmed on Board			245
+--Sailed Arrived Destination	250
+--Filed/Closed					260
+--Cancelled						295
+
+
+SELECT * 
+INTO #tmp1
+FROM OPENQUERY(IES, '
+	SELECT s.SHIPMENT_ID, s.REFERENCE_NO, s.BOOKINGNUMBE, s.CUSTREFNO, s.ACCOUNT, s.DIVISIONID, s.BUS_LINE
+		, s.CARRIER, s.EXPORTER, s.CONSIGNEE, s.SALES_REP, s.CONTROLLER
+		, s.B_L_NUMBER, s.MASTER, s.TYPEOFMOVE
+		, s.PIER, s.PLACEOFRECEI, s.PLACEOFDELIV, s.PORTOFDCHG, s.PORTOFLOAD, s.VESSEL, s.CARGOORIGINS
+		, s.TEU
+		, s.DATEFILEOPEN
+		, s.ETA as DELIVERYDATE, s.SAILDATE, s.LASTCHGDATE, STATUS
+		, s.TOT_SALE, s.TOT_COST, s.GROSS_PROFIT
+		, s.CURRENCY 
+	FROM SHIPMENT_DAT s
+	WHERE s.SAILDATE >= ''2014-01-01'' --AND STATUS <> ''295''
+	');
+
+
+-- Delete Double Entry CSA Records --
+-------------------------------------
+DELETE
+FROM #tmp1
+WHERE REFERENCE_NO IN (
+	SELECT [INTERFACE_HEADER_ATTRIBUTE4] FROM [dbo].[tblOracleCSAFileRef]);
+
+
+SELECT * 
+INTO #tmp2
+FROM OPENQUERY(IES, '
+	SELECT FILE_NO, CONTAINER
+	FROM CONTAINE_DAT
+	');
+
+
+SELECT * 
+INTO #tmp3
+FROM OPENQUERY(IES, '
+	SELECT FILE_ID, AES_ITN, PROCESS_STATUS
+	FROM AES_LOG_DAT
+	');
+
+
+-- Generate Comma Delimited Container List --
+SELECT DISTINCT
+	FILE_NO
+	,STUFF(CONTAIN, 1, 1, '') AS CONTAINER
+INTO #tmp4
+FROM #tmp2 f
+	CROSS APPLY
+	( SELECT ', ' + LTRIM(RTRIM(CONTAINER)) AS [text()]
+	FROM #tmp2 c
+	WHERE c.FILE_NO = f.FILE_NO FOR XML PATH('')
+	) o (CONTAIN)
+WHERE FILE_NO IS NOT NULL AND FILE_NO <> '-999999999999999'
+ORDER BY FILE_NO;
+
+
+SELECT * 
+INTO #tmp5
+FROM OPENQUERY(IES, '
+	SELECT DISTINCT SHIPMENT_ID, REFERENCE_NO, EXPORT_DATE, DELIVERY_ETA, SHIPPER_CITY, SHIPPER_STATE, CONSIGNEE_CITY, CONSIGNEE_STATE
+	FROM STATSF_DAT
+	WHERE SHIPMENT_ID <> 0 --AND EXPORT_DATE >= ''2012-11-01'' --AND DELIVERY_ETA IS NOT NULL
+	ORDER BY SHIPMENT_ID
+	');
+	
+
+-- LOAD INVOICE DATA --
+-----------------------
+INSERT INTO [AJCDW].[dbo].[tblInvoice]
+SELECT t1.SHIPMENT_ID, t1.REFERENCE_NO, t11.LINE_REFERENCE_4, t11.LINE_EFFECTIVE_DATE, NULL, NULL
+	, t11.LINE_ATTRIBUTE2, t11.OREVENUE, t11.OCOST, t11.OREVENUE-t11.OCOST AS GP, t11.PERIOD_NAME, NULL, NULL, NULL
+	, t11.INV_TYPE, t11.LOB
+	, NULL, NULL, 2
+FROM #tmp1 t1
+	INNER JOIN tblOracleGLCleansed t11
+		ON t1.REFERENCE_NO = t11.LINE_ATTRIBUTE11
+ORDER BY SHIPMENT_ID;
+
+
+-- LOAD SHIPMENT DATA --
+------------------------
+INSERT INTO [AJCDW].[dbo].[tblShipment]
+SELECT DISTINCT t1.SHIPMENT_ID, t1.REFERENCE_NO
+	, t1.BOOKINGNUMBE, t1.CUSTREFNO, t1.ACCOUNT
+	, t1.DIVISIONID, t1.BUS_LINE
+	, t1.CARRIER, t1.EXPORTER, t1.CONSIGNEE, t1.SALES_REP, t1.CONTROLLER
+	, t1.B_L_NUMBER, t1.[MASTER], t1.TYPEOFMOVE
+	, t1.PIER, t4.CONTAINER, NULL, NULL, NULL, NULL
+	, t1.PORTOFDCHG, t1.PORTOFLOAD, t1.VESSEL, t1.CARGOORIGINS
+	, t3.AES_ITN, t3.PROCESS_STATUS
+	, t1.TEU
+	, t1.TOT_SALE AS REVENUE, t1.TOT_COST AS COST, 0, t1.GROSS_PROFIT AS GP, 0
+	, t1.DATEFILEOPEN
+	, t1.DELIVERYDATE, t1.SAILDATE, t1.LASTCHGDATE, GETDATE() AS LOADEDDATE
+	, CASE WHEN T1.STATUS = '205' THEN 'Booked'
+		WHEN T1.STATUS = '210' THEN 'Pickup Requested'
+		WHEN T1.STATUS = '215' THEN 'On Hand'
+		WHEN T1.STATUS = '220' THEN 'HBL Printed'
+		WHEN T1.STATUS = '225' THEN 'Consolidated'
+		WHEN T1.STATUS = '230' THEN 'Manifest Printed'
+		WHEN T1.STATUS = '235' THEN 'Cargo Tendered'
+		WHEN T1.STATUS = '240' THEN 'Prealert Sent'
+		WHEN T1.STATUS = '245' THEN 'Confirmed on Board'
+		WHEN T1.STATUS = '250' THEN 'Sailed Arrived Destination'
+		WHEN T1.STATUS = '260' THEN 'Filed/Closed'
+		WHEN T1.STATUS = '295' THEN 'Cancelled'
+		else 'No Status' end as SHPSTATUS
+	, 2, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+FROM #tmp1 t1
+	LEFT OUTER JOIN #tmp4 t4
+		ON t1.SHIPMENT_ID = t4.FILE_NO
+	LEFT OUTER JOIN #tmp3 t3
+		ON t1.SHIPMENT_ID = t3.[FILE_ID]
+ORDER BY t1.SHIPMENT_ID;
+
+
+-- Update TEU For Master BL Records with No Invoice --
+------------------------------------------------------
+update tblShipment
+set ShpTEU = 0
+from tblShipment
+where ShpDivID = '40'
+	and ShpMaster = 'M' and ShpTEU <> 0
+	and ShipmentID not in (select ShipmentID from tblInvoice)
+	and FK_SystemID = 2;
+
+
+-- Update Import Records Delivery Date --
+-----------------------------------------
+update tblShipment
+set ShpDelivDate = t5.DELIVERY_ETA, ShpOriginCity = t5.SHIPPER_CITY, ShpOriginState = t5.SHIPPER_STATE, ShpDelivCity = t5.CONSIGNEE_CITY, ShpDelivState = t5.CONSIGNEE_STATE
+from tblShipment s
+	inner join #tmp5 t5
+		on s.ShipmentID = t5.shipment_id
+where s.FK_SystemID = 2;
+
+
+-- Update Div 0 Records --
+--------------------------
+UPDATE tblShipment
+SET ShpDivID = LEFT(RefNo, 2)
+WHERE ShpDivID = 0;
+
+	
+DROP TABLE #tmp1;
+DROP TABLE #tmp2;
+DROP TABLE #tmp3;
+DROP TABLE #tmp4;
+DROP TABLE #tmp5;
+
+
+--------------------------
+-- FOREIGN KEY UPDATES --
+--------------------------
+
+-- Division --
+--------------
+UPDATE tblShipment
+SET fk_divid = di.DivisionID
+FROM tblShipment sh
+	INNER JOIN tblDiv di
+		ON (sh.ShpDivID = di.DivisionNum
+			AND sh.ShpLOB = di.LOBNum)
+WHERE LTRIM(RTRIM(sh.ShpDivID)) <> '' AND LTRIM(RTRIM(sh.ShpLOB)) <> '' AND sh.FK_SystemID = 2; 
+
+    
+ -- Customer --
+---------------
+UPDATE tblShipment
+SET fk_custmasterid = cm.CustMasterID
+FROM tblShipment sh
+	INNER JOIN tblCustMaster cm
+		ON sh.ShpAccnt = cm.CustMasterCode AND sh.FK_SystemID = cm.FK_SystemID
+WHERE LTRIM(RTRIM(sh.ShpAccnt)) <> '' AND sh.FK_SystemID = 2; 
+    
+
+-- Sales Person --
+------------------
+UPDATE tblShipment
+SET fk_salespid = sp.salespid
+FROM tblShipment sh
+    INNER JOIN tblCustMaster cm
+		ON sh.ShpAccnt = cm.CustMasterCode AND sh.FK_SystemID = cm.FK_SystemID
+    INNER JOIN tblSalesP sp
+		ON cm.salesman = sp.salespcode
+WHERE LTRIM(RTRIM(sh.ShpAccnt)) <> '' AND sh.FK_SystemID = 2;  
+
+
+-- Shipment Type (Import vs Export) --
+--------------------------------------
+UPDATE tblshipment
+SET FK_ShipmentTypeID = st.ShipmentType_ID
+FROM tblshipment sh
+	INNER JOIN tblShipmentType st
+		ON left(ltrim(rtrim(sh.RefNo)), 3) = st.ShpTypeFilePrefix or right(ltrim(rtrim(sh.RefNo)), 3) = st.ShpTypeFileSuffix;
+
+
+-- LOAD CONTAINER DATA  --
+--------------------------
+insert into tblContainer
+select distinct t1.container, t1.[type], s.ShpDivID, s.ShpLOB, s.ShpCarrier, '' as cont_desc
+	, t1.seal, t1.seal2, t1.seal3, t1.file_no, 2 as sysid
+from tblShipment s
+	inner join (SELECT * 
+					FROM OPENQUERY(IES, '
+						SELECT CONTAINERID, CONTAINER, FILE_NO, WTLBS, PIECES, SEAL, SEAL2, SEAL3, TYPE FROM CONTAINE_DAT          
+				')) t1
+		on t1.file_no = s.ShipmentID
+where LTRIM(rtrim(t1.container)) <> '' and s.FK_SystemID = 2;
+
+
+update tblContainer
+set ContDesc = 'Reefer'
+where ContType like '%RF%';
+
+
+update tblContainer
+set ContDesc = 'Dry'
+where ContType not like '%RF%' and ltrim(rtrim(ContType)) <> '';
+
+
+insert into tblContainerContents
+select distinct t2.ContentId, t2.WTLBS, t2.PIECES, t2.PIECE_TYPE, t2.VALUE, t2.UNITS, t2.UNIT_TYPE, t2.DESC_TEXT, t2.FILE_NO
+	, t2.RATE_AS, t2.UNIT_PACK
+	, 2 as sysid
+from tblShipment s
+	inner join (SELECT * 
+					FROM OPENQUERY(IES, '
+						SELECT ContentId, WTLBS, PIECES, PIECE_TYPE, VALUE, UNITS, UNIT_TYPE, DESC_TEXT, FILE_NO, RATE_AS, UNIT_PACK FROM CONTENT_DAT
+				')) t2
+	on t2.FILE_NO = s.ShipmentID
+where s.FK_SystemID = 2;
+
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp2-AJCDW_02-FactFullIES]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

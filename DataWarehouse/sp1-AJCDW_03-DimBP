@@ -1,0 +1,63 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[sp1-AJCDW_03-DimBP]    Script Date: 5/21/2019 11:08:13 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[sp1-AJCDW_03-DimBP]
+
+AS
+BEGIN
+
+SET NOCOUNT ON;
+
+-- Commented out by Salah on 4/24/19 after virus on AJCL servers.  We believe the USDCFAPBG01 is not used any longer
+
+/*
+---------
+-- BP  --
+---------
+
+-- Get Customers --
+-------------------
+
+insert into tblCustMaster
+select *
+FROM OPENQUERY([USDCFAPBG01], '
+	select * from StgAJCDW.dbo.tblStgBPCustMast
+');
+
+-- Get Vendors --
+-------------------
+
+insert into tblVendor
+select [VendorNum],[VendName],[VendAddr1],[VendAddr2],[VendCity],[VendState],[VendZip],[VendPhone],[VendFax]
+      ,[VendEmail],[VendLiab],[VendLAmt],[VendCAmt],[VendFHA],[VendLiabInsur],[VendLiabInsPolicy],[VendEquip1],[VendEquip2],[VendEquip3]
+      ,[VendDOTNum],[VendCargoInsur],[VendCargoInsPolicy],[VendStatus],[VendActive],[FK_SystemID]
+FROM OPENQUERY([USDCFAPBG01], '
+	select * from StgAJCDW.dbo.tblStgBPVendor
+');
+
+-- Get Consignee --
+-------------------
+
+insert into tblConsg
+select *
+FROM OPENQUERY([USDCFAPBG01], '
+	select * from StgAJCDW.dbo.tblStgConsg
+');
+
+-- Get Shipper --
+-----------------
+
+insert into tblShipper
+select *
+FROM OPENQUERY([USDCFAPBG01], '
+	select * from StgAJCDW.dbo.tblStgShipper
+');
+
+*/
+END
+

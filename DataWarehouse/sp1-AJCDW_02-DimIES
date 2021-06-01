@@ -1,0 +1,59 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[sp1-AJCDW_02-DimIES]    Script Date: 5/21/2019 11:08:00 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[sp1-AJCDW_02-DimIES]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+---------
+-- IES --
+---------
+
+-- Load Master Data  --
+-----------------------
+
+insert into tblCustMaster 
+SELECT * 
+FROM OPENQUERY(IES, '
+SELECT distinct cliend_id, acctg_id, type
+	, name, street, address, city, state
+	, zip_code, country, phone, fax, contact_name, BillTo_email, salesman
+	, case when active_status = 0 then 1 when active_status = 1 then 0 end as active
+	, 2 as sysid FROM CLIENT_DAT')
+WHERE ltrim(rtrim(acctg_id)) <> '' 
+ORDER BY name;
+
+
+END
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp1-AJCDW_02-DimIES]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

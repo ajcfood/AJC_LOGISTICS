@@ -1,0 +1,99 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadOracleGLCleansed]    Script Date: 6/22/2020 10:51:23 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+ALTER PROCEDURE [dbo].[spAJCDW_LoadOracleGLCleansed](@YEAR CHAR(2))
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+
+-- Delete current year cleansed Oracle GL data --
+-------------------------------------------------
+delete
+from tblOracleGLCleansed
+where PERIOD_NAME LIKE 'CAL%-' + @YEAR;
+
+
+-- Insert current year Cleansed Oracle GL Data --
+-------------------------------------------------
+insert into tblOracleGLCleansed
+select LINE_ATTRIBUTE11, LINE_REFERENCE_4, LINE_ATTRIBUTE2, PERIOD_NAME, LINE_EFFECTIVE_DATE
+	, isnull(case when ((LINE_ACCT_COMBO like '53.5%') and (LTRIM(RTRIM(JE_SOURCE)) in ('Spreadsheet', 'MANUAL'))) and LINE_ACCOUNTED_CR is NOT NULL then 0
+		when ((LINE_ACCT_COMBO like '53.4060%') and (LTRIM(RTRIM(HEADER_NAME))) = 'Credit Memos USD' and LINE_ATTRIBUTE11 <> 'MGSO3444') then LINE_ACCOUNTED_DR *-1
+		when ((LINE_ACCT_COMBO like '53.4000%') and (LTRIM(RTRIM(HEADER_NAME))) like 'Credit Memo%USD%' and LINE_ACCOUNTED_DR is NOT NULL) then LINE_ACCOUNTED_DR *-1
+		when ((LINE_ACCT_COMBO like '53.4000%') and (LTRIM(RTRIM(JE_SOURCE))) in ('Spreadsheet', 'MANUAL') and HEADER_NAME not like '%FM RECLASS SALES WITH NO FILE#%' and LINE_ACCOUNTED_DR is NOT NULL) then LINE_ACCOUNTED_DR *-1
+		when ((LINE_ATTRIBUTE11 like 'BP%') and (LINE_ACCT_COMBO like '53.4000%') and (LTRIM(RTRIM(JE_SOURCE)))= 'Receivables' and LINE_ACCOUNTED_DR is NOT NULL) then LINE_ACCOUNTED_DR *-1
+		when ((LINE_ACCT_COMBO like '53.5%') and (LTRIM(RTRIM(HEADER_NAME))) = 'CSA COGS Reversal USD') then 0
+		when HEADER_NAME like '%FM RECLASS SALES WITH NO FILE#%' then 0
+		when ((LINE_ACCT_COMBO like '53.4000%') and (LTRIM(RTRIM(HEADER_NAME))) like 'Sales Invoices%USD%') and LINE_ACCOUNTED_CR IS NULL then LINE_ACCOUNTED_DR *-1
+		when ((LINE_ACCT_COMBO like '53.4060%') and (LTRIM(RTRIM(JE_SOURCE))) = '1221') and LINE_ACCOUNTED_CR is NOT NULL then 0
+		else LINE_ACCOUNTED_CR end,0) as OREVENUE
+	, isnull(case when ((LINE_ACCT_COMBO like '53.5%') and (LTRIM(RTRIM(JE_SOURCE)) in ('Spreadsheet', 'MANUAL'))) and LINE_ACCOUNTED_DR is NULL then (LINE_ACCOUNTED_CR) *-1
+		when ((LINE_ACCT_COMBO like '53.4060%') and (LTRIM(RTRIM(HEADER_NAME))) = 'Credit Memos USD' and LINE_ATTRIBUTE11 <> 'MGSO3444') then 0
+		when ((LINE_ACCT_COMBO like '53.4000%') and (LTRIM(RTRIM(HEADER_NAME))) like 'Credit Memo%USD%') then 0
+		when ((LINE_ACCT_COMBO like '53.4000%') and (LTRIM(RTRIM(JE_SOURCE))) in ('Spreadsheet', 'MANUAL') and HEADER_NAME not like '%FM RECLASS SALES WITH NO FILE#%') then 0
+		when ((LINE_ATTRIBUTE11 like 'BP%') and (LINE_ACCT_COMBO like '53.4000%') and (LTRIM(RTRIM(JE_SOURCE)))= 'Receivables') then 0
+		when ((LINE_ACCT_COMBO like '53.5%') and (LTRIM(RTRIM(HEADER_NAME))) = 'CSA COGS Reversal USD') then (LINE_ACCOUNTED_CR) *-1
+		when HEADER_NAME like '%FM RECLASS SALES WITH NO FILE#%' then 0
+		when ((LINE_ACCT_COMBO like '53.4000%') and (LTRIM(RTRIM(HEADER_NAME))) like 'Sales Invoices%USD%') then 0
+		when ((LINE_ACCT_COMBO like '53.4060%') and (LTRIM(RTRIM(JE_SOURCE))) = '1221') then LINE_ACCOUNTED_DR
+		else LINE_ACCOUNTED_DR end,0) as OCOST
+	, TRANS_TYPE
+	, LINE_ACCT_COMBO
+	, HEADER_NAME
+	, case when (LINE_ACCT_COMBO like '53.4060%') then 'Clm'
+		when (LINE_ACCT_COMBO like '53.5133%') then 'Clm'
+		else 'Inv' end as INV_TYPE
+	, case when substring(LINE_ACCT_COMBO, 13,3) = '911' then '11'
+		when substring(LINE_ACCT_COMBO, 13,3) = '910' then '10'
+		when substring(LINE_ACCT_COMBO, 13,3) = '909' then '9'
+		when substring(LINE_ACCT_COMBO, 13,3) = '912' then '12'
+		when substring(LINE_ACCT_COMBO, 13,3) = '941' then '41'
+		when substring(LINE_ACCT_COMBO, 13,3) = '942' then '21'
+		when substring(LINE_ACCT_COMBO, 13,3) = '925' then '25'
+		when substring(LINE_ACCT_COMBO, 13,3) = '943' then '31,33,43'
+		when substring(LINE_ACCT_COMBO, 13,3) = '945' then '61'
+		when substring(LINE_ACCT_COMBO, 13,3) = '946' then '62'
+		when substring(LINE_ACCT_COMBO, 13,3) = '926' then '76' 
+		when substring(LINE_ACCT_COMBO, 9,3) = '395' and substring(LINE_ACCT_COMBO, 13,3) = '946' then '65' 
+		else NULL end as LOB
+from tblOracleGL o
+where PERIOD_NAME LIKE 'CAL%-' + @YEAR
+	and LINE_ATTRIBUTE11 IS NOT NULL
+order by LINE_ATTRIBUTE11;
+
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[spAJCDW_LoadOracleGLCleansed]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

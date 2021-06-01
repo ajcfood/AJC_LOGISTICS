@@ -1,0 +1,148 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[LSCSpaceReporting]    Script Date: 8/8/2019 1:58:08 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+ALTER procedure [dbo].[LSCSpaceReporting] as
+BEGIN TRY
+BEGIN
+
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+/*************************************************************************************************************************/
+
+
+--Change values here is total spaces every change at the warehouse
+IF OBJECT_ID ('TEMPDB..#TempZone') IS NOT NULL  DROP TABLE #TempZone
+select 'Dry' TempZone, 795 TotalSpaces
+into #TempZone
+union select 'Chill', 601
+union select 'Frozen', 171
+union select '4 Deep', 336
+
+IF OBJECT_ID ('TEMPDB..#RptLSCCapacity') IS NOT NULL  DROP TABLE #RptLSCCapacity
+CREATE TABLE #RptLSCCapacity
+(
+	[Date] [int] NULL,
+	[DayOfWeek] [varchar](9) NULL,
+	[TempZone] [varchar](15) NULL,
+	[TotalSpaces] [int] NULL,
+	[TotalOccupied] [float] NULL,
+	[TotalOpen]  AS ([TotalSpaces]-[TotalOccupied]),
+	[% Used]  AS (([TotalOccupied]/[TotalSpaces])*(100))
+)
+
+
+insert into #RptLSCCapacity (date, DayOfWeek, tempzone, totalspaces) 
+select CONVERT(varchar, GetDate(),112), DATENAME(WEEKDAY, GETDATE()), tempzone, totalspaces 
+from #TempZone
+
+
+--populate Dry
+update r set totaloccupied = (
+								select DISTINCT(COUNT(*)) TotalOccupiedDry
+								from ajcdw..tblWMSInv
+								where status in ('OnHand','LoadPlan')
+								and LTRIM(RTRIM(PartDescription)) != ('BULKHEAD')
+								and LTRIM(RTRIM(TempZone)) LIKE 'DR%'
+								and NOT     (
+												 (
+													LTRIM(RTRIM(Supplier)) IN ('GOSFOO', 'WHITE', 'SUFOO')
+												 )
+											  OR (
+													Customer IN ('PRSG', 'LIAFOOJAX')
+												 )
+
+											)
+								and WAREHOUSE = 'JAXWHSE'
+							 )
+from #RptLSCCapacity r
+where TempZone = 'Dry'
+and Date = CONVERT(varchar, GetDate(),112)
+
+--Populate Chill
+update r set totaloccupied = (
+								select DISTINCT(COUNT(*)) TotalOccupiedChill
+								from ajcdw..tblWMSInv
+								where status in ('OnHand','LoadPlan')
+								and LTRIM(RTRIM(PartDescription)) != ('BULKHEAD')
+								and LTRIM(RTRIM(TempZone)) LIKE 'C%'
+								and WAREHOUSE = 'JAXWHSE'
+							 )
+from #RptLSCCapacity r
+where TempZone = 'Chill'
+and Date = CONVERT(varchar, GetDate(),112)
+
+
+--Populate Frozen
+update r set totaloccupied = (
+								select DISTINCT(COUNT(*)) TotalOccupiedFrozen
+								from ajcdw..tblWMSInv
+								where status in ('OnHand','LoadPlan')
+								and LTRIM(RTRIM(PartDescription)) != ('BULKHEAD')
+								and LTRIM(RTRIM(TempZone)) LIKE 'F%'
+								and WAREHOUSE = 'JAXWHSE'
+							 )
+from #RptLSCCapacity r
+where TempZone = 'Frozen'
+and Date = CONVERT(varchar, GetDate(),112)
+
+
+--Populate 4 Deep
+update r set totaloccupied = (
+								select DISTINCT(COUNT(*)) TotalOccupiedDry
+								from ajcdw..tblWMSInv
+								where status in ('OnHand','LoadPlan')
+								and LTRIM(RTRIM(PartDescription)) != ('BULKHEAD')
+								and LTRIM(RTRIM(TempZone)) LIKE 'DR%'
+								and LTRIM(RTRIM(Supplier)) = 'GOSFOO'
+								and Customer IN ('PRSG', 'LIAFOOJAX')
+								and WAREHOUSE = 'JAXWHSE'
+							 )
+from #RptLSCCapacity r
+where TempZone = '4 Deep'
+and Date = CONVERT(varchar, GetDate(),112)
+
+
+--Final report
+delete from AJCDW.dbo.RptLSCCapacity_Final where date = CONVERT(varchar, GetDate(),112)
+
+insert into AJCDW.dbo.RptLSCCapacity_Final 
+select Date, DayOfWeek, TempZone, TotalSpaces, TotalOccupied, TotalOpen, convert(varchar,convert(decimal(18,0),[% Used])) + '%' [% Used]
+from #RptLSCCapacity
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[LSCSpaceReporting]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

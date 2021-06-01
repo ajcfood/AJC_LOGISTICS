@@ -1,0 +1,50 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LOAD_UPDT]    Script Date: 1/17/2020 3:59:42 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[spAJCDW_LOAD_UPDT]
+
+AS
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+06/04/2019 - SA - Removed error logging due to alerts triggered using [spAJCDW_LOAD_UPDT] instead of individual proc name
+
+*/
+
+--Delete all entries where proc failed or did not complete. This prevents the proc error email of "Subquery returned more than 1 value"
+DELETE tblTimeTracking WHERE EndDate IS NULL
+
+EXEC [sp-AJCDW_01-UPDTDIMS];
+EXEC [sp-AJCDW_02-UPDTORCLGL];
+EXEC [sp-AJCDW_03-UPDTFACTIES];
+EXEC [sp-AJCDW_04-UPDTFACTCSA];
+--EXEC [sp-AJCDW_05-UPDTFACTBP];  --commented out on 3/27/19 per Operation that Broker Plus is no longer being used
+EXEC [sp-AJCDW_05.5-UPDTFACTMG];
+EXEC [sp2-AJCDW_05-FactFullAcctPeriod];
+EXEC [sp2-AJCDW_06-FactFullOutofPeriod];
+EXEC [sp2-AJCDW_07-FactFullDataCleanse];
+EXEC [sp-AJCDW_06-UPDTFACTLOADFILE];
+EXEC [sp2-AJCDW_09-FactFullLoadARData];
+EXEC [sp2-AJCDW_10-FactFullUpdtInvNum];
+EXEC [sp2-AJCDW_11-FactFullLoadAPData];
+
+EXEC [spAJCDW_CreatePowerBI_Views];
+EXEC [spAJCDW_LoadCommCalctbl];
+EXEC [spAJCDW_LoadSGACleansed]; -- update the date on this at the end of every year
+EXEC [spAJCDW_LoadCustPlanCleansed]; -- update customer plan vs actual info/table 
+EXEC [spAJCDW_LoadSalesPlanCleansedFLAT]; -- update sales person plan vs actual info/table with flat/nonseasonal budget
+EXEC [spAJCDW_LoadSalesPlanCleansedADJ]; -- update sales person plan vs actual info/table with adjusted/seasonal budget
+EXEC [spAJCDW_LoadCustPlanCleansedEAGLE]; -- update customer plan vs actual info/table EAGLE ONLY
+EXEC [spAJCDW_BillingLag]; -- update billing lag table
+EXEC [spAJCDW_YOYReportingUpdate]; --populate YOY data for reporting
+EXEC [spAJCDW_PopulatePowerBIReporting]; --Populate PowerBI Reporting Tables
+EXEC [PurgeDuplicateShipmentIDs]; --Purge duplicate ShipmentIDs so PowerBI Refreshes dont fail
+
+END

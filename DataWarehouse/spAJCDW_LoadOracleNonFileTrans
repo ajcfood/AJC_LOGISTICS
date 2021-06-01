@@ -1,0 +1,257 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadOracleNonFileTrans]    Script Date: 5/21/2019 11:21:04 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+ALTER PROCEDURE [dbo].[spAJCDW_LoadOracleNonFileTrans](@YEAR CHAR(2))
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+
+DELETE 
+FROM tblOracleNonFileTrans
+WHERE LINE_PERIOD_NAME LIKE 'CAL%-' + @YEAR;
+
+
+insert into tblOracleNonFileTrans
+SELECT JE_SOURCE, JE_CATEGORY, LINE_ATTRIBUTE11, HEADER_NAME, PERIOD_NAME, LINE_EFFECTIVE_DATE
+	, isnull(case when ((LINE_ACCT_COMBO like '53.4050%') and (LTRIM(RTRIM(JE_CATEGORY)) = 'Trade Receipts') and LINE_ACCOUNTED_DR <> 0) then 0
+		when ((LINE_ACCT_COMBO like '53.4050%') and (LTRIM(RTRIM(JE_CATEGORY)) in ('MISC RECEIPTS', 'MANUAL')) and LINE_ACCOUNTED_DR <> 0) then 0
+		when ((LINE_ACCT_COMBO like '53.4050%') and (LTRIM(RTRIM(JE_CATEGORY)))  = 'Adjustment' and LINE_ACCOUNTED_DR <> 0) then 0
+		when ((LINE_ACCT_COMBO like '53.4000%') and (LTRIM(RTRIM(JE_CATEGORY)) in ('MISC RECEIPTS', 'MANUAL')) and LINE_ACCOUNTED_DR <> 0) then 0
+		when ((LINE_ACCT_COMBO like '53.4000.395.946%') and (LTRIM(RTRIM(JE_CATEGORY)))  = 'Sales Invoices' and LINE_ACCOUNTED_DR <> 0) then 0
+		when ((LINE_ACCT_COMBO like '53.4000%') and (LTRIM(RTRIM(JE_CATEGORY)) = 'Credit Memos') and LINE_ACCOUNTED_DR <> 0) then 0
+		when ((LINE_ACCT_COMBO like '53.4000%') and (LTRIM(RTRIM(JE_CATEGORY)))  = 'Adjustment' and LINE_ACCOUNTED_DR <> 0) then 0
+		when ((LINE_ACCT_COMBO like '53.4060%') and LINE_ACCOUNTED_DR <> 0) then 0
+		else LINE_ACCOUNTED_DR end,0) as OCOST
+	, isnull(case when ((LINE_ACCT_COMBO like '53.4050%') and (LTRIM(RTRIM(JE_CATEGORY))) = 'Trade Receipts' and LINE_ACCOUNTED_DR <> 0) then LINE_ACCOUNTED_DR *-1
+		when ((LINE_ACCT_COMBO like '53.4050%') and (LTRIM(RTRIM(JE_CATEGORY)) in ('MISC RECEIPTS', 'MANUAL')) and LINE_ACCOUNTED_DR <> 0) then LINE_ACCOUNTED_DR *-1
+		when ((LINE_ACCT_COMBO like '53.4050%') and (LTRIM(RTRIM(JE_CATEGORY)))  = 'Adjustment' and LINE_ACCOUNTED_DR <> 0) then LINE_ACCOUNTED_DR *-1
+		when ((LINE_ACCT_COMBO like '53.4000%') and (LTRIM(RTRIM(JE_CATEGORY)) in ('MISC RECEIPTS', 'MANUAL')) and LINE_ACCOUNTED_DR <> 0) then LINE_ACCOUNTED_DR *-1
+		when ((LINE_ACCT_COMBO like '53.4000.395.946%') and (LTRIM(RTRIM(JE_CATEGORY)))  = 'Sales Invoices' and LINE_ACCOUNTED_DR <> 0) then LINE_ACCOUNTED_DR *-1
+		when ((LINE_ACCT_COMBO like '53.4000%') and (LTRIM(RTRIM(JE_CATEGORY)) = 'Credit Memos') and LINE_ACCOUNTED_DR <> 0) then LINE_ACCOUNTED_DR *-1
+		when ((LINE_ACCT_COMBO like '53.4000%') and (LTRIM(RTRIM(JE_CATEGORY)))  = 'Adjustment' and LINE_ACCOUNTED_DR <> 0) then LINE_ACCOUNTED_DR *-1
+		when ((LINE_ACCT_COMBO like '53.4060%') and LINE_ACCOUNTED_DR <> 0) then LINE_ACCOUNTED_DR *-1
+		else LINE_ACCOUNTED_CR end,0) as OREVENUE
+	, LINE_DESCRIPTION 
+	, LINE_REFERENCE_10
+	, LINE_ACCT_COMBO
+	, SEGMENT1, SEGMENT2, SEGMENT3, SEGMENT4, SEGMENT5, SEGMENT6, SEGMENT7
+FROM tblOracleGL
+WHERE LINE_ACCT_COMBO LIKE '53.4%'
+	and PERIOD_NAME LIKE 'CAL%-' + @YEAR
+	and LINE_ATTRIBUTE11 is null;
+
+insert into tblOracleNonFileTrans
+SELECT JE_SOURCE, JE_CATEGORY, LINE_ATTRIBUTE11, HEADER_NAME, PERIOD_NAME, LINE_EFFECTIVE_DATE
+	, isnull(case when ((LINE_ACCT_COMBO like '53.4050%') and (LTRIM(RTRIM(JE_CATEGORY)) = 'Trade Receipts') and LINE_ACCOUNTED_DR <> 0) then 0
+		when ((LINE_ACCT_COMBO like '53.4050%') and (LTRIM(RTRIM(JE_CATEGORY)) in ('MISC RECEIPTS', 'MANUAL')) and LINE_ACCOUNTED_DR <> 0) then 0
+		when ((LINE_ACCT_COMBO like '53.4050%') and (LTRIM(RTRIM(JE_CATEGORY)))  = 'Adjustment' and LINE_ACCOUNTED_DR <> 0) then 0
+		when ((LINE_ACCT_COMBO like '53.4000%') and (LTRIM(RTRIM(JE_CATEGORY)) in ('MISC RECEIPTS', 'MANUAL')) and LINE_ACCOUNTED_DR <> 0) then 0
+		when ((LINE_ACCT_COMBO like '53.4000.395.946%') and (LTRIM(RTRIM(JE_CATEGORY)))  = 'Sales Invoices' and LINE_ACCOUNTED_DR <> 0) then 0
+		when ((LINE_ACCT_COMBO like '53.4000%') and (LTRIM(RTRIM(JE_CATEGORY)) = 'Credit Memos') and LINE_ACCOUNTED_DR <> 0) then 0
+		when ((LINE_ACCT_COMBO like '53.4000%') and (LTRIM(RTRIM(JE_CATEGORY)))  = 'Adjustment' and LINE_ACCOUNTED_DR <> 0) then 0
+		when ((LINE_ACCT_COMBO like '53.4060%') and LINE_ACCOUNTED_DR <> 0) then 0
+		else LINE_ACCOUNTED_DR end,0) as OCOST
+	, isnull(case when ((LINE_ACCT_COMBO like '53.4050%') and (LTRIM(RTRIM(JE_CATEGORY))) = 'Trade Receipts' and LINE_ACCOUNTED_DR <> 0) then LINE_ACCOUNTED_DR *-1
+		when ((LINE_ACCT_COMBO like '53.4050%') and (LTRIM(RTRIM(JE_CATEGORY)) in ('MISC RECEIPTS', 'MANUAL')) and LINE_ACCOUNTED_DR <> 0) then LINE_ACCOUNTED_DR *-1
+		when ((LINE_ACCT_COMBO like '53.4050%') and (LTRIM(RTRIM(JE_CATEGORY)))  = 'Adjustment' and LINE_ACCOUNTED_DR <> 0) then LINE_ACCOUNTED_DR *-1
+		when ((LINE_ACCT_COMBO like '53.4000%') and (LTRIM(RTRIM(JE_CATEGORY)) in ('MISC RECEIPTS', 'MANUAL')) and LINE_ACCOUNTED_DR <> 0) then LINE_ACCOUNTED_DR *-1
+		when ((LINE_ACCT_COMBO like '53.4000.395.946%') and (LTRIM(RTRIM(JE_CATEGORY)))  = 'Sales Invoices' and LINE_ACCOUNTED_DR <> 0) then LINE_ACCOUNTED_DR *-1
+		when ((LINE_ACCT_COMBO like '53.4000%') and (LTRIM(RTRIM(JE_CATEGORY)) = 'Credit Memos') and LINE_ACCOUNTED_DR <> 0) then LINE_ACCOUNTED_DR *-1
+		when ((LINE_ACCT_COMBO like '53.4000%') and (LTRIM(RTRIM(JE_CATEGORY)))  = 'Adjustment' and LINE_ACCOUNTED_DR <> 0) then LINE_ACCOUNTED_DR *-1
+		when ((LINE_ACCT_COMBO like '53.4060%') and LINE_ACCOUNTED_DR <> 0) then LINE_ACCOUNTED_DR *-1
+		else LINE_ACCOUNTED_CR end,0) as OREVENUE
+	, LINE_DESCRIPTION 
+	, LINE_REFERENCE_10
+	, LINE_ACCT_COMBO
+	, SEGMENT1, SEGMENT2, SEGMENT3, SEGMENT4, SEGMENT5, SEGMENT6, SEGMENT7
+FROM tblOracleGL
+WHERE LINE_ACCT_COMBO LIKE '53.4%'
+	and PERIOD_NAME LIKE 'CAL%-' + @YEAR
+		and (LINE_ATTRIBUTE11 not in (select refno from tblInvoice)	
+		and  LINE_ATTRIBUTE11 not like '[0-9][0-9][0-9][0-9][0-9][0-9]-%' 
+		and  LINE_ATTRIBUTE11 not like '[0-9]0-%'
+		and LINE_ATTRIBUTE11 not like 'BP[0-9][0-9][0-9]%'
+		and LINE_ATTRIBUTE11 not like 'MG%');  -- added 2/6/18 to exclude MG cost accruals on files
+
+
+insert into tblOracleNonFileTrans
+SELECT JE_SOURCE, JE_CATEGORY, LINE_ATTRIBUTE11, HEADER_NAME, PERIOD_NAME, LINE_EFFECTIVE_DATE
+	, isnull(case when ((LINE_ACCT_COMBO like '53.5%') and LINE_ACCOUNTED_CR <> 0)  then LINE_ACCOUNTED_CR *-1
+		else LINE_ACCOUNTED_DR end,0) as OCOST
+	, isnull(case when ((LINE_ACCT_COMBO like '53.5%') and LINE_ACCOUNTED_CR <> 0) then 0
+		else LINE_ACCOUNTED_CR end,0) as OREVENUE
+	, LINE_DESCRIPTION 
+	, LINE_REFERENCE_10
+	, LINE_ACCT_COMBO
+	, SEGMENT1, SEGMENT2, SEGMENT3, SEGMENT4, SEGMENT5, SEGMENT6, SEGMENT7
+FROM tblOracleGL
+WHERE LINE_ACCT_COMBO LIKE '53.5%'
+	and PERIOD_NAME LIKE 'CAL%-' + @YEAR
+	and LINE_ATTRIBUTE11 is null;
+
+insert into tblOracleNonFileTrans
+SELECT JE_SOURCE, JE_CATEGORY, LINE_ATTRIBUTE11, HEADER_NAME, PERIOD_NAME, LINE_EFFECTIVE_DATE
+	, isnull(case when ((LINE_ACCT_COMBO like '53.5%') and LINE_ACCOUNTED_CR <> 0)  then LINE_ACCOUNTED_CR *-1
+		else LINE_ACCOUNTED_DR end,0) as OCOST
+	, isnull(case when ((LINE_ACCT_COMBO like '53.5%') and LINE_ACCOUNTED_CR <> 0) then 0
+		else LINE_ACCOUNTED_CR end,0) as OREVENUE
+	, LINE_DESCRIPTION 
+	, LINE_REFERENCE_10
+	, LINE_ACCT_COMBO
+	, SEGMENT1, SEGMENT2, SEGMENT3, SEGMENT4, SEGMENT5, SEGMENT6, SEGMENT7
+FROM tblOracleGL
+WHERE LINE_ACCT_COMBO LIKE '53.5%'
+	and PERIOD_NAME LIKE 'CAL%-' + @YEAR
+		and (LINE_ATTRIBUTE11 not in (select refno from tblInvoice)	
+		and  LINE_ATTRIBUTE11 not like '[0-9][0-9][0-9][0-9][0-9][0-9]-%' 
+		and  LINE_ATTRIBUTE11 not like '[0-9]0-%'
+		and LINE_ATTRIBUTE11 not like 'BP[0-9][0-9][0-9]%'
+		and LINE_ATTRIBUTE11 not like 'MG%');  -- added 2/6/18 to exclude MG cost accruals on files
+
+-----------------
+--SGA Expenses---
+-----------------
+
+--added by Salah on 1/14/19 to start to pull SG&A data (6XXX level Oracle accounts) into tblOracleGL
+
+
+--COMPANY 52 SG&A--
+insert into tblOracleNonFileTrans
+SELECT JE_SOURCE, JE_CATEGORY, LINE_ATTRIBUTE11, HEADER_NAME, PERIOD_NAME, LINE_EFFECTIVE_DATE
+	, isnull(case when ((LINE_ACCT_COMBO like '52.6%') and LINE_ACCOUNTED_CR <> 0)  then LINE_ACCOUNTED_CR *-1
+		else LINE_ACCOUNTED_DR end,0) as OCOST
+	, isnull(case when ((LINE_ACCT_COMBO like '52.6%') and LINE_ACCOUNTED_CR <> 0) then 0
+		else LINE_ACCOUNTED_CR end,0) as OREVENUE
+	, LINE_DESCRIPTION 
+	, LINE_REFERENCE_10
+	, LINE_ACCT_COMBO
+	, SEGMENT1, SEGMENT2, SEGMENT3, SEGMENT4, SEGMENT5, SEGMENT6, SEGMENT7
+FROM tblOracleGL
+WHERE LINE_ACCT_COMBO LIKE '52.6%'
+	and PERIOD_NAME LIKE 'CAL%-' + @YEAR
+	and LINE_ATTRIBUTE11 is null;
+
+insert into tblOracleNonFileTrans
+SELECT JE_SOURCE, JE_CATEGORY, LINE_ATTRIBUTE11, HEADER_NAME, PERIOD_NAME, LINE_EFFECTIVE_DATE
+	, isnull(case when ((LINE_ACCT_COMBO like '52.6%') and LINE_ACCOUNTED_CR <> 0)  then LINE_ACCOUNTED_CR *-1
+		else LINE_ACCOUNTED_DR end,0) as OCOST
+	, isnull(case when ((LINE_ACCT_COMBO like '52.6%') and LINE_ACCOUNTED_CR <> 0) then 0
+		else LINE_ACCOUNTED_CR end,0) as OREVENUE
+	, LINE_DESCRIPTION 
+	, LINE_REFERENCE_10
+	, LINE_ACCT_COMBO
+	, SEGMENT1, SEGMENT2, SEGMENT3, SEGMENT4, SEGMENT5, SEGMENT6, SEGMENT7
+FROM tblOracleGL
+WHERE LINE_ACCT_COMBO LIKE '52.6%'
+	and PERIOD_NAME LIKE 'CAL%-' + @YEAR
+		and (LINE_ATTRIBUTE11 not in (select refno from tblInvoice)	
+		and  LINE_ATTRIBUTE11 not like '[0-9][0-9][0-9][0-9][0-9][0-9]-%' 
+		and  LINE_ATTRIBUTE11 not like '[0-9]0-%'
+		and LINE_ATTRIBUTE11 not like 'BP[0-9][0-9][0-9]%'
+		and LINE_ATTRIBUTE11 not like 'MG%');  -- added 2/6/18 to exclude MG cost accruals on files
+
+--COMPANY 53 SG&A--
+insert into tblOracleNonFileTrans
+SELECT JE_SOURCE, JE_CATEGORY, LINE_ATTRIBUTE11, HEADER_NAME, PERIOD_NAME, LINE_EFFECTIVE_DATE
+	, isnull(case when ((LINE_ACCT_COMBO like '53.6%') and LINE_ACCOUNTED_CR <> 0)  then LINE_ACCOUNTED_CR *-1
+		else LINE_ACCOUNTED_DR end,0) as OCOST
+	, isnull(case when ((LINE_ACCT_COMBO like '53.6%') and LINE_ACCOUNTED_CR <> 0) then 0
+		else LINE_ACCOUNTED_CR end,0) as OREVENUE
+	, LINE_DESCRIPTION 
+	, LINE_REFERENCE_10
+	, LINE_ACCT_COMBO
+	, SEGMENT1, SEGMENT2, SEGMENT3, SEGMENT4, SEGMENT5, SEGMENT6, SEGMENT7
+FROM tblOracleGL
+WHERE LINE_ACCT_COMBO LIKE '53.6%'
+	and PERIOD_NAME LIKE 'CAL%-' + @YEAR
+	and LINE_ATTRIBUTE11 is null;
+
+insert into tblOracleNonFileTrans
+SELECT JE_SOURCE, JE_CATEGORY, LINE_ATTRIBUTE11, HEADER_NAME, PERIOD_NAME, LINE_EFFECTIVE_DATE
+	, isnull(case when ((LINE_ACCT_COMBO like '53.6%') and LINE_ACCOUNTED_CR <> 0)  then LINE_ACCOUNTED_CR *-1
+		else LINE_ACCOUNTED_DR end,0) as OCOST
+	, isnull(case when ((LINE_ACCT_COMBO like '53.6%') and LINE_ACCOUNTED_CR <> 0) then 0
+		else LINE_ACCOUNTED_CR end,0) as OREVENUE
+	, LINE_DESCRIPTION 
+	, LINE_REFERENCE_10
+	, LINE_ACCT_COMBO
+	, SEGMENT1, SEGMENT2, SEGMENT3, SEGMENT4, SEGMENT5, SEGMENT6, SEGMENT7
+FROM tblOracleGL
+WHERE LINE_ACCT_COMBO LIKE '53.6%'
+	and PERIOD_NAME LIKE 'CAL%-' + @YEAR
+		and (LINE_ATTRIBUTE11 not in (select refno from tblInvoice)	
+		and  LINE_ATTRIBUTE11 not like '[0-9][0-9][0-9][0-9][0-9][0-9]-%' 
+		and  LINE_ATTRIBUTE11 not like '[0-9]0-%'
+		and LINE_ATTRIBUTE11 not like 'BP[0-9][0-9][0-9]%'
+		and LINE_ATTRIBUTE11 not like 'MG%');  -- added 2/6/18 to exclude MG cost accruals on files
+
+--COMPANY 54 SG&A--
+insert into tblOracleNonFileTrans
+SELECT JE_SOURCE, JE_CATEGORY, LINE_ATTRIBUTE11, HEADER_NAME, PERIOD_NAME, LINE_EFFECTIVE_DATE
+	, isnull(case when ((LINE_ACCT_COMBO like '54.6%') and LINE_ACCOUNTED_CR <> 0)  then LINE_ACCOUNTED_CR *-1
+		else LINE_ACCOUNTED_DR end,0) as OCOST
+	, isnull(case when ((LINE_ACCT_COMBO like '54.6%') and LINE_ACCOUNTED_CR <> 0) then 0
+		else LINE_ACCOUNTED_CR end,0) as OREVENUE
+	, LINE_DESCRIPTION 
+	, LINE_REFERENCE_10
+	, LINE_ACCT_COMBO
+	, SEGMENT1, SEGMENT2, SEGMENT3, SEGMENT4, SEGMENT5, SEGMENT6, SEGMENT7
+FROM tblOracleGL
+WHERE LINE_ACCT_COMBO LIKE '54.6%'
+	and PERIOD_NAME LIKE 'CAL%-' + @YEAR
+	and LINE_ATTRIBUTE11 is null;
+
+insert into tblOracleNonFileTrans
+SELECT JE_SOURCE, JE_CATEGORY, LINE_ATTRIBUTE11, HEADER_NAME, PERIOD_NAME, LINE_EFFECTIVE_DATE
+	, isnull(case when ((LINE_ACCT_COMBO like '54.6%') and LINE_ACCOUNTED_CR <> 0)  then LINE_ACCOUNTED_CR *-1
+		else LINE_ACCOUNTED_DR end,0) as OCOST
+	, isnull(case when ((LINE_ACCT_COMBO like '54.6%') and LINE_ACCOUNTED_CR <> 0) then 0
+		else LINE_ACCOUNTED_CR end,0) as OREVENUE
+	, LINE_DESCRIPTION 
+	, LINE_REFERENCE_10
+	, LINE_ACCT_COMBO
+	, SEGMENT1, SEGMENT2, SEGMENT3, SEGMENT4, SEGMENT5, SEGMENT6, SEGMENT7
+FROM tblOracleGL
+WHERE LINE_ACCT_COMBO LIKE '54.6%'
+	and PERIOD_NAME LIKE 'CAL%-' + @YEAR
+		and (LINE_ATTRIBUTE11 not in (select refno from tblInvoice)	
+		and  LINE_ATTRIBUTE11 not like '[0-9][0-9][0-9][0-9][0-9][0-9]-%' 
+		and  LINE_ATTRIBUTE11 not like '[0-9]0-%'
+		and LINE_ATTRIBUTE11 not like 'BP[0-9][0-9][0-9]%'
+		and LINE_ATTRIBUTE11 not like 'MG%');  -- added 2/6/18 to exclude MG cost accruals on files
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[spAJCDW_LoadOracleNonFileTrans]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

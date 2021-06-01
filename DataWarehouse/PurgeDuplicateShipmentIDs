@@ -1,0 +1,191 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[PurgeDuplicateShipmentIDs]    Script Date: 12/26/2019 10:25:23 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+ALTER procedure [dbo].[PurgeDuplicateShipmentIDs] as
+BEGIN TRY
+BEGIN
+
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+
+					--Find Dup ShipmentIDs
+					IF OBJECT_ID ('TEMPDB..#Dups') IS NOT NULL  DROP TABLE #Dups
+					select ShipmentID, Count(*) TotalCount
+					into #Dups
+					from AJCDW.dbo.tblShipment 
+					group by ShipmentID
+					having count(*) > 1
+
+					--Mark all records after first entry based on ShpRecID as dup - Everyone except MG
+					IF OBJECT_ID ('TEMPDB..#PurgeNonMG') IS NOT NULL  DROP TABLE #PurgeNonMG
+					select ROW_NUMBER() OVER (PARTITION BY ts.ShipmentID ORDER BY ts.ShpRecID) Row,ts.*
+					into #PurgeNonMG
+					from AJCDW.dbo.tblShipment ts
+					inner join #Dups t on t.ShipmentID = ts.ShipmentID
+					where ts.FK_SystemID <> 4
+
+					DELETE 
+					FROM	AJCDW.dbo.tblShipment
+					OUTPUT			Deleted.[ShpRecID]
+								  , Deleted.[ShipmentID]
+								  , Deleted.[RefNo]
+								  , Deleted.[ShpBkgNum]
+								  , Deleted.[ShpCustPONo]
+								  , Deleted.[ShpAccnt]
+								  , Deleted.[ShpDivID]
+								  , Deleted.[ShpLOB]
+								  , Deleted.[ShpCarrier]
+								  , Deleted.[ShpExporter]
+								  , Deleted.[ShpConsg]
+								  , Deleted.[ShpSalesP]
+								  , Deleted.[ShpController]
+								  , Deleted.[ShpBLNum]
+								  , Deleted.[ShpMaster]
+								  , Deleted.[ShpMoveType]
+								  , Deleted.[ShpPier]
+								  , Deleted.[ShpContainer]
+								  , Deleted.[ShpOriginCity]
+								  , Deleted.[ShpOriginState]
+								  , Deleted.[ShpDelivCity]
+								  , Deleted.[ShpDelivState]
+								  , Deleted.[ShpPortofDchg]
+								  , Deleted.[ShpPortofLoad]
+								  , Deleted.[ShpVessel_Equipmnt]
+								  , Deleted.[ShpPntOrigin]
+								  , Deleted.[ShpAES_ITN]
+								  , Deleted.[ShpAES_STATUS]
+								  , Deleted.[ShpTEU]
+								  , Deleted.[ShpREVENUE]
+								  , Deleted.[ShpCOST]
+								  , Deleted.[ShpFreightCost]
+								  , Deleted.[ShpGP]
+								  , Deleted.[ShpGPPerc]
+								  , Deleted.[ShpFileOpenDate]
+								  , Deleted.[ShpDelivDate]
+								  , Deleted.[ShpShipDate]
+								  , Deleted.[LASTUPDTDATE]
+								  , Deleted.[ShpLoadedDate]
+								  , Deleted.[ShpStatus]
+								  , Deleted.[FK_SystemID]
+								  , Deleted.[FK_DivID]
+								  , Deleted.[FK_CustMasterID]
+								  , Deleted.[FK_SalesPID]
+								  , Deleted.[FK_ShipmentTypeID]
+								  , Deleted.[FK_StationID]
+								  , Deleted.[FK_VendID]
+								  , Deleted.[FK_FileID]
+								  , Deleted.[FK_ConsgID]
+								  , Deleted.[FK_ShipperID]
+								  , GETDATE()
+					INTO		AJCDW.dbo.tblShipment_Deleted 
+					FROM		AJCDW.dbo.tblShipment ts
+					INNER JOIN	#PurgeNonMG p on p.ShpRecID = ts.ShpRecID
+					WHERE		p.Row > 1
+
+
+					--Mark all records after first entry based on ShpRecID as dup - MG - We delete the old entry and keep the new entry to account for carrier rate changes
+					IF OBJECT_ID ('TEMPDB..#PurgeMG') IS NOT NULL  DROP TABLE #PurgeMG
+					select ROW_NUMBER() OVER (PARTITION BY ts.ShipmentID ORDER BY ts.ShpRecID DESC) Row,ts.*
+					into #PurgeMG
+					from AJCDW.dbo.tblShipment ts
+					inner join #Dups t on t.ShipmentID = ts.ShipmentID
+					where ts.FK_SystemID = 4
+
+					DELETE 
+					FROM	AJCDW.dbo.tblShipment
+					OUTPUT			Deleted.[ShpRecID]
+								  , Deleted.[ShipmentID]
+								  , Deleted.[RefNo]
+								  , Deleted.[ShpBkgNum]
+								  , Deleted.[ShpCustPONo]
+								  , Deleted.[ShpAccnt]
+								  , Deleted.[ShpDivID]
+								  , Deleted.[ShpLOB]
+								  , Deleted.[ShpCarrier]
+								  , Deleted.[ShpExporter]
+								  , Deleted.[ShpConsg]
+								  , Deleted.[ShpSalesP]
+								  , Deleted.[ShpController]
+								  , Deleted.[ShpBLNum]
+								  , Deleted.[ShpMaster]
+								  , Deleted.[ShpMoveType]
+								  , Deleted.[ShpPier]
+								  , Deleted.[ShpContainer]
+								  , Deleted.[ShpOriginCity]
+								  , Deleted.[ShpOriginState]
+								  , Deleted.[ShpDelivCity]
+								  , Deleted.[ShpDelivState]
+								  , Deleted.[ShpPortofDchg]
+								  , Deleted.[ShpPortofLoad]
+								  , Deleted.[ShpVessel_Equipmnt]
+								  , Deleted.[ShpPntOrigin]
+								  , Deleted.[ShpAES_ITN]
+								  , Deleted.[ShpAES_STATUS]
+								  , Deleted.[ShpTEU]
+								  , Deleted.[ShpREVENUE]
+								  , Deleted.[ShpCOST]
+								  , Deleted.[ShpFreightCost]
+								  , Deleted.[ShpGP]
+								  , Deleted.[ShpGPPerc]
+								  , Deleted.[ShpFileOpenDate]
+								  , Deleted.[ShpDelivDate]
+								  , Deleted.[ShpShipDate]
+								  , Deleted.[LASTUPDTDATE]
+								  , Deleted.[ShpLoadedDate]
+								  , Deleted.[ShpStatus]
+								  , Deleted.[FK_SystemID]
+								  , Deleted.[FK_DivID]
+								  , Deleted.[FK_CustMasterID]
+								  , Deleted.[FK_SalesPID]
+								  , Deleted.[FK_ShipmentTypeID]
+								  , Deleted.[FK_StationID]
+								  , Deleted.[FK_VendID]
+								  , Deleted.[FK_FileID]
+								  , Deleted.[FK_ConsgID]
+								  , Deleted.[FK_ShipperID]
+								  , GETDATE()
+					INTO		AJCDW.dbo.tblShipment_Deleted 
+					FROM		AJCDW.dbo.tblShipment ts
+					INNER JOIN	#PurgeMG p on p.ShpRecID = ts.ShpRecID
+					WHERE		p.Row > 1
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[PurgeDuplicateShipmentIDs]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

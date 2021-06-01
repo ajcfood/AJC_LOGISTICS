@@ -1,0 +1,274 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[spAJCDW_PopulatePowerBIReporting]    Script Date: 8/5/2020 05:32:53 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+ALTER PROCEDURE [dbo].[spAJCDW_PopulatePowerBIReporting] AS
+BEGIN TRY
+
+BEGIN
+
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+/**************************************************************************************
+
+Workspace: AJCL-FedEx 
+Report Name: Manifest Analysis
+
+***************************************************************************************/
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+TRUNCATE TABLE AJCDW..RptFXFAnalysis
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+ /*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+insert into AJCDW..RptFXFAnalysis ([Manifest], [Account], [LOB], [ACCTYR], [ACCTMONTH], [DeliveryDate], [Weekday], [Sum of InvRevenue], [Sum of InvCost], [Sum of InvGP], 
+[No. of Pros], [Zone 1 Pros], [Zone 2 Pros], [Zone 3 Pros], [Zone 4 Pros])
+
+select s.ShpBkgNum Manifest, s.ShpAccnt Account, s.ShpLOB LOB, ti.ACCTYR, ti.ACCTMONTH, MIN(ti.InvDate) DeliveryDate, FORMAT(MIN(ti.InvDate), 'dddd', 'en-US') AS Weekday, 
+SUM(ti.InvRevenue) [Sum of InvRevenue],
+SUM(ti.InvCost) [Sum of InvCost], SUM(ti.InvGP) [Sum of InvGP], ISNULL([No. of Pros],0) [No. of Pros], ISNULL([Zone 1 Pros],'') [Zone 1 Pros], 
+ISNULL([Zone 2 Pros],'') [Zone 2 Pros], 
+ISNULL([Zone 3 Pros],'') [Zone 3 Pros], ISNULL([Zone 4 Pros],'') [Zone 4 Pros]
+from AJCDW..tblShipment s
+inner join AJCDW..tblInvoice ti on ti.ShipmentID = s.ShipmentID
+inner join [IES].[IES]..[SHIPMENT_DAT] t7 on s.ShipmentID = t7.shipment_id
+cross apply (
+					select ShpBkgNum, count(*) [No. of Pros]
+					from AJCDW..tblShipment ts
+					where shpLOB IN ('62','63')
+					and ts.ShpBkgNum = s.ShpBkgNum
+					and ts.ShpAccnt = s.ShpAccnt
+					and ShpShipDate >= DATEADD(MM,-24,CAST(GETDATE() AS DATE))
+					and LTRIM(RTRIM(ShpMoveType)) in ('1','2','3','4')
+					group by ShpBkgNum
+			) NoOfPros 
+outer apply (
+					select ShpBkgNum, LTRIM(RTRIM(ShpMoveType)) ShpMoveType, count(*) [Zone 1 Pros]
+					from AJCDW..tblShipment ts
+					where shpLOB IN ('62','63')
+					and ts.ShpBkgNum = s.ShpBkgNum
+					and ts.ShpAccnt = s.ShpAccnt
+					and ShpShipDate >= DATEADD(MM,-24,CAST(GETDATE() AS DATE))
+					and ShpMoveType = LTRIM(RTRIM('1'))
+					group by ShpBkgNum, LTRIM(RTRIM(ShpMoveType))
+			) Zone1 
+outer apply (
+					select ShpBkgNum, LTRIM(RTRIM(ShpMoveType)) ShpMoveType, count(*) [Zone 2 Pros]
+					from AJCDW..tblShipment ts
+					where shpLOB IN ('62','63')
+					and ts.ShpBkgNum = s.ShpBkgNum
+					and ts.ShpAccnt = s.ShpAccnt
+					and ShpShipDate >= DATEADD(MM,-24,CAST(GETDATE() AS DATE))
+					and ShpMoveType = LTRIM(RTRIM('2')) 
+					group by ShpBkgNum, LTRIM(RTRIM(ShpMoveType))
+			) Zone2
+outer apply (
+					select ShpBkgNum, LTRIM(RTRIM(ShpMoveType)) ShpMoveType, count(*) [Zone 3 Pros]
+					from AJCDW..tblShipment ts
+					where shpLOB IN ('62','63')
+					and ts.ShpBkgNum = s.ShpBkgNum
+					and ts.ShpAccnt = s.ShpAccnt
+					and ShpShipDate >= DATEADD(MM,-24,CAST(GETDATE() AS DATE))
+					and ShpMoveType = LTRIM(RTRIM('3'))
+					group by ShpBkgNum, LTRIM(RTRIM(ShpMoveType))
+			) Zone3
+outer apply (
+					select ShpBkgNum, LTRIM(RTRIM(ShpMoveType)) ShpMoveType, count(*) [Zone 4 Pros]
+					from AJCDW..tblShipment ts
+					where shpLOB IN ('62','63')
+					and ts.ShpBkgNum = s.ShpBkgNum
+					and ts.ShpAccnt = s.ShpAccnt
+					and ShpShipDate >= DATEADD(MM,-24,CAST(GETDATE() AS DATE))
+					and ShpMoveType = LTRIM(RTRIM('4')) 
+					group by ShpBkgNum, LTRIM(RTRIM(ShpMoveType))
+			) Zone4
+where s.shpLOB IN ('62','63')
+and t7.BUS_LINE IN ('62','63')
+and ShpShipDate >= DATEADD(MM,-24,CAST(GETDATE() AS DATE))
+and isnull(s.ShpBkgNum,'') <> ''
+and ShpMaster <> 'M'
+group by s.ShpBkgNum, s.ShpAccnt, s.ShpLOB, ti.ACCTYR, ti.ACCTMONTH, ISNULL([No. of Pros],0), ISNULL([Zone 1 Pros],''), ISNULL([Zone 2 Pros],''), 
+ISNULL([Zone 3 Pros],''), ISNULL([Zone 4 Pros],'')
+
+
+UPDATE	AJCDW..RptFXFAnalysis
+SET		[No. of Pros] = 0, 
+		[Zone 1 Pros] = 0, 
+		[Zone 2 Pros] = 0, 
+		[Zone 3 Pros] = 0, 
+		[Zone 4 Pros] = 0
+WHERE	Weekday IN ('Saturday','Sunday')
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 2, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+
+ /******************BILLING LAG ANALAYSIS REPORT******************/
+
+
+ /*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 3, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+DELETE FROM RptBillingLagAnalysis WHERE [Invoice Date] >= DATEADD(MM,-13,CAST(GETDATE() AS DATE))
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 3, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+ /*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 4, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+INSERT INTO RptBillingLagAnalysis ([Cust Name], [File], LOB, [Sail Date], [Del Date], [Invoice Date], [Posted Date], [Billing Lag], [Invoice Rev], [Invoice Cost], [Invoice GP])
+SELECT		y.InvCustName, LTRIM(RTRIM(ts.RefNo)), ts.ShpLOB LOB, [Sail Date], [Del Date], [Invoice Date], 
+			[Posted Date], 
+			CASE WHEN ts.ShpLOB NOT IN (9,10,11, 43, 76) THEN DATEDIFF(dd,[Sail Date],[Posted Date]) 
+				 ELSE DATEDIFF(dd,[Del Date],[Posted Date]) 
+				 END  [Billing Lag], 
+			[Invoice Rev], 
+			[Invoice Cost], 
+			[Invoice GP]
+FROM		tblShipment ts 
+INNER JOIN	tblFile tf ON tf.FileID = ts.FK_FileID
+CROSS APPLY	(
+				SELECT   LTRIM(RTRIM(InvCustName)) InvCustName, CAST(MIN(ti.InvDate) AS DATE) [Sail Date], CAST(ti.DelivDate AS DATE) [Del Date], CAST(MIN(ti.InvDate) AS DATE) [Invoice Date],
+						 SUM(ti.InvRevenue) [Invoice Rev], SUM(ti.InvCost) [Invoice Cost], SUM(ti.InvGP) [Invoice GP]
+				FROM	 tblInvoice ti 
+				WHERE    ti.ShipmentID = ts.ShipmentID
+				AND		 ISNULL(ti.InvCustName, '') <> ''	
+				AND		 CAST(ti.InvDate AS DATE) >= DATEADD(MM,-13,CAST(GETDATE() AS DATE))	
+				GROUP BY LTRIM(RTRIM(InvCustName)), CAST(DelivDate AS DATE)
+			) y
+INNER JOIN	(
+				SELECT	 INTERFACE_HEADER_CONTEXT, INTERFACE_HEADER_ATTRIBUTE1, PURCHASE_ORDER, CAST(DATEADD(dd,-1,MIN(ARCREATEDATE)) AS DATE) [Posted Date]
+				FROM	 tblOracleARData tx 
+				GROUP BY PURCHASE_ORDER, INTERFACE_HEADER_CONTEXT, INTERFACE_HEADER_ATTRIBUTE1
+			) x ON 	CASE WHEN x.INTERFACE_HEADER_CONTEXT LIKE '%CSA%' THEN '70-' + INTERFACE_HEADER_ATTRIBUTE1 
+					     WHEN x.INTERFACE_HEADER_CONTEXT LIKE '%MGATE%' THEN INTERFACE_HEADER_ATTRIBUTE1
+					ELSE X.PURCHASE_ORDER END = ts.RefNo 
+WHERE		ISNULL(ts.ShpLOB,'') <> ''
+AND			LTRIM(RTRIM(ts.ShpStatus)) <> 'Cancelled'
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 4, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+  /*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 5, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+EXEC AJCDW.dbo.[CustomerYOYActuals]
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 5, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+
+ /*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 6, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+--Populate CSA Reversal/Revision Report for Credit
+TRUNCATE TABLE RptCSAInvReversalRevision
+
+INSERT INTO RptCSAInvReversalRevision ([Cust #], [Oracle Txn Number], [Housebill], [PO #], [Delivery Date], [Actual Date Closed], [Original], [Balance Due])
+select DISTINCT  ct.CUSTOMER_NUMBER [Cust #], ard.TRX_Number [Oracle Txn Number], ard.Interface_Header_Attribute1 Housebill, ard.Purchase_Order [PO #], ard.trx_date [Delivery Date], ISNULL(ARD1.ARCreatedate, ARD.ARCreatedate) [Actual Date Closed],
+	   ard.amount_line_items_original Original, ard.AMOUNT_LINE_ITEMS_REMAINING [Balance Due]
+from   [dbo].[tblOracleARData] ARD
+inner join  tbloraclecustterms ct on ct.customer_id = ard.bill_to_customer_ID
+left join [dbo].[tblOracleARData] ARD1 ON ARD1.INTERFACE_HEADER_ATTRIBUTE1 = ARD.INTERFACE_HEADER_ATTRIBUTE1 AND ARD1.BILL_TO_CUSTOMER_ID = ARD.BILL_TO_CUSTOMER_ID AND ARD1.CLASS = 'CM' AND ARD1.INTERFACE_HEADER_ATTRIBUTE2 = ARD.INTERFACE_HEADER_ATTRIBUTE2 
+inner join (
+				select distinct Interface_Header_Attribute1
+				from [dbo].[tblOracleARData] a
+				inner join  tbloraclecustterms ct on ct.customer_id = a.bill_to_customer_ID
+				where ct.CUSTOMER_NUMBER LIKE '460%'
+				and  class = 'CM'
+			) ARD2 ON ARD2.INTERFACE_HEADER_ATTRIBUTE1 = ARD.INTERFACE_HEADER_ATTRIBUTE1 
+where ct.CUSTOMER_NUMBER LIKE '460%'
+--and ard.TRX_NUMBER LIKE '70-131475%'
+and ard.TRX_DATE >= DATEADD(mm,-2,CAST(GETDATE() AS DATE))
+order by ct.CUSTOMER_NUMBER, ard.TRX_Number, ISNULL(ARD1.ARCreatedate, ARD.ARCreatedate)
+
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 6, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+ /*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 7, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+--Invoices with CreditMemos that net out report
+EXEC AJCDW.dbo.[NetInvoicedCM]
+
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 7, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+/***********************************************************************************************************************/
+
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[spAJCDW_PopulatePowerBIReporting]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

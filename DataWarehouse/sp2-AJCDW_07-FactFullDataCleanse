@@ -1,0 +1,288 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[sp2-AJCDW_07-FactFullDataCleanse]    Script Date: 12/26/2019 10:10:43 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[sp2-AJCDW_07-FactFullDataCleanse]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+------------------------------
+--      Data Cleanse        --
+------------------------------
+
+update tblShipment
+set ShpStatus = 'Filed/Closed'
+from tblShipment
+where ShipmentID IN (
+	select s.ShipmentID
+	from tblShipment s
+		inner join tblInvoice i
+			on s.ShipmentID = i.ShipmentID
+	where ShpStatus is null and s.FK_SystemID = 2
+	group by s.ShipmentID);
+
+
+update tblCustMaster
+set CustMasterCode = 'US CADO', CustName = 'US CADO HOLDING', CustAddr1 = '13681 NEWPORT AVE', CustAddr2 = 'STE 8 #308', CustCity = 'TUSTIN', CustState = 'CA', CustZip = '92780'
+where CustMasterNum = 245 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'SHANGHAI', CustState = 'CHINA'
+where CustMasterNum = 14221 and FK_SystemID = 2;
+
+update tblCustMaster
+set CustCity = 'WILRIJK', CustState = 'BELGIUM'
+where CustMasterNum = 38511 and FK_SystemID = 2;
+
+update tblCustMaster
+set CustCity = 'FLOWERY BRANCH', CustState = 'GA'
+where CustMasterNum = 36106 and FK_SystemID = 2;
+
+update tblCustMaster
+set CustCity = 'WILRIJK', CustState = 'BELGIUM'
+where CustMasterNum = 41828 and FK_SystemID = 2;
+
+update tblCustMaster
+set CustCity = 'TRINIDAD', CustState = 'TOBAGO'
+where CustMasterNum = 42116 and FK_SystemID = 2;
+
+update tblCustMaster
+set CustCity = 'BEIRUT', CustState = 'LEBANON'
+where CustMasterNum = 32063 and FK_SystemID = 2;
+
+update tblCustMaster
+set CustCity = 'GREAT FALLS', CustState = 'VA'
+where CustMasterNum = 40388 and FK_SystemID = 2;
+
+update tblCustMaster
+set CustCity = 'BIRMINGHAM', CustState = 'AL'
+where CustMasterNum = 116 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'CULIACAN', CustState = 'MX'
+where CustMasterNum = 209 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'ATLANTA', CustState = 'GA'
+where CustMasterNum = 28 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'MIAMI', CustState = 'FL'
+where CustMasterNum = 215 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'ATLANTA', CustState = 'GA'
+where CustMasterNum = 205 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'MOULTRIE', CustState = 'GA'
+where CustMasterNum = 219 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'JACKSONVILLE', CustState = 'FL'
+where CustMasterNum = 221 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'KANSAS CITY', CustState = 'MO'
+where CustMasterNum = 222 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'ST LOUIS', CustState = 'MO'
+where CustMasterNum = 224 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'ST LOUIS', CustState = 'MO'
+where CustMasterNum = 225 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'SPARTANBURG', CustState = 'SC'
+where CustMasterNum = 226 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'ST LOUIS', CustState = 'MO'
+where CustMasterNum = 228 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'ZOLFO SPRINGS', CustState = 'FL'
+where CustMasterNum = 227 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'ST LOUIS', CustState = 'MO'
+where CustMasterNum = 229 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'VILLA RICA', CustState = 'GA'
+where CustMasterNum = 230 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'METTER', CustState = 'GA'
+where CustMasterNum = 237 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'ATLANTA', CustState = 'GA'
+where CustMasterNum = 241 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'PURCHASE', CustState = 'NY'
+where CustMasterNum = 236 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'PURCHASE', CustState = 'NY'
+where CustMasterNum = 243 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'PURCHASE', CustState = 'NY'
+where CustMasterNum = 244 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'WILRIJK', CustState = 'BELGIUM'
+where CustMasterNum = 265 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'TAMPA', CustState = 'FL'
+where CustMasterNum = 264 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'ST LOUIS', CustState = 'MO'
+where CustMasterNum = 259 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'AMHERST', CustState = 'NY'
+where CustMasterNum = 266 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'HAZLEHURST', CustState = 'GA'
+where CustMasterNum = 235 and FK_SystemID = 3;
+
+update tblCustMaster
+set CustCity = 'CLINTON', CustState = 'NC'
+where CustMasterNum = 239 and FK_SystemID = 3;
+
+
+-- Delete invalid invoice number which was caused by improperly 
+-- changing stationid without unfinalizing invoice
+--------------------------------------------------------------------
+delete
+from tblShipment
+where ShipmentID = 706419 and ShpCustPONo like 'HON%'
+
+
+---------------------------------------------
+--     Delete WMS Inv Cleanup Files        --
+---------------------------------------------
+/*
+DELETE
+FROM tblShipment
+WHERE FK_ShipmentTypeID = 2 and DELIVERYDATE is null and BUS_LINE in ('21', '25');
+
+GO
+
+DELETE
+FROM tblShipment
+WHERE REFERENCE_NO IN ('006337-00', '006338-00', '006961-00', '006962-00');
+
+GO
+
+delete
+from tblShipment
+where REFERENCE_NO like 'blan%';
+
+GO
+
+DELETE
+FROM tblInvoice
+WHERE Ref_No IN ('BP14575','BP14577','BP14594','BP14604','BP14607','BP14609','BP14610','BP14611','BP14612','BP14625','BP14627')
+
+GO
+
+delete
+from tblShipment
+where Shipment_ID not in (
+select SHIPMENT_ID from tblinvoice) and (REVENUE = 0 and COST = 0) AND SHIPDATE <= '6/1/2016'
+
+GO
+
+--delete
+--from tblShipment
+--where DELIVERYDATE is null 
+--	and FK_ShipmentTypeID = 2 
+--	and acctperiodname is null 
+--	and BUS_LINE not in (62, 63) 
+--	and REVENUE = 0 and ORCLREVENUE = 0
+--	and SHIPDATE <= '2016-12-31';
+
+GO
+
+--delete
+--from tblShipment
+--where REFERENCE_NO like '10-%' and BUS_LINE = 11 and SHIPDATE is null;
+
+GO
+
+--delete
+--from tblShipment
+--where account = 'FXF' and acctperiodname is null and REVENUE = 0 and SHIPDATE <= '2016-06-01';
+
+GO
+
+--delete
+--from tblShipment
+--where acctperiodname is null and REVENUE = 0 and ORCLREVENUE = 0 and account <> 'FXF' and SHIPDATE <= '2016-06-01';
+
+GO
+
+--delete
+--from tblInvoice
+--where Ref_No in ('BP16136','BP16230','BP24754','BP31782','BP32102')
+
+GO
+*/
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp2-AJCDW_07-FactFullDataCleanse]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

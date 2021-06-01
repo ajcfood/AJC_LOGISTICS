@@ -1,0 +1,249 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_05-UPDTFACTBP]    Script Date: 5/21/2019 11:16:41 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[sp-AJCDW_05-UPDTFACTBP]
+
+AS
+BEGIN
+
+SET NOCOUNT ON;
+
+--Commented out proc on 4/24/19 by Shakeeb Ali because server USDCFAPBG01 is no longer active.
+
+/*
+DECLARE @CYEAR CHAR(4);
+DECLARE @FYEAR CHAR(4);
+
+SELECT @CYEAR = CONVERT(CHAR, DATEPART(YYYY, GETDATE()));
+SELECT @FYEAR = @CYEAR+1;
+
+
+---------
+--  BP --
+---------
+
+
+select *
+into #tmp2
+FROM OPENQUERY([USDCFAPBG01], '
+	--select * from StgAJCDW.dbo.tblStgBPShipment where SHIPDATE >= ''1/1/2016''
+	select * from StgAJCDW.dbo.tblStgBPShipment where SHIPDATE >= ''1/1/'' + convert(varchar, datepart(yyyy, getdate()) - 1)
+');
+
+
+-- LOAD SHIPMENT DATA --
+------------------------
+delete
+from tblShipment
+where ShipmentID in (select SHIPMENT_ID from #tmp2)
+and FK_SystemID = 3;
+
+insert into tblshipment
+select *
+from #tmp2;
+
+
+-- LOAD INVOICE DATA --
+-----------------------
+delete
+from tblInvoice
+where ShipmentID in (select t2.shipment_id from #tmp2 t2
+						inner join tblOracleGLCleansed t11
+							on 'BP'+CONVERT(varchar,t2.shipment_id) = t11.LINE_ATTRIBUTE11)
+and FK_SystemID = 3;
+
+
+insert into tblInvoice
+select t2.shipment_id, 'BP'+CONVERT(varchar,t2.shipment_id) as refno, t2.bookingnumbe as invno, t11.LINE_EFFECTIVE_DATE as invdate, NULL, NULL
+	, null, t11.OREVENUE, t11.OCOST, t11.OREVENUE-t11.OCOST AS GP
+	, t11.PERIOD_NAME, NULL, NULL, NULL
+	, t11.INV_TYPE, t11.LOB
+	, NULL, NULL, 3
+from #tmp2 t2
+inner join tblOracleGLCleansed t11
+	on 'BP'+CONVERT(varchar,t2.shipment_id) = t11.LINE_ATTRIBUTE11
+order by 'BP'+CONVERT(varchar,t2.shipment_id);
+
+
+-- Update bogus Delivery dates
+Update tblShipment
+Set ShpDelivDate = ShpShipDate
+Where ShpDelivDate = '1899-12-30 00:00:00.000'
+	and FK_SystemID = 3;
+
+Update tblShipment
+Set ShpDelivDate = convert(datetime, replace(ShpDelivDate, datepart(YYYY, ShpDelivDate), datepart(YYYY, ShpShipDate)), 104)
+Where ShpDelivDate > '1899-12-30 00:00:00.000' and ShpDelivDate < '2012-11-01'
+	and FK_SystemID = 3;
+
+Update tblInvoice
+Set InvDate = ShpDelivDate
+From tblInvoice i
+	inner join tblShipment s
+		on i.ShipmentID = s.ShipmentID
+Where i.InvDate = '1899-12-30 00:00:00.000'
+	and s.FK_SystemID = 3;
+
+
+-- Change Delivery Date for dates set too much in the future
+Update tblShipment
+Set ShpDelivDate = convert(datetime, replace(ShpDelivDate, datepart(YYYY, ShpDelivDate), datepart(YYYY, ShpShipDate)), 104)
+Where ShpDelivDate > '12/31/' + @FYEAR
+	and FK_SystemID = 3;
+
+
+--------------------
+-- Load File Data --
+--------------------
+
+DELETE
+FROM tblFile
+WHERE ShipmentID in (select SHIPMENT_ID from #tmp2)
+	and FK_SystemID = 3;
+
+
+ -- Shipment --
+--------------
+INSERT INTO tblFile
+SELECT DISTINCT ShipmentID
+      , RefNo
+	  , ShpFileOpenDate
+      , ShpShipDate
+	  , ShpDelivDate
+      , DATEPART(YEAR, ShpShipDate) AS SHPYEAR
+      , DATEPART(QUARTER, ShpShipDate) AS SHPQRTR
+      , DATEPART(MONTH, ShpShipDate) AS SHPMONTH
+      , DATEPART(WEEK, ShpShipDate) AS SHPWEEK
+	  , DATENAME(WEEKDAY, ShpShipDate) AS SHPWEEKDAY
+	  , DATEPART(YEAR, ShpDelivDate) AS DELYEAR
+      , DATEPART(QUARTER, ShpDelivDate) AS DELQRTR
+      , DATEPART(MONTH, ShpDelivDate) AS DELMONTH
+      , DATEPART(WEEK, ShpDelivDate) AS DELWEEK
+      , DATENAME(WEEKDAY, ShpDelivDate) AS DELWEEKDAY
+	  , DATEPART(YEAR, ShpFileOpenDate) AS OPENYEAR
+      , DATEPART(QUARTER, ShpFileOpenDate) AS OPENQRTR
+      , DATEPART(MONTH, ShpFileOpenDate) AS OPENONTH
+      , DATEPART(WEEK, ShpFileOpenDate) AS OPENWEEK
+	  , DATENAME(WEEKDAY, ShpFileOpenDate) AS OPENWEEKDAY
+	  , NULL
+	  , NULL
+	  , NULL
+	  , NULL
+      ,[FK_SystemID]
+FROM tblShipment
+WHERE ShipmentID NOT IN (SELECT ShipmentID FROM tblFile)
+	and FK_SystemID = 3;
+
+
+-------------------------
+-- Update Foreign Keys --
+-------------------------
+
+-- Division --
+--------------
+UPDATE tblShipment
+SET fk_divid = di.DivisionID
+FROM tblShipment sh
+	INNER JOIN #tmp2 t2
+		ON sh.ShipmentID = t2.SHIPMENT_ID
+    INNER JOIN tblDiv di
+		ON (sh.ShpDivID = di.DivisionNum
+			AND sh.ShpLOB = di.LOBNum)
+WHERE sh.FK_DivID IS NULL AND sh.ShpDivID <> '' AND sh.FK_SystemID = 3; 
+
+
+-- Customer --
+--------------
+UPDATE tblShipment
+SET fk_custmasterid = cm.CustMasterID
+FROM tblShipment sh
+	INNER JOIN #tmp2 t2
+		ON sh.ShipmentID = t2.SHIPMENT_ID
+    INNER JOIN tblCustMaster cm
+		ON sh.ShpAccnt = cm.CustMasterNum AND sh.FK_SystemID = cm.fk_systemid
+WHERE LTRIM(RTRIM(sh.ShpAccnt)) <> '' AND sh.FK_SystemID = 3;
+
+
+-- Consignee --
+---------------
+UPDATE tblShipment
+SET fk_consgid = cg.ConsgID
+FROM tblShipment sh
+    INNER JOIN tblConsg cg
+		ON sh.ShipmentID = cg.ConsgFileNum AND sh.FK_SystemID = cg.fk_systemid
+			AND sh.ShpConsg = cg.ConsgName
+WHERE sh.FK_ConsgID IS NULL AND sh.ShpConsg <> '' AND sh.FK_SystemID = 3;
+
+
+-- Shipper --
+-------------
+UPDATE tblShipment
+SET fk_shipperid = s.ShipperID
+FROM tblShipment sh
+    INNER JOIN tblShipper s
+		ON sh.ShipmentID = s.ShipperFileNum AND sh.FK_SystemID = s.fk_systemid
+			AND sh.ShpExporter = s.ShipperName
+WHERE sh.FK_ShipperID IS NULL AND sh.ShpExporter <> '' AND sh.FK_SystemID = 3;
+
+
+-- Sales Person --
+------------------
+UPDATE tblShipment
+SET fk_salespid = sp.salespid
+FROM tblShipment sh
+	INNER JOIN #tmp2 t2
+		ON sh.ShipmentID = t2.SHIPMENT_ID
+    INNER JOIN tblCustMaster cm
+		ON sh.ShpAccnt = cm.CustMasterNum AND sh.FK_SystemID = cm.fk_systemid
+    INNER JOIN tblSalesP sp
+		ON cm.salesman = sp.salespcode AND cm.fk_systemid = sp.FK_SystemID
+WHERE LTRIM(RTRIM(sh.ShpAccnt)) <> '' AND sh.FK_SystemID = 3; 
+
+
+UPDATE tblShipment
+SET fk_salespid = sp.salespid
+FROM tblShipment sh
+	INNER JOIN #tmp2 t2
+		ON sh.ShipmentID = t2.SHIPMENT_ID
+	INNER JOIN tblSalesP sp
+		ON sh.ShpSalesP = sp.SalesPName AND sh.FK_SystemID = sp.fk_systemid
+WHERE sh.[FK_SalesPID] is null and ltrim(rtrim(sh.ShpSalesP)) <> '' and sh.[FK_SystemID] = 3;
+
+
+-- Vendor --
+------------
+UPDATE tblShipment
+SET fk_vendid = v.vendorid
+FROM tblShipment sh
+	INNER JOIN #tmp2 t2
+		ON sh.ShipmentID = t2.SHIPMENT_ID
+    INNER JOIN tblVendor v
+		ON sh.ShpCarrier = v.VendorNum AND sh.FK_SystemID = v.fk_systemid
+WHERE LTRIM(RTRIM(sh.ShpCarrier)) <> '' AND sh.FK_SystemID = 3;
+
+
+-- Insert Container Contents --
+-------------------------------
+insert into tblContainerContents
+select t2.*
+from tblShipment s
+	inner join (select [ContentsNum], [ContConWeight], [ContConPieces], [ContConPieceType], [ContConValue], [ContConUnits], [ContConUnitType]
+						  , [ContConDesc], [FileNo], [ContRateAs], [ContUnitPack], [FK_SystemID]
+					FROM OPENQUERY([USDCFAPBG01], '
+						select * from StgAJCDW.dbo.tblStgContainerContents
+						')) t2 
+	on s.ShipmentID = t2.[FileNo]
+where t2.[FileNo] not in (select ContentsNum from tblContainerContents)
+	and s.FK_SystemID = 3;
+
+
+DROP TABLE #tmp2
+*/
+
+END
+

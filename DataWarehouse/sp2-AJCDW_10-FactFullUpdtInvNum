@@ -1,0 +1,152 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[sp2-AJCDW_10-FactFullUpdtInvNum]    Script Date: 12/26/2019 10:14:51 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[sp2-AJCDW_10-FactFullUpdtInvNum]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+----------------------------------------
+--    Load Invoice Numbers from IES   --
+----------------------------------------
+SELECT * 
+INTO #tmp1
+FROM OPENQUERY(IES, '
+	SELECT DISTINCT i.FILE_ID, i.INVOICE_NO, i.CUSTOMER
+		--, i.CODE, i.DESCRIPTION
+		--, i.VENDOR_INV_DT
+		--, i.CHARGE as Revenue
+		, i.VENDOR_COST as Cost
+		--, s.SHIPMENT_ID, s.SAILDATE
+		, s.REFERENCE_NO
+	FROM SHIPMENT_DAT s, INV_DETA_DAT i
+	WHERE s.SHIPMENT_ID = i.FILE_ID AND s.SAILDATE >= ''2016-01-01''
+	');
+
+-- Delete Double Entry CSA Records --
+-------------------------------------
+DELETE
+FROM #tmp1
+WHERE REFERENCE_NO IN (
+	SELECT [INTERFACE_HEADER_ATTRIBUTE4] FROM [dbo].[tblOracleCSAFileRef]);
+
+
+-- Update Invoice Numbers for Null Values From IES --
+----------------------------------------------------
+update tblInvoice
+set InvNo = t1.invoice_no
+--select i.ShipmentID, i.RefNo, i.InvNo, i.InvVendInvNo, i.InvCost, t1.reference_no, t1.invoice_no, t1.Cost
+from tblinvoice i
+	inner join #tmp1 t1
+		on i.ShipmentID = t1.[file_id]
+			and i.InvCost = t1.Cost
+where t1.Cost <> 0 
+	and i.InvNo is null
+	and i.FK_SystemID = 2;
+
+
+------------------------
+-- Update InvCustName --
+------------------------
+
+-- Initialize Field --
+----------------------
+--update tblInvoice
+--set InvCustName = NULL;
+
+-- Update InvCustName from AR Table --
+--------------------------------------
+update tblInvoice
+set InvCustName = cm.CustName
+--select i.*, cm.CustMasterID,cm.CustMasterCode, cm.CustName
+from tblInvoice i
+	inner join tblOracleARData oar
+		on i.InvNo = oar.TRX_NUMBER
+	inner join tblCustMaster cm
+		on cm.CustMasterCode = oar.ATTRIBUTE6
+		and i.FK_SystemID = cm.FK_SystemID
+where i.InvCustName is null;
+
+-- Update InvCustName from Shipment Table --
+-------------------------------------------- 
+update tblInvoice
+set InvCustName = cm.CustName
+--select i.InvoiceID, i.ShipmentID, i.InvNo, i.InvCustName, s.RefNo, s.FK_CustMasterID, cm.CustMasterID, cm.CustName
+from tblInvoice i
+	inner join tblShipment s
+		on i.ShipmentID = s.ShipmentID
+		and i.FK_SystemID = s.FK_SystemID
+	inner join tblCustMaster cm
+		on cm.CustMasterID = s.FK_CustMasterID
+		and cm.FK_SystemID = s.FK_SystemID
+where i.InvCustName is null;
+
+-- Update InvCustName with Costs Items --
+-----------------------------------------
+update tblInvoice
+set InvCustName = cm.CustName
+--select i.ShipmentID, i.RefNo, i.InvNo, i.InvVendInvNo, i.InvCustName, t1.invoice_no, i.InvCost, t1.Cost, t1.customer, cm.CustName--, t1.saildate, t1.vendor_inv_dt
+from tblinvoice i
+	inner join #tmp1 t1
+		on i.ShipmentID = t1.[file_id]
+			and i.InvNo = t1.invoice_no
+			and i.InvCost = t1.Cost
+	inner join tblCustMaster cm
+		on cm.CustMasterCode = t1.Customer
+		and cm.FK_SystemID = i.FK_SystemID
+where t1.Cost <> 0 
+	and i.InvCustName <> cm.CustName 
+	and i.RefNo like '40-%' 
+	and i.RefNo <> '40-010063' -- Test record
+	and i.FK_SystemID = 2;
+
+
+drop table #tmp1;
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp2-AJCDW_10-FactFullUpdtInvNum]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

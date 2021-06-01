@@ -1,0 +1,115 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[NetInvoicedCM]    Script Date: 3/24/2020 5:15:20 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+ALTER procedure [dbo].[NetInvoicedCM] as 
+
+BEGIN TRY
+BEGIN
+
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+ TRUNCATE TABLE AJCDW.dbo.RptInvCMNet
+
+ INSERT INTO AJCDW.dbo.RptInvCMNet ([Inv_Trx_ID], [CM_Trx_ID], [Inv_Trx_No], [CM_Trx_No], [Inv_Trx_Date], [CM_Trx_Date], [Inv_File_No], [CM_File_No], [Inv_Amt], [CM_Amt], [Application])
+select inv.CUSTOMER_TRX_ID Inv_Trx_ID, cm.CUSTOMER_TRX_ID CM_Trx_ID, inv.TRX_NUMBER Inv_Trx_No, cm.TRX_NUMBER CM_Trx_No, inv.TRX_DATE Inv_Trx_Date, cm.TRX_DATE CM_Trx_Date, inv.PURCHASE_ORDER Inv_File_No,
+	   cm.PURCHASE_ORDER CM_File_No, inv.AMOUNT_DUE_ORIGINAL Inv_Amt, cm.AMOUNT_DUE_ORIGINAL CM_Amt, inv.Application
+from 
+--IES
+	(
+		select CUSTOMER_TRX_ID, TRX_NUMBER, TRX_DATE, PURCHASE_ORDER, AMOUNT_DUE_ORIGINAL, CLASS, 'IES' Application
+		from tblOracleARData
+		where INTERFACE_HEADER_CONTEXT = 'IES'
+		and AMOUNT_DUE_ORIGINAL > 0
+		and YEAR(TRX_DATE) = YEAR(GETDATE())	--pulls only CY invoiced claims
+	) inv
+INNER JOIN (
+				select CUSTOMER_TRX_ID, TRX_NUMBER, REPLACE(TRX_NUMBER,'R','') SCRUBBED_TRX_NUMBER, TRX_DATE, PURCHASE_ORDER, AMOUNT_DUE_ORIGINAL, CLASS
+				from tblOracleARData
+				where INTERFACE_HEADER_CONTEXT = 'IES'
+				and AMOUNT_DUE_ORIGINAL < 0
+				and YEAR(TRX_DATE) = YEAR(GETDATE())	--pulls only CY invoiced claims
+		  ) cm ON cm.SCRUBBED_TRX_NUMBER = inv.TRX_NUMBER and inv.AMOUNT_DUE_ORIGINAL = ABS(cm.AMOUNT_DUE_ORIGINAL)
+
+UNION 
+
+--CSA
+select inv.CUSTOMER_TRX_ID Inv_Trx_ID, cm.CUSTOMER_TRX_ID CM_Trx_ID, inv.TRX_NUMBER Inv_Trx_No, cm.TRX_NUMBER CM_Trx_No, inv.TRX_DATE Inv_Trx_Date, cm.TRX_DATE CM_Trx_Date, inv.PURCHASE_ORDER Inv_File_No,
+	   cm.PURCHASE_ORDER CM_File_No, inv.AMOUNT_DUE_ORIGINAL Inv_Amt, cm.AMOUNT_DUE_ORIGINAL CM_Amt, inv.Application
+from (
+		select CUSTOMER_TRX_ID, TRX_NUMBER, TRX_DATE, PURCHASE_ORDER, AMOUNT_DUE_ORIGINAL, CLASS, 'CSA' Application
+		from tblOracleARData
+		where INTERFACE_HEADER_CONTEXT = 'CSA'
+		and AMOUNT_DUE_ORIGINAL > 0
+		and YEAR(TRX_DATE) = YEAR(GETDATE())	--pulls only CY invoiced claims
+	) inv
+INNER JOIN (
+				select CUSTOMER_TRX_ID, TRX_NUMBER, REPLACE(TRX_NUMBER,'-CM','') SCRUBBED_TRX_NUMBER, TRX_DATE, PURCHASE_ORDER, AMOUNT_DUE_ORIGINAL, CLASS
+				from tblOracleARData
+				where INTERFACE_HEADER_CONTEXT = 'CSA'
+				and AMOUNT_DUE_ORIGINAL < 0
+				and YEAR(TRX_DATE) = YEAR(GETDATE())	--pulls only CY invoiced claims
+		  ) cm ON cm.SCRUBBED_TRX_NUMBER = inv.TRX_NUMBER and inv.AMOUNT_DUE_ORIGINAL = ABS(cm.AMOUNT_DUE_ORIGINAL)
+
+UNION
+
+--MGATE
+select inv.CUSTOMER_TRX_ID Inv_Trx_ID, cm.CUSTOMER_TRX_ID CM_Trx_ID, inv.TRX_NUMBER Inv_Trx_No, cm.TRX_NUMBER CM_Trx_No, inv.TRX_DATE Inv_Trx_Date, cm.TRX_DATE CM_Trx_Date, inv.INTERFACE_HEADER_ATTRIBUTE1 Inv_File_No,
+	   cm.INTERFACE_HEADER_ATTRIBUTE1 CM_File_No, inv.AMOUNT_DUE_ORIGINAL Inv_Amt, cm.AMOUNT_DUE_ORIGINAL CM_Amt, inv.Application
+from (
+		select CUSTOMER_TRX_ID, TRX_NUMBER, TRX_DATE, INTERFACE_HEADER_ATTRIBUTE1, AMOUNT_DUE_ORIGINAL, CLASS, 'MGATE' Application
+		from tblOracleARData
+		where INTERFACE_HEADER_CONTEXT = 'MGATE'
+		and AMOUNT_DUE_ORIGINAL > 0
+		and YEAR(TRX_DATE) = YEAR(GETDATE())	--pulls only CY invoiced claims
+	) inv
+INNER JOIN (
+				select CUSTOMER_TRX_ID, TRX_NUMBER, CASE WHEN TRX_NUMBER LIKE '%-R' THEN REPLACE(TRX_NUMBER,'-R','')
+														 WHEN TRX_NUMBER LIKE '%R' THEN REPLACE(TRX_NUMBER,'R','') 
+														 END  SCRUBBED_TRX_NUMBER, 
+					  TRX_DATE, INTERFACE_HEADER_ATTRIBUTE1, AMOUNT_DUE_ORIGINAL, CLASS
+				from tblOracleARData
+				where INTERFACE_HEADER_CONTEXT = 'MGATE'
+				and AMOUNT_DUE_ORIGINAL < 0
+				and YEAR(TRX_DATE) = YEAR(GETDATE())	--pulls only CY invoiced claims
+		  ) cm ON cm.SCRUBBED_TRX_NUMBER = inv.TRX_NUMBER and inv.AMOUNT_DUE_ORIGINAL = ABS(cm.AMOUNT_DUE_ORIGINAL)
+
+
+ /*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[NetInvoicedCM]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

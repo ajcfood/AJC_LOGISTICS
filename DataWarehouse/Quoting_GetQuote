@@ -1,0 +1,234 @@
+USE [AirTrak]
+GO
+/****** Object:  StoredProcedure [dbo].[Quoting_GetQuote]    Script Date: 4/3/2020 12:13:13 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+
+ALTER PROCEDURE [dbo].[Quoting_GetQuote] 
+@CUSTID INT 
+
+AS
+BEGIN TRY
+BEGIN
+
+			IF EXISTS (SELECT TOP 1 1 FROM Quoting_SWESummary WHERE ISNULL(Gateway,'') = '')
+			BEGIN
+
+					DELETE FROM Quoting_SWESummary WHERE ISNULL(Gateway,'') = '' OR TotCubicFeet IS NULL
+			
+			END
+
+			DECLARE @DestState VARCHAR(2) = (SELECT TOP 1 DestState FROM Quoting_SWEDetails WHERE CustID = @CustID AND QuoteNo IS NULL)
+			DECLARE @ZipCode VARCHAR(5) = (SELECT TOP 1 DestZipCode FROM Quoting_SWEDetails WHERE CustID = @CustID AND QuoteNo IS NULL)
+			DECLARE @QuoteNo TABLE (QuoteNo INT)
+			DECLARE @SummaryID INT
+
+			--Round Cubic Feet and Units
+			UPDATE		x
+			SET			Units = CEILING(Units)
+			FROM		Quoting_SWEDetails X 
+			WHERE	    CAST(X.DateQuoted AS DATE) = CAST(GETDATE() AS DATE)		
+			AND			X.CustID = @CUSTID
+			AND			X.QuoteNo IS NULL 
+
+			UPDATE		x 
+			SET			CubicFeet = ROUND((ROUND([Length],0)*ROUND([Width],0)*ROUND([Height],0))/1728,0) * UNITS 
+			FROM		Quoting_SWEDetails X 
+			WHERE	    CAST(X.DateQuoted AS DATE) = CAST(GETDATE() AS DATE)		
+			AND			X.CustID = @CUSTID
+			AND			X.QuoteNo IS NULL 
+
+			UPDATE		X 
+			SET			QuoteNo = (SELECT IDENT_CURRENT('Quoting_SWESummary') + IDENT_INCR('Quoting_SWESummary'))
+			OUTPUT		INSERTED.QuoteNo
+			INTO		@QuoteNo 
+			FROM		Quoting_SWEDetails X
+			WHERE	CAST(X.DateQuoted AS DATE) = CAST(GETDATE() AS DATE)		
+			AND		X.CustID = @CustID
+			AND		X.QuoteNo IS NULL 
+
+			INSERT INTO Quoting_SWESummary (CustID, Gateway, TotCubicFeet)
+			SELECT		CustID, CASE DestState WHEN 'AK' THEN '3400 C INDUSTRY DR EAST FIFE, WA 98424' 
+											   WHEN 'HI' THEN '900 S. EUCLID ST., UNIT B LA HABRA, CA 90631'
+											   ELSE ''
+											   END 
+						, CAST(SUM(CubicFeet) AS INT) TotCubicFeet
+			FROM		Quoting_SWEDetails X
+			WHERE		CustID = @CustID 
+			AND			QuoteNo IN (
+									 SELECT  QuoteNo 
+									 FROM	@QuoteNo
+								   )
+			GROUP BY	CustID, CASE DestState WHEN 'AK' THEN '3400 C INDUSTRY DR EAST FIFE, WA 98424' 
+											   WHEN 'HI' THEN '900 S. EUCLID ST., UNIT B LA HABRA, CA 90631'
+											   ELSE ''
+											   END 
+
+			/**********************************************************************Calculate Quote for Hawaii**********************************************************************/
+
+			SET @SummaryID = (SELECT DISTINCT QuoteNo FROM @QuoteNo)
+
+			DECLARE @CubicFeet TABLE (CuFt DECIMAL(6,2))
+
+			INSERT INTO @CubicFeet (CuFt) 
+			SELECT		ROUND(
+								(Length * Width * Height) / 1728
+							,0) * ISNULL(Units, 1.00) --Calculate cubic feet per pkg type
+			FROM		Quoting_SWEDetails SD
+			WHERE		SD.QuoteNo = @SummaryID		
+								
+
+			IF (
+									@DestState = 'HI' 
+								AND @ZipCode <> '96772'	--Must be quoted manually per Phil
+								AND NOT EXISTS (
+													--Cannot quote any HI shipments where any one piece is > 750 cu ft
+													SELECT  TOP 1 CuFt 
+													FROM	@CubicFeet 
+													WHERE	CuFt > 750.00 
+												)
+								AND NOT EXISTS (
+													--Cannot quote any HI shipments where any DIMS have L > 120 in. OR W > 92 in. OR H > 100 in.
+													SELECT		TOP 1 *
+													FROM		Quoting_SWEDetails QS 
+													WHERE		QS.QuoteNo = @SummaryID
+													AND			(
+																	   QS.Length > 120.00
+																	OR QS.Width > 92.00
+																	OR QS.Height > 100.00
+																)
+												)
+								AND	NOT EXISTS  (
+													SELECT 		SUM(ISNULL(Units, 1.00))
+													FROM		Quoting_SWEDetails SD
+													WHERE		SD.QuoteNo = @SummaryID
+													AND			PKGType <> 'CARTON'	--More than 5 units of any pkg type except Cartons cannot be quoted
+													HAVING		SUM(ISNULL(Units, 1.00)) > 5.00
+												)	 
+								AND NOT EXISTS  (
+													SELECT		TOP 1 1
+													FROM		Quoting_SWEDetails SD
+													WHERE		SD.QuoteNo = @SummaryID
+													AND			WeightPerPKGType > 5000.00	
+													AND			Units = 1
+												)
+				)
+					BEGIN
+
+
+							--Calculate Inland Fee
+							UPDATE			CSAF 
+							SET				TotInlandFee = Y.FlatFee * CSAF.TotPieces
+							FROM			Quoting_SWESummary CSAF
+							CROSS APPLY		(
+												SELECT	TOP 1 PKGType, OrigZipCode
+												FROM	Quoting_SWEDetails SD
+												WHERE	SD.QuoteNo = CSAF.SummaryID 
+												AND		SD.CustID = CSAF.CustID
+												AND		SD.PKGType = 'PALLET'	--Rates are per pallet rate only
+											) X
+							CROSS APPLY		(
+												SELECT TOP 1 ZipCode, FlatFee, Effective, Terminated 
+												FROM	Quoting_InlandLocalPickUp ILP
+												WHERE	ILP.ZipCode = X.OrigZipCode
+												AND		ILP.CustID = CSAF.CustID
+											) Y
+							WHERE	CSAF.CustID = @CustID 
+							AND		CSAF.TotInlandFee = 0.00
+							AND		CSAF.SummaryID = @SummaryID
+							AND		CAST(GETDATE() AS DATE) >= Y.Effective 
+							AND		CAST(GETDATE() AS DATE) < COALESCE(Y.Terminated, GETDATE())
+
+
+							--Calc HI Quote
+							EXEC [Quoting_CalcHIQuote] @CustID, @SummaryID  
+
+					END 
+			
+			
+
+			IF (
+						@DestState = 'AK' 
+					AND @ZipCode IN (SELECT ZipCode FROM Quoting_AKZones)
+					AND NOT EXISTS (
+										--Cannot quote any AK shipments where any one piece is > 750 cu ft
+										SELECT  TOP 1 CuFt 
+										FROM	@CubicFeet 
+										WHERE	CuFt > 750.00 
+									)
+					AND NOT EXISTS (
+										--Cannot quote any AK shipments where any DIMS have L > 120 in. OR W > 92 in. OR H > 100 in.
+										SELECT		TOP 1 *
+										FROM		Quoting_SWEDetails QS 
+										WHERE		QS.QuoteNo = @SummaryID
+										AND			(
+															QS.Length > 120.00
+														OR QS.Width > 92.00
+														OR QS.Height > 100.00
+													)
+									)
+					AND	NOT EXISTS  (
+										SELECT 		SUM(ISNULL(Units, 1.00))
+										FROM		Quoting_SWEDetails SD
+										WHERE		SD.QuoteNo = @SummaryID
+										AND			PKGType <> 'CARTON'	--More than 5 units of any pkg type except Cartons cannot be quoted
+										HAVING		SUM(ISNULL(Units, 1.00)) > 5.00
+									)	 
+
+				)
+					BEGIN
+
+							--Calculate Inland Fee
+							UPDATE			CSAF 
+							SET				TotInlandFee = Y.FlatFee * CSAF.TotPieces
+							FROM			Quoting_SWESummary CSAF
+							CROSS APPLY		(
+												SELECT	TOP 1 PKGType, OrigZipCode
+												FROM	Quoting_SWEDetails SD
+												WHERE	SD.QuoteNo = CSAF.SummaryID 
+												AND		SD.CustID = CSAF.CustID
+												AND		SD.PKGType = 'PALLET'	--Rates are per pallet rate only
+											) X
+							CROSS APPLY		(
+												SELECT TOP 1 ZipCode, FlatFee, Effective, Terminated 
+												FROM	Quoting_InlandLocalPickUp ILP
+												WHERE	ILP.ZipCode = X.OrigZipCode
+												AND		ILP.CustID = CSAF.CustID
+											) Y
+							WHERE	CSAF.CustID = @CustID 
+							AND		CSAF.TotInlandFee = 0.00
+							AND		CSAF.SummaryID = @SummaryID
+							AND		CAST(GETDATE() AS DATE) >= Y.Effective 
+							AND		CAST(GETDATE() AS DATE) < COALESCE(Y.Terminated, GETDATE())
+
+										
+							--Calc AK Quote
+							EXEC [Quoting_CalcAKQuote] @CustID, @SummaryID 
+	
+					END
+
+
+END
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AirTrak.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[Quoting_GetQuote]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

@@ -1,0 +1,167 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadOracleGL]    Script Date: 5/21/2019 11:20:29 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[spAJCDW_LoadOracleGL](@YEAR CHAR(2))
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+DECLARE @SQL1 NVARCHAR(MAX),
+	  @SQL2 NVARCHAR(MAX),
+	 @SQL3 NVARCHAR(MAX),  -- @SQL3 added by Salah on 1/14/19 to start to pull SG&A data (6XXX level Oracle accounts) into tblOracleGL
+	 @SQL4 NVARCHAR(MAX),  -- @SQL4 added by Salah on 2/6/19 to start to pull SG&A for company 52 and 54
+	 @SQL5 NVARCHAR(MAX);  -- @SQL5 added by Salah on 2/6/19 to start to pull SG&A for company 52 and 54
+
+
+-------------------------
+-- LOAD ORACLE GL DATA --
+-------------------------
+
+-- Delete current year Oracle GL records --
+-------------------------------------------
+delete
+from tblOracleGL
+where PERIOD_NAME LIKE 'CAL%-' + @YEAR;
+
+
+-- COST DATA --
+---------------
+SET @SQL1 = 'INSERT INTO dbo.tblOracleGL 
+SELECT * 
+FROM OPENQUERY(ORACLEPROD, ''
+		SELECT LINE_ACCT_COMBO, JE_SOURCE, JE_CATEGORY, BATCH_NAME, HEADER_NAME, PERIOD_NAME, LINE_JE_LINE_NUM, LINE_EFFECTIVE_DATE, LINE_DESCRIPTION
+			, LINE_ATTRIBUTE11, LINE_REFERENCE_4, LINE_ATTRIBUTE2, CURRENCY_CODE
+			, LINE_ACCOUNTED_DR
+			, LINE_ACCOUNTED_CR
+			, LINE_REFERENCE_10
+			, SEGMENT1, SEGMENT2, SEGMENT3, SEGMENT4, SEGMENT5, SEGMENT6, SEGMENT7, ''''COST''''
+		FROM AJC_GL_JE_LINES_V 
+		WHERE LINE_ACCT_COMBO LIKE ''''53.5%''''
+			AND PERIOD_NAME LIKE ''''CAL%-' + @YEAR + '''''
+			AND JE_SOURCE <> ''''Consolidation''''
+			--AND JE_SOURCE <> ''''MassAllocation'''' -- Commented 6/7/18 to add Insurance Mass Allocation Journals
+			--AND LINE_ATTRIBUTE11 IS NOT NULL
+		ORDER BY  LINE_EFFECTIVE_DATE'')';
+
+EXEC sp_executesql @SQL1;
+
+
+-- REVENUE DATA --
+------------------
+SET @SQL2 = 'INSERT INTO dbo.tblOracleGL
+SELECT * 
+FROM OPENQUERY(ORACLEPROD, ''
+		SELECT LINE_ACCT_COMBO, JE_SOURCE, JE_CATEGORY, BATCH_NAME, HEADER_NAME, PERIOD_NAME, LINE_JE_LINE_NUM, LINE_EFFECTIVE_DATE, LINE_DESCRIPTION
+			, LINE_ATTRIBUTE11, LINE_REFERENCE_4, LINE_ATTRIBUTE2, CURRENCY_CODE
+			, LINE_ACCOUNTED_DR
+			, LINE_ACCOUNTED_CR
+			, LINE_REFERENCE_10
+			, SEGMENT1, SEGMENT2, SEGMENT3, SEGMENT4, SEGMENT5, SEGMENT6, SEGMENT7, ''''REVENUE''''
+		FROM AJC_GL_JE_LINES_V 
+		WHERE LINE_ACCT_COMBO LIKE ''''53.4%''''
+			AND PERIOD_NAME LIKE ''''CAL%-' + @YEAR + '''''
+			AND JE_SOURCE <> ''''Consolidation''''
+			AND JE_SOURCE <> ''''MassAllocation''''
+			--AND LINE_ATTRIBUTE11 IS NOT NULL
+		ORDER BY LINE_EFFECTIVE_DATE'')';
+
+EXEC sp_executesql @SQL2;
+
+-- SGA DATA --
+---------------
+
+-- Added by Salah on 1/14/19 to start to pull SG&A data (6XXX level Oracle accounts) into tblOracleGL
+
+--COMPANY 52 SG&A--
+SET @SQL4 = 'INSERT INTO dbo.tblOracleGL 
+SELECT * 
+FROM OPENQUERY(ORACLEPROD, ''
+		SELECT LINE_ACCT_COMBO, JE_SOURCE, JE_CATEGORY, BATCH_NAME, HEADER_NAME, PERIOD_NAME, LINE_JE_LINE_NUM, LINE_EFFECTIVE_DATE, LINE_DESCRIPTION
+			, LINE_ATTRIBUTE11, LINE_REFERENCE_4, LINE_ATTRIBUTE2, CURRENCY_CODE
+			, LINE_ACCOUNTED_DR
+			, LINE_ACCOUNTED_CR
+			, LINE_REFERENCE_10
+			, SEGMENT1, SEGMENT2, SEGMENT3, SEGMENT4, SEGMENT5, SEGMENT6, SEGMENT7, ''''SGA''''
+		FROM AJC_GL_JE_LINES_V 
+		WHERE LINE_ACCT_COMBO LIKE ''''52.6%''''
+			AND PERIOD_NAME LIKE ''''CAL%-' + @YEAR + '''''
+			AND JE_SOURCE <> ''''Consolidation''''
+			--AND JE_SOURCE <> ''''MassAllocation'''' -- Commented 6/7/18 to add Insurance Mass Allocation Journals
+			--AND LINE_ATTRIBUTE11 IS NOT NULL
+		ORDER BY  LINE_EFFECTIVE_DATE'')';
+EXEC sp_executesql @SQL4;
+
+--COMPANY 53 SG&A--
+SET @SQL3 = 'INSERT INTO dbo.tblOracleGL 
+SELECT * 
+FROM OPENQUERY(ORACLEPROD, ''
+		SELECT LINE_ACCT_COMBO, JE_SOURCE, JE_CATEGORY, BATCH_NAME, HEADER_NAME, PERIOD_NAME, LINE_JE_LINE_NUM, LINE_EFFECTIVE_DATE, LINE_DESCRIPTION
+			, LINE_ATTRIBUTE11, LINE_REFERENCE_4, LINE_ATTRIBUTE2, CURRENCY_CODE
+			, LINE_ACCOUNTED_DR
+			, LINE_ACCOUNTED_CR
+			, LINE_REFERENCE_10
+			, SEGMENT1, SEGMENT2, SEGMENT3, SEGMENT4, SEGMENT5, SEGMENT6, SEGMENT7, ''''SGA''''
+		FROM AJC_GL_JE_LINES_V 
+		WHERE LINE_ACCT_COMBO LIKE ''''53.6%''''
+			AND PERIOD_NAME LIKE ''''CAL%-' + @YEAR + '''''
+			AND JE_SOURCE <> ''''Consolidation''''
+			--AND JE_SOURCE <> ''''MassAllocation'''' -- Commented 6/7/18 to add Insurance Mass Allocation Journals
+			--AND LINE_ATTRIBUTE11 IS NOT NULL
+		ORDER BY  LINE_EFFECTIVE_DATE'')';
+EXEC sp_executesql @SQL3;
+
+--COMPANY 54 SG&A--
+SET @SQL5 = 'INSERT INTO dbo.tblOracleGL 
+SELECT * 
+FROM OPENQUERY(ORACLEPROD, ''
+		SELECT LINE_ACCT_COMBO, JE_SOURCE, JE_CATEGORY, BATCH_NAME, HEADER_NAME, PERIOD_NAME, LINE_JE_LINE_NUM, LINE_EFFECTIVE_DATE, LINE_DESCRIPTION
+			, LINE_ATTRIBUTE11, LINE_REFERENCE_4, LINE_ATTRIBUTE2, CURRENCY_CODE
+			, LINE_ACCOUNTED_DR
+			, LINE_ACCOUNTED_CR
+			, LINE_REFERENCE_10
+			, SEGMENT1, SEGMENT2, SEGMENT3, SEGMENT4, SEGMENT5, SEGMENT6, SEGMENT7, ''''SGA''''
+		FROM AJC_GL_JE_LINES_V 
+		WHERE LINE_ACCT_COMBO LIKE ''''54.6%''''
+			AND PERIOD_NAME LIKE ''''CAL%-' + @YEAR + '''''
+			AND JE_SOURCE <> ''''Consolidation''''
+			--AND JE_SOURCE <> ''''MassAllocation'''' -- Commented 6/7/18 to add Insurance Mass Allocation Journals
+			--AND LINE_ATTRIBUTE11 IS NOT NULL
+		ORDER BY  LINE_EFFECTIVE_DATE'')';
+
+
+EXEC sp_executesql @SQL5;
+
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[spAJCDW_LoadOracleGL]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

@@ -1,0 +1,148 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_06-UPDTFACTLOADFILE]    Script Date: 12/26/2019 10:11:47 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[sp-AJCDW_06-UPDTFACTLOADFILE]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+/*
+05/17/2019 - SA - Added Error Logging
+
+*/
+
+--------------------
+-- Load File Data --
+--------------------
+DELETE
+FROM tblFile
+WHERE ShipmentID Not In 
+(SELECT ShipmentID FROM tblShipment);
+
+
+ -- Shipment --
+---------------
+INSERT INTO tblFile
+SELECT DISTINCT ShipmentID
+      , RefNo
+	  , ShpFileOpenDate
+      , ShpShipDate
+	  , ShpDelivDate
+      , DATEPART(YEAR, ShpShipDate) AS SHPYEAR
+      , DATEPART(QUARTER, ShpShipDate) AS SHPQRTR
+      , DATEPART(MONTH, ShpShipDate) AS SHPMONTH
+      , DATEPART(WEEK, ShpShipDate) AS SHPWEEK
+	  , DATENAME(WEEKDAY, ShpShipDate) AS SHPWEEKDAY
+	  , DATEPART(YEAR, ShpDelivDate) AS DELYEAR
+      , DATEPART(QUARTER, ShpDelivDate) AS DELQRTR
+      , DATEPART(MONTH, ShpDelivDate) AS DELMONTH
+      , DATEPART(WEEK, ShpDelivDate) AS DELWEEK
+      , DATENAME(WEEKDAY, ShpDelivDate) AS DELWEEKDAY
+	  , DATEPART(YEAR, ShpFileOpenDate) AS OPENYEAR
+      , DATEPART(QUARTER, ShpFileOpenDate) AS OPENQRTR
+      , DATEPART(MONTH, ShpFileOpenDate) AS OPENONTH
+      , DATEPART(WEEK, ShpFileOpenDate) AS OPENWEEK
+	  , DATENAME(WEEKDAY, ShpFileOpenDate) AS OPENWEEKDAY
+	  , NULL
+	  , NULL
+	  , NULL
+	  , NULL
+      ,[FK_SystemID]
+FROM tblShipment
+WHERE ShipmentID NOT IN (SELECT ShipmentID FROM tblFile);
+
+
+---------------------------
+--        Imports       ---
+---------------------------
+UPDATE tblFile
+SET ACCTPERIODNAME = PERIOD_NAME, ACCTYR = PERIOD_YEAR, ACCTQTR = QUARTER_NUM, ACCTMONTH = PERIOD_NUM
+FROM tblFile f
+	INNER JOIN (
+		SELECT s.ShipmentID, s.RefNo, s.ShpLOB, s.ShpShipDate, s.ShpDelivDate, s.FK_ShipmentTypeID, V.*
+		FROM tblShipment s
+		CROSS APPLY (SELECT DISTINCT PERIOD_NAME, PERIOD_YEAR, QUARTER_NUM, PERIOD_NUM FROM tblOracleCalendar oc 
+					  WHERE s.ShpDelivDate BETWEEN oc.START_DATE AND oc.END_DATE) V
+		WHERE (s.FK_ShipmentTypeID = 2 OR s.FK_ShipmentTypeID IS NULL)
+	) so ON f.ShipmentID = so.ShipmentID
+WHERE f.ACCTPERIODNAME IS NULL;
+
+---------------------------
+--       Exports         --
+---------------------------
+UPDATE tblFile
+SET ACCTPERIODNAME = PERIOD_NAME, ACCTYR = PERIOD_YEAR, ACCTQTR = QUARTER_NUM, ACCTMONTH = PERIOD_NUM
+FROM tblFile f
+	INNER JOIN (
+		SELECT s.ShipmentID, s.RefNo, s.ShpLOB, s.ShpShipDate, s.ShpDelivDate, s.FK_ShipmentTypeID, V.*
+		FROM tblShipment s
+		CROSS APPLY (SELECT DISTINCT PERIOD_NAME, PERIOD_YEAR, QUARTER_NUM, PERIOD_NUM FROM tblOracleCalendar oc 
+              WHERE s.ShpShipDate BETWEEN oc.START_DATE AND oc.END_DATE) V
+		WHERE (s.FK_ShipmentTypeID IN (1,3,4,5))
+	) so ON f.ShipmentID = so.ShipmentID
+WHERE f.ACCTPERIODNAME IS NULL;
+
+
+-- Update Foreign Keys --
+-------------------------
+UPDATE tblShipment
+SET fk_fileid = f.FileID
+FROM tblShipment s
+    INNER JOIN tblFile f
+		ON s.ShipmentID = f.ShipmentID AND s.FK_SystemID = f.fk_systemid
+WHERE s.FK_FileID IS NULL;
+
+
+-- Insert Oracle Accounts --
+----------------------------
+INSERT INTO tblOracleAccounts
+SELECT * 
+FROM OPENQUERY(ORACLEPROD, '
+	SELECT DISTINCT FLEX_VALUE,DESCRIPTION--,SUMMARY_FLAG,FLEX_VALUE_SET_ID,PARENT_FLEX_VALUE 
+	FROM FND_FLEX_VALUE_CHILDREN_V 
+	WHERE FLEX_VALUE_SET_ID=1000006 
+	')
+WHERE FLEX_VALUE NOT IN (SELECT FLEX_VALUE FROM tblOracleAccounts);
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp-AJCDW_06-UPDTFACTLOADFILE]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

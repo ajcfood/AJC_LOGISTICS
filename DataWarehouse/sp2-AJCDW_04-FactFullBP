@@ -1,0 +1,143 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[sp2-AJCDW_04-FactFullBP]    Script Date: 5/21/2019 11:10:03 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[sp2-AJCDW_04-FactFullBP]
+
+AS
+BEGIN
+
+SET NOCOUNT ON;
+
+
+--Commented out proc on 4/24/19 by Shakeeb Ali because server USDCFAPBG01 is no longer active.
+/*
+---------
+--  BP --
+---------
+
+
+select *
+into #tmp2
+FROM OPENQUERY([USDCFAPBG01], '
+	select * from StgAJCDW.dbo.tblStgBPShipment
+');
+
+
+-- LOAD SHIPMENT DATA --
+------------------------
+insert into tblshipment
+select *
+from #tmp2;
+
+
+-- LOAD INVOICE DATA --
+-----------------------
+insert into [AJCDW].[dbo].[tblInvoice]
+select t2.shipment_id, 'BP'+CONVERT(varchar,t2.shipment_id) as refno, t2.bookingnumbe as invno, t11.LINE_EFFECTIVE_DATE as invdate, NULL, NULL
+	, null, t11.OREVENUE, t11.OCOST, t11.OREVENUE-t11.OCOST AS GP
+		, t11.PERIOD_NAME, NULL, NULL, NULL
+		, t11.INV_TYPE, t11.LOB
+		, NULL, NULL, 3
+from #tmp2 t2
+inner join tblOracleGLCleansed t11
+on 'BP'+CONVERT(varchar,t2.shipment_id) = t11.LINE_ATTRIBUTE11
+order by 'BP'+CONVERT(varchar,t2.shipment_id);
+
+
+DROP TABLE #tmp2
+
+
+-------------------------
+-- Update Foreign Keys --
+-------------------------
+
+-- Division --
+--------------
+UPDATE tblShipment
+SET fk_divid = di.DivisionID
+FROM tblShipment sh
+    INNER JOIN tblDiv di
+    ON (sh.ShpDivID = di.DivisionNum
+		AND sh.ShpLOB = di.LOBNum)
+WHERE sh.FK_DivID IS NULL AND sh.ShpDivID <> '' AND sh.FK_SystemID = 3; 
+
+
+-- Customer --
+--------------
+UPDATE tblShipment
+SET fk_custmasterid = cm.CustMasterID
+FROM tblShipment sh
+    INNER JOIN tblCustMaster cm
+		ON sh.ShpAccnt = cm.CustMasterNum AND sh.FK_SystemID = cm.fk_systemid
+WHERE LTRIM(RTRIM(sh.ShpAccnt)) <> '' AND sh.FK_SystemID = 3;
+
+
+-- Consignee --
+---------------
+UPDATE tblShipment
+SET fk_consgid = cg.ConsgID
+FROM tblShipment sh
+    INNER JOIN tblConsg cg
+		ON sh.ShipmentID = cg.ConsgFileNum AND sh.FK_SystemID = cg.fk_systemid
+			AND sh.ShpConsg = cg.ConsgName
+WHERE sh.FK_SystemID = 3;
+
+
+-- Shipper --
+-------------
+UPDATE tblShipment
+SET fk_shipperid = s.ShipperID
+FROM tblShipment sh
+    INNER JOIN tblShipper s
+		ON sh.ShipmentID = s.ShipperFileNum AND sh.FK_SystemID = s.fk_systemid
+			AND sh.ShpExporter = s.ShipperName
+WHERE sh.FK_SystemID = 3;
+
+
+-- Sales Person --
+------------------
+UPDATE tblShipment
+SET fk_salespid = sp.salespid
+FROM tblShipment sh
+    INNER JOIN tblCustMaster cm
+		ON sh.ShpAccnt = cm.CustMasterNum AND sh.FK_SystemID = cm.fk_systemid
+    INNER JOIN tblSalesP sp
+		ON cm.salesman = sp.salespcode AND cm.fk_systemid = sp.FK_SystemID
+WHERE LTRIM(RTRIM(sh.ShpAccnt)) <> '' AND sh.FK_SystemID = 3; 
+
+
+UPDATE tblShipment
+SET fk_salespid = sp.salespid
+FROM tblShipment sh
+	INNER JOIN tblSalesP sp
+		ON sh.ShpSalesP = sp.SalesPName AND sh.FK_SystemID = sp.fk_systemid
+WHERE sh.[FK_SalesPID] is null and ltrim(rtrim(sh.ShpSalesP)) <> '' and sh.[FK_SystemID] = 3;
+
+
+-- Vendor --
+------------
+UPDATE tblShipment
+SET fk_vendid = v.vendorid
+FROM tblShipment sh
+    INNER JOIN tblVendor v
+		ON sh.ShpCarrier = v.VendorNum AND sh.FK_SystemID = v.fk_systemid
+WHERE LTRIM(RTRIM(sh.ShpCarrier)) <> '' AND sh.FK_SystemID = 3;
+
+
+-- Insert Container Contents --
+-------------------------------
+insert into tblContainerContents
+select [ContentsNum], [ContConWeight], [ContConPieces], [ContConPieceType], [ContConValue], [ContConUnits], [ContConUnitType]
+      , [ContConDesc], [FileNo], [ContRateAs], [ContUnitPack], [FK_SystemID]
+FROM OPENQUERY([USDCFAPBG01], '
+	select * from StgAJCDW.dbo.tblStgContainerContents
+	');
+
+*/
+END
+

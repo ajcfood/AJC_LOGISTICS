@@ -1,0 +1,746 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[sp-AJCDW_04-UPDTFACTCSA]    Script Date: 12/14/2020 08:54:37 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[sp-AJCDW_04-UPDTFACTCSA]
+
+AS
+BEGIN TRY
+BEGIN
+
+SET NOCOUNT ON;
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+/*
+
+-- 05/17/2019 SA - Added Load Intial Email Invoice Sent Date/Time
+-- 05/17/2019 SA - Added Error Logging
+-- 05/20/2019 SA - Combined Handling Station and Housebill from  [AirTrak].[dbo].tbl_ShipmentHeader as ShpMaster into tblShipment 
+-- 05/20/2019 SA - Added columns SailDate, DeliveryDate, AgingIssue, InvRev, OracleInvNo, CSAShipNo, CustName to tblTrackingNotes and insert into tblTrackingNotes
+
+*/
+
+Declare @StartDate VARCHAR(10);
+
+Set @StartDate = datepart(yyyy, getdate());
+
+Select @StartDate = '1/1/' + convert(varchar, @StartDate-1);
+
+DECLARE @CYEAR CHAR(4);
+DECLARE @FYEAR CHAR(4);
+
+SELECT @CYEAR = CONVERT(CHAR, DATEPART(YYYY, GETDATE()));
+SELECT @FYEAR = @CYEAR+1;
+
+
+---------------
+--    CSA    --
+---------------
+
+
+-- Insert Orders --
+---------------------
+
+-- Handlingstation = destination, controllingstation = origin
+-- Stationcity, Stationstate from tblStation for both origin and destination
+
+select *
+into #tmp1
+FROM OPENQUERY(USDCFCSASQL01, '
+select ''70''+convert(varchar,s.PK_OrderNo) as PK_OrderNo, s.HandlingStation, s.ControllingStation, s.Housebill, s.FK_ControlCustomerNo
+	, 70 as Div, 76 as LOB, s.Carrier, '''' as Exporter, s.FK_ControlCustomerNo as Cons, s.FK_Salesperson, s.AcctManager as Controller 
+	, CONVERT(VARCHAR(50), '''') as BLNum
+	, s.FK_ModeID as Mode
+	, '''' as Pier, '''' as Cont
+	, CONVERT(VARCHAR(50), NULL) as OriginCity, CONVERT(VARCHAR(5),NULL) as OriginState
+	, CONVERT(VARCHAR(50),NULL) as DelivCity, CONVERT(VARCHAR(5),NULL) as DelivState
+	, s.HandlingStation as PortofDsc, s.ControllingStation as PortofLoad, '''' as Vessel, '''' as CargoOrig
+	, '''' as AESITN, '''' as AESStat
+	, s.Status
+	, 0 as GP, 0 as INVGP, s.LastUpdate
+from [AirTrak].[dbo].tbl_ShipmentHeader s
+--where s.Status <> ''C'' and s.Housebill <> ''0''
+');
+
+--STEPS 2 -5 added by Salah on 2/25/19 to pull Customer PO Numbers from CSA and place them in BLNum field in tblshipment--
+
+--STEP #2: Get distinct reference type for each load
+select *
+INTO #tmp5
+FROM OPENQUERY(USDCFCSASQL01, '
+select r.*
+from [AirTrak].[dbo].tbl_References r INNER JOIN
+	(
+	SELECT FK_OrderNo, MIN(PK_ReferenceNo) PKRefNo
+	from [AirTrak].[dbo].tbl_References
+	GROUP BY FK_OrderNo
+	) r1 ON r1.FK_OrderNo = r.FK_OrderNo AND r.PK_ReferenceNo = r1.PKRefno
+--WHERE r.FK_OrderNo = ''20930''
+ORDER BY FK_OrderNo
+')
+
+--STEP #3: Select only reference types of PO or SO from temp 2 table
+select *
+INTO #tmp6
+FROM OPENQUERY(USDCFCSASQL01, '
+select *
+from [AirTrak].[dbo].tbl_References r
+WHERE r.CustomerType = ''B'' and FK_RefTypeID IN (''PO'', ''SO'')
+--	AND FK_OrderNo = ''20930''
+')
+
+--STEP #4: Join temp three and temp two table results together by PK_ReferenceNo to get final results to use to update temp one table.
+SELECT t6.PK_ReferenceNo, t6.FK_OrderNo, t6.CustomerType, t6.ReferenceNo, t6.FK_RefTypeID
+INTO #tmp7
+from #tmp6 t6
+JOIN #tmp5 t5 on t6.PK_ReferenceNo = t5.PK_ReferenceNo
+ORDER BY t6.FK_OrderNo
+
+
+--STEP#5: Update #tmp1, set the BLNum to the value from temp 4 table where the match is on the Order Number from both tables.
+UPDATE #tmp1 
+SET BLNum = t7.ReferenceNo
+From #tmp1 t1
+join #tmp7 t7
+on PK_OrderNo = '70'+convert(varchar,t7.FK_OrderNo)
+
+update #tmp1
+set DelivCity = s.Stationcity, DelivState = s.Stationstate
+--select PK_OrderNo, HandlingStation, ControllingStation, Housebill, FK_ControlCustomerNo, Div, LOB, Carrier, Exporter, Cons, FK_Salesperson
+	--, Controller, BLNum, Pier, Cont, Stationcity as DelivCity, Stationstate as DelivState, PortofDsc, PortofLoad, Vessel, CargoOrig, AESITN, AESStat, GP, INVGP
+from #tmp1 t1
+inner join tblStations s
+on t1.Handlingstation = s.Stationnum;
+
+
+update #tmp1
+set OriginCity = s.Stationcity, OriginState = s.Stationstate
+--select PK_OrderNo, HandlingStation, ControllingStation, Housebill, FK_ControlCustomerNo, Div, LOB, Carrier, Exporter, Cons, FK_Salesperson
+--	, Controller, BLNum, Pier, Cont, Stationcity as OriginCity, Stationstate as OriginState, PortofDsc, PortofLoad, Vessel, CargoOrig, AESITN, AESStat, GP, INVGP
+from #tmp1 t1
+inner join tblStations s
+on t1.ControllingStation = s.Stationnum;
+
+
+select *
+into #tmp2
+FROM OPENQUERY(USDCFCSASQL01, '
+select 	''70''+convert(varchar,i.FK_OrderNo) as FK_OrderNo, i.FK_StationId+convert(varchar(50),i.Housebill)+''0''+convert(varchar(50),i.InvoiceSeqNo) as invoicenum
+		, i.PODDateTime as InvoiceDate
+		, case when i.APARCode = ''C'' then i.DueDate end as Inv_DueDate
+		, case when i.APARCode = ''V'' then i.DueDate end as Vendor_DueDate
+		, case when i.APARCode = ''C'' then i.Total end as Inv_Amount
+		, case when i.APARCode = ''V'' then i.InvoiceAmount end as Vendor_Amount
+		, i.Weight as Lbs, i.Quantity as TEU
+		, case when i.aparcode = ''C'' then i.Total else 0 end as TOT_Sale
+		, case when i.aparcode = ''V'' then i.InvoiceAmount else 0 end as TOT_Cost
+		, i.Currency
+		, i.ShipmentDateTime as ShipDate
+from [AirTrak].[dbo].tbl_interfaceAPAR i
+order by FK_OrderNo
+');
+
+
+select distinct fk_orderno, invoicenum, max(InvoiceDate) as InvoiceDate, max(ShipDate) as ShipDate
+into #tmp3
+from #tmp2 
+where InvoiceDate <> '1900-01-01 00:00:00.000'
+group by fk_orderno, invoicenum
+order by fk_orderno;
+
+
+select fk_orderno
+	, SUM(Inv_Amount) as inv_amount
+	, SUM(tot_sale) as tot_sale 
+	, SUM(tot_cost) as tot_cost
+	, (SUM(tot_sale) - SUM(tot_cost)) as gp
+into #tmp4
+from #tmp2
+group by fk_orderno
+order by fk_orderno;
+
+
+-- LOAD SHIPMENT DATA --
+------------------------
+delete
+from tblShipment
+where ShipmentID in (select PK_OrderNo from #tmp1 t1
+						inner join #tmp3 t3
+							on t1.PK_OrderNo = t3.FK_OrderNo
+						inner join #tmp4 t4
+							on t1.PK_OrderNo = t4.FK_OrderNo
+					where t3.shipdate >= @StartDate)
+and FK_SystemID = 1;
+
+insert into tblShipment
+select distinct t1.PK_OrderNo, '70-'+convert(varchar,t1.Housebill) as refno, t1.HandlingStation as bookno, t3.invoicenum, t1.FK_ControlCustomerNo as account, t1.Div, t1.LOB, t1.Carrier, t1.Exporter, t1.Cons, t1.FK_Salesperson
+	, t1.Controller, t1.BLNum, t1.HandlingStation + ' ' + cast(t1.Housebill as varchar(10)), t1.Mode --NULL
+	, t1.Pier, t1.Cont, t1.OriginCity, t1.OriginState, t1.DelivCity, t1.DelivState, t1.PortofDsc, t1.PortofLoad, t1.Vessel, t1.CargoOrig, t1.AESITN, t1.AESStat
+	, 0 as teu
+	, t4.tot_sale, t4.tot_cost, 0, t4.gp, 0
+	, t1.LastUpdate
+	, t3.invoicedate as deliverydate, t3.shipdate, t1.LastUpdate, GETDATE() AS LOADEDDATE, t1.Status
+	, 1 as SysID, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+from #tmp1 t1
+	inner join #tmp3 t3
+		on t1.PK_OrderNo = t3.FK_OrderNo
+	inner join #tmp4 t4
+		on t1.PK_OrderNo = t4.FK_OrderNo
+where t3.shipdate >= @StartDate
+order by t1.PK_OrderNo;
+
+
+-- LOAD INVOICE DATA --
+-----------------------
+delete
+from tblInvoice
+where ShipmentID IN (select PK_OrderNo from #tmp1 t1
+						inner join #tmp3 t3
+							on t1.PK_OrderNo = t3.FK_OrderNo
+						inner join tblOracleGLCleansed t11
+							on '70-'+convert(varchar,t1.Housebill) = t11.LINE_ATTRIBUTE11
+					where t3.shipdate >= @StartDate)
+AND FK_SystemID = 1;
+
+insert into tblInvoice
+select t1.PK_OrderNo, '70-'+convert(varchar,t1.Housebill) as refno, t3.invoicenum, t11.LINE_EFFECTIVE_DATE, NULL, NULL
+	, null, t11.OREVENUE, t11.OCOST, t11.OREVENUE - t11.OCOST AS GP
+	, t11.PERIOD_NAME, NULL, NULL, NULL
+	, t11.INV_TYPE, t11.LOB
+	, NULL, NULL, 1
+from #tmp1 t1
+	inner join #tmp3 t3
+		on t1.PK_OrderNo = t3.FK_OrderNo
+		inner join tblOracleGLCleansed t11
+		on '70-'+convert(varchar,t1.Housebill) = t11.LINE_ATTRIBUTE11
+where t3.shipdate >= @StartDate	
+order by t1.PK_OrderNo;
+
+
+-- Update bogus Delivery dates
+Update tblShipment
+Set ShpDelivDate = ShpShipDate
+Where ShpDelivDate = '1899-12-30 00:00:00.000'
+	and FK_SystemID = 1;
+
+Update tblShipment
+Set ShpDelivDate = convert(datetime, replace(ShpDelivDate, datepart(YYYY, ShpDelivDate), datepart(YYYY, ShpShipDate)), 104)
+Where ShpDelivDate > '1899-12-30 00:00:00.000' and ShpDelivDate < '2012-11-01'
+	and FK_SystemID = 1;
+
+Update tblInvoice
+Set InvDate = ShpDelivDate
+From tblInvoice i
+	inner join tblShipment s
+		on i.ShipmentID = s.ShipmentID
+Where i.InvDate = '1899-12-30 00:00:00.000'
+	and s.FK_SystemID = 1;
+
+
+-- Change Delivery Date for dates set too much in the future
+Update tblShipment
+Set ShpDelivDate = convert(datetime, replace(ShpDelivDate, datepart(YYYY, ShpDelivDate), datepart(YYYY, ShpShipDate)), 104)
+Where ShpDelivDate > '12/31/' + @FYEAR
+	and FK_SystemID = 1;
+
+
+--------------------
+-- Load File Data --
+--------------------
+
+DELETE
+FROM tblFile
+WHERE ShipmentID in (select PK_OrderNo from #tmp1 t1
+						inner join #tmp3 t3
+							on t1.PK_OrderNo = t3.FK_OrderNo
+						inner join #tmp4 t4
+							on t1.PK_OrderNo = t4.FK_OrderNo
+					where t3.shipdate >= @StartDate)
+and FK_SystemID = 1;
+
+ -- Shipment --
+--------------
+INSERT INTO tblFile
+SELECT DISTINCT ShipmentID
+      , RefNo
+	  , ShpFileOpenDate
+      , ShpShipDate
+	  , ShpDelivDate
+      , DATEPART(YEAR, ShpShipDate) AS SHPYEAR
+      , DATEPART(QUARTER, ShpShipDate) AS SHPQRTR
+      , DATEPART(MONTH, ShpShipDate) AS SHPMONTH
+      , DATEPART(WEEK, ShpShipDate) AS SHPWEEK
+	  , DATENAME(WEEKDAY, ShpShipDate) AS SHPWEEKDAY
+	  , DATEPART(YEAR, ShpDelivDate) AS DELYEAR
+      , DATEPART(QUARTER, ShpDelivDate) AS DELQRTR
+      , DATEPART(MONTH, ShpDelivDate) AS DELMONTH
+      , DATEPART(WEEK, ShpDelivDate) AS DELWEEK
+      , DATENAME(WEEKDAY, ShpDelivDate) AS DELWEEKDAY
+	  , DATEPART(YEAR, ShpFileOpenDate) AS OPENYEAR
+      , DATEPART(QUARTER, ShpFileOpenDate) AS OPENQRTR
+      , DATEPART(MONTH, ShpFileOpenDate) AS OPENONTH
+      , DATEPART(WEEK, ShpFileOpenDate) AS OPENWEEK
+	  , DATENAME(WEEKDAY, ShpFileOpenDate) AS OPENWEEKDAY
+	  , NULL
+	  , NULL
+	  , NULL
+	  , NULL
+      ,[FK_SystemID]
+FROM tblShipment
+WHERE ShipmentID NOT IN (SELECT ShipmentID FROM tblFile)
+	AND FK_SystemID = 1;
+
+
+-------------------------
+-- Update Foreign Keys --
+-------------------------
+
+-- Update Division --
+---------------------
+UPDATE tblShipment
+SET fk_divid = di.DivisionID
+FROM tblShipment sh
+	INNER JOIN #tmp1 t1
+		ON sh.ShipmentID = t1.PK_OrderNo
+	INNER JOIN tblDiv di
+		ON (sh.ShpDivID = di.DivisionNum
+			AND sh.ShpLOB = di.LOBNum)
+WHERE LTRIM(RTRIM(sh.ShpDivID)) <> '' AND LTRIM(RTRIM(sh.ShpLOB)) <> '' AND sh.FK_SystemID = 1; 
+
+
+-- Update Customer --
+---------------------
+UPDATE tblShipment
+SET fk_custmasterid = c.CustMasterID
+FROM tblShipment s
+	INNER JOIN #tmp1 t1
+		ON s.ShipmentID = t1.PK_OrderNo
+	INNER JOIN AJCDW.dbo.tblCustMaster c
+		ON s.ShpAccnt = c.CustMasterNum and s.FK_SystemID = c.FK_SystemID
+WHERE LTRIM(RTRIM(s.ShpAccnt)) <> '' and c.FK_SystemID = 1 and c.[CustType] = 'Customer';
+
+
+-- Update Consignee --
+----------------------
+UPDATE tblShipment
+SET ShpConsg = c.CustName
+FROM tblShipment s
+	INNER JOIN #tmp1 t1
+		ON s.ShipmentID = t1.PK_OrderNo
+	INNER JOIN AJCDW.dbo.tblCustMaster c
+		ON s.ShpAccnt = c.CustMasterNum and s.FK_SystemID = c.FK_SystemID
+WHERE LTRIM(RTRIM(s.ShpAccnt)) <> '' and c.FK_SystemID = 1 and c.[CustType] = 'Customer';
+
+
+-- Update Salesperson --
+------------------------
+UPDATE tblShipment
+SET fk_salespid = sp.salespid
+FROM tblShipment sh
+	INNER JOIN #tmp1 t1
+		ON sh.ShipmentID = t1.PK_OrderNo
+    INNER JOIN tblSalesP sp
+		ON sh.ShpSalesP = sp.salespcode AND sh.FK_SystemID = sp.fk_systemid
+WHERE LTRIM(RTRIM(sh.ShpSalesP)) <> '' AND sh.FK_SystemID = 1; 
+
+
+-- Update Stations --
+---------------------
+UPDATE tblShipment
+SET fk_stationid = st.StationID
+FROM tblShipment sh
+	INNER JOIN #tmp1 t1
+		ON sh.ShipmentID = t1.PK_OrderNo
+    INNER JOIN tblStations st
+		ON sh.ShpBkgNum = st.StationNum AND sh.FK_SystemID = st.fk_systemid
+WHERE LTRIM(RTRIM(sh.RefNo)) <> '' AND sh.FK_SystemID = 1; 
+
+
+DROP TABLE #tmp1;
+DROP TABLE #tmp2;
+DROP TABLE #tmp3;
+DROP TABLE #tmp4;
+
+
+-- Insert Container Contents --
+-------------------------------
+insert into tblContainerContents
+select t2.*
+from tblShipment s
+	inner join (select *
+				FROM OPENQUERY(USDCFCSASQL01, '
+					select ''70''+convert(varchar,sd.FK_OrderNo) as FK_OrderNo, sd.Weight, sd.Pieces, sd.FK_PieceTypeId, sd.DeclareValue, sd.CubicFeet, ''Cubic Feet'' as ContUnitType
+					, sd.Description, ''70''+convert(varchar,sd.FK_OrderNo)  as FileNo, '''' as RateAs, '''' as UnitPack, 1 as SysID
+					from [AirTrak].[dbo].tbl_ShipmentDesc sd
+					order by FK_OrderNo
+				')) t2
+	on s.ShipmentID = t2.FK_OrderNo
+where t2.FK_OrderNo not in (select ContentsNum from tblContainerContents)
+	and s.FK_SystemID = 1;
+
+
+--Load Intial Email Invoice Sent Date/Time
+
+IF OBJECT_ID ('TEMPDB..#AddNewRecords') IS NOT NULL  DROP TABLE #AddNewRecords
+
+BEGIN
+
+			WITH CTE AS (
+							select MIN([PK_NoteNo]) [PK_NoteNo], FK_OrderNo
+							from USDCFCSASQL01.AirTrak.dbo.tbl_TrackingNotes x
+							where (
+										note like 'Invoice Emailed to:%' 
+									 OR note like 'Print Invoice%'
+									 OR note like 'Invoice 00 Printed%'
+								  )
+							and [DateTimeEntered] >= '4/1/19' 
+							GROUP BY FK_OrderNo
+						)
+
+			SELECT x.[PK_NoteNo], '70' + convert(varchar,x.[FK_OrderNo]) FK_OrderNo, [DateTimeEntered], [Note], [FK_UserId]
+			INTO	#AddNewRecords
+			FROM USDCFCSASQL01.AirTrak.dbo.tbl_TrackingNotes x
+			inner join CTE y on y.[PK_NoteNo] = x.[PK_NoteNo]
+			order by [FK_OrderNo]
+
+END
+
+INSERT INTO [AJCDW].dbo.[tblTrackingNotes] (
+												[PK_NoteNo], [FK_OrderNo], [DateTimeEntered], [Note], [FK_UserId], [SailDate], [DeliveryDate], [AgingIssue], 
+												[InvRev], [OracleInvNo], [CSAShipNo], [CustName]
+										   )
+
+SELECT				x.[PK_NoteNo], x.[FK_OrderNo], x.[DateTimeEntered], SUBSTRING(x.[Note],1,350), x.[FK_UserId] /*Took substring of 350 because that is the max that column will allow*/,
+					
+					ts.ShpShipDate, ts.ShpDelivDate, DATEDIFF(DD, ts.ShpDelivDate, x.DateTimeEntered), z.InvRevenue, orad.Trx_Number, ts.ShpMaster, orad.CUSTOMER_NAME
+FROM				#AddNewRecords x
+LEFT OUTER JOIN		ajcdw.dbo.tblTrackingNotes tn on tn.PK_NoteNo = x.PK_NoteNo
+INNER JOIN			ajcdw.dbo.tblShipment ts ON ts.ShipmentID = x.FK_OrderNo
+INNER JOIN			ajcdw.dbo.tblOracleARData orad ON orad.PURCHASE_ORDER = ts.ShpMaster
+CROSS APPLY			(
+						SELECT	ShipmentID, SUM(InvRevenue) InvRevenue
+						FROM	ajcdw.dbo.tblInvoice ti
+						WHERE ti.ShipmentID = ts.ShipmentID
+						GROUP BY ShipmentID
+					) z
+
+WHERE				tn.PK_NoteNo IS NULL
+AND					ts.ShpDelivDate IS NOT NULL;
+
+
+-- PIVOT MILESTONE DETAILS FOR JOIN WITH LOAD DETAILS --
+-------------------------------
+
+TRUNCATE TABLE AJCDW.dbo.tblCSARevRecog 
+
+INSERT INTO  AJCDW.dbo.tblCSARevRecog (
+										[PK_OrderNo], [HandlingStation], [Housebill], [ShipmentDateTime], [ScheduledDateTime], [CustName], [APARCode], [ChargeCode], [Descrption], [Total], InvoiceDate 
+										,[New Shipment Milestone], [Shipment Picked Up Milestone], [Consolidation Milestone], [In Transit Inland Milestone], [Arrvied Origin Port Milestone], 
+										[In Transit Ocean Milestone], [Arrived Destination Port Milestone], [Out For Delivery Milestone], [Delivered Milestone] 
+									  )
+SELECT		 x.*
+			,[New shipment] AS [New Shipment Milestone]
+			,[Shipment Picked Up] AS [Shipment Picked Up Milestone]
+			,Consolidation AS [Consolidation Milestone]
+			,[In Transit Inland] AS [In Transit Inland Milestone]
+			,[Arrived Origin Port] AS [Arrvied Origin Port Milestone]
+			,[In Transit Ocean] AS [In Transit Ocean Milestone]
+			,[Arrived Destination Port] AS [Arrived Destination Port Milestone]
+			,[Out For Delivery] AS [Out For Delivery Milestone]
+			,Delivered AS [Delivered Milestone]
+FROM	(
+			SELECT	sh.PK_OrderNo, sh.HandlingStation, sh.Housebill, sh.ShipmentDateTime, sh.ScheduledDateTime, c.CustName, sa.APARCode
+					, CASE WHEN sa.APARCode = 'C' THEN sa.ChargeCode WHEN sa.APARCode = 'V' THEN sa.FK_ServiceId ELSE NULL END AS ChargeCode
+					, CASE WHEN sa.APARCode = 'C' THEN sa.Description WHEN sa.APARCode = 'V' THEN vs.Service ELSE NULL END AS Descrption
+					, sa.Total, x.InvoiceDate
+			from			USDCFCSASQL01.[AirTrak].[dbo].tbl_ShipmentHeader sh
+			inner join		USDCFCSASQL01.[AirTrak].[dbo].tbl_ShipmentAPAR sa on sh.PK_OrderNo = sa.FK_OrderNo
+			cross apply		(
+								SELECT TOP 1 PODDateTime InvoiceDate 
+								FROM USDCFCSASQL01.[AirTrak].[dbo].tbl_InterfaceAPAR ia 
+								WHERE ia.FK_OrderNo = sa.FK_OrderNo
+								AND ISNULL(ia.PODDateTime,'1/1/1900') <> '1/1/1900'
+							) x 
+			inner join		USDCFCSASQL01.[AirTrak].[dbo].tbl_Customers c on c.PK_CustNo = sh.BillNo
+			left outer join USDCFCSASQL01.[AirTrak].[dbo].tbl_VendorServices vs on PK_ServiceId = sa.FK_ServiceId
+		 
+		) X
+INNER JOIN	 (
+						SELECT *
+						FROM (
+								SELECT FK_OrderNo, Description MilestoneDescription, EventDateTime
+								FROM USDCFCSASQL01.[AirTrak].[dbo].[tbl_ShipmentMilestone] sm
+								JOIN USDCFCSASQL01.[AirTrak].[dbo].tbl_Milestone m on m.FK_OrderStatusId = sm.FK_OrderStatusId
+
+							) as tp
+						PIVOT
+							(
+								   MAX(EventDateTime)
+								   FOR MilestoneDescription IN (
+																  [New shipment]
+																  ,[Shipment Picked Up]
+																  ,Consolidation
+																  ,[In Transit Inland]
+																  ,[Arrived Origin Port]
+																  ,[In Transit Ocean]
+																  ,[Arrived Destination Port]
+																  ,[Out For Delivery]
+																  ,Delivered
+																 )
+							) as pvt
+			) Y ON x.PK_OrderNo = y.FK_OrderNo
+ORDER BY	x.PK_OrderNo
+
+
+
+------CSA CUSTOMER INVOICE AGING BASED ON PRINTED DATE IN SYSTEM-------
+-----------------------------------------------------------------------
+
+
+--- Files where they have invoice printed or emailed ---
+--select *
+--into #tmp50
+--FROM OPENQUERY(USDCFCSASQL01, '
+--select MAX(PK_NoteNo) AS NOTENUM, t.FK_OrderNo, HOUSEBILL, MAX(DateTimeEntered) AS PRINTED_DATE
+----, CAST(t.Note as varchar(250)) NOTE
+--, DATEDIFF(dd,MAX(DateTimeEntered),getdate()) DaysSincePrinting
+--, MAX(i.PODDateTime) AS PODDATE
+--, CASE
+--	WHEN MAX(i.PODDateTime) <> ''1900-01-01 00:00:00.000'' THEN DATEDIFF(dd, MAX(i.PODDateTime),MAX(DateTimeEntered))
+--    ELSE DATEDIFF(dd,MAX(DateTimeEntered),GETDATE())
+--END AS PODLag
+--FROM [AirTrak].[dbo].tbl_TrackingNotes t
+--JOIN [AirTrak].[dbo].tbl_interfaceAPAR i on t.FK_OrderNo = i.FK_OrderNo
+--where CAST(Note as varchar(500)) LIKE ''Print Invoice(MAIN) Button Clicked from Costs/Billing Page''
+--	OR  CAST(Note as varchar(500)) LIKE ''Invoice 00 Printed%''
+--	--OR CAST(Note as varchar(500)) LIKE ''Invoice Emailed%''
+--GROUP BY t.FK_OrderNo, HOUSEBILL
+----, CAST(t.Note as varchar(250))
+--ORDER BY HOUSEBILL, PRINTED_DATE
+--');
+
+SELECT MAX(PK_NoteNo) AS NOTENUM, t.FK_OrderNo, i.FK_StationID, i.HOUSEBILL, MAX(DateTimeEntered) AS PRINTED_DATE
+--, CAST(t.Note as varchar(250)) NOTE
+, DATEDIFF(dd,MAX(DateTimeEntered),getdate()) DaysSincePrinting
+, MAX(i.PODDateTime) AS PODDATE
+, CASE
+       WHEN MAX(i.PODDateTime) <> '1900-01-01 00:00:00.000' THEN DATEDIFF(dd, MAX(i.PODDateTime),MAX(DateTimeEntered))
+    ELSE DATEDIFF(dd,MAX(DateTimeEntered),GETDATE())
+END AS PODLag
+into #tmp50
+FROM USDCFCSASQL01.[AirTrak].[dbo].tbl_TrackingNotes t
+JOIN USDCFCSASQL01.[AirTrak].[dbo].tbl_interfaceAPAR i on t.FK_OrderNo = i.FK_OrderNo
+INNER JOIN (
+				SELECT Pk_SeqNo, Housebill, FK_StationID, CreateDate, ROW_NUMBER() OVER (PARTITION BY HouseBill Order By PK_SeqNo DESC) RN
+				FROM USDCFCSASQL01.[AirTrak].[dbo].tbl_interfaceAPAR 
+			) x on x.Pk_SeqNo = i.Pk_SeqNo
+where (
+			 CAST(Note as varchar(500)) LIKE 'Print Invoice(MAIN) Button Clicked from Costs/Billing Page' 
+          OR CAST(Note as varchar(500)) LIKE 'Invoice 00 Printed%'
+	  )
+AND x.RN = 1
+GROUP BY t.FK_OrderNo, i.FK_StationID ,i.HOUSEBILL
+ORDER BY i.HOUSEBILL, PRINTED_DATE
+
+--- Files where have POD date but have not been printed or emailed from CSA ---
+
+select MAX(t.PK_NoteNo) AS NOTENUM, t.FK_OrderNo, i.FK_StationID, i.HOUSEBILL, NULL AS PRINTED_DATE
+       , DATEDIFF(dd,MAX(t.DateTimeEntered),getdate()) DaysSincePrinting
+       , MAX(i.PODDateTime) AS PODDATE
+       , CASE
+                 WHEN MAX(i.PODDateTime) <> '1900-01-01 00:00:00.000' AND MAX(t.DateTimeEntered) IS NOT NULL THEN DATEDIFF(dd,MAX(i.PODDateTime),MAX(t.DateTimeEntered))
+				 WHEN MAX(i.PODDateTime) <> '1900-01-01 00:00:00.000' AND MAX(t.DateTimeEntered) IS NULL THEN DATEDIFF(dd, GETDATE(),MAX(i.PODDateTime))
+              --ELSE CAST(GETDATE() - MAX(t.DateTimeEntered) AS INT)
+			  ELSE 0
+       END AS PODLag
+into #tmp52
+FROM                 USDCFCSASQL01.[AirTrak].[dbo].tbl_TrackingNotes t
+INNER JOIN           USDCFCSASQL01.[AirTrak].[dbo].tbl_interfaceAPAR i on t.FK_OrderNo = i.FK_OrderNo
+INNER JOIN (
+				SELECT Pk_SeqNo, Housebill, FK_StationID, CreateDate, ROW_NUMBER() OVER (PARTITION BY HouseBill Order By PK_SeqNo DESC) RN
+				FROM USDCFCSASQL01.[AirTrak].[dbo].tbl_interfaceAPAR 
+			) x on x.Pk_SeqNo = i.Pk_SeqNo
+LEFT OUTER JOIN      (
+                                  SELECT DISTINCT FK_OrderNo 
+                                  FROM   USDCFCSASQL01.[AirTrak].[dbo].tbl_TrackingNotes 
+                                  WHERE				CAST(Note as varchar(500)) LIKE 'Print Invoice(MAIN) Button Clicked from Costs/Billing Page'
+												OR  CAST(Note as varchar(500)) LIKE 'Invoice 00 Printed%'
+                                                --OR  CAST(Note as varchar(500)) LIKE 'Invoice Emailed%'
+                           ) t2 ON t2.FK_OrderNo = t.FK_OrderNo
+where t2.Fk_OrderNo IS NULL 
+AND x.RN = 1
+GROUP BY t.FK_OrderNo, i.HOUSEBILL, i.FK_StationID
+ORDER BY i.HOUSEBILL
+
+SELECT NOTENUM, FK_OrderNo, FK_StationID, HOUSEBILL, PRINTED_DATE, DaysSincePrinting, PODDATE,
+	NULL PODLag
+INTO #tmp54
+FROM #tmp52
+ORDER BY HOUSEBILL
+
+
+SELECT x.* INTO #tmp53 FROM
+(SELECT * from #tmp50
+UNION
+SELECT * from #tmp54) x
+
+/*
+SELECT * from #tmp50 where housebill = '33238'
+SELECT * from #tmp52 where housebill = '33238'
+SELECT * from #tmp53 order by housebill 
+SELECT * from #tmp54 order by housebill where housebill = '33238'
+DROP TABLE #tmp50
+DROP TABLE #tmp52
+DROP TABLE #tmp53
+DROP TABLE #tmp54
+*/
+
+SELECT a.CUSTOMER_NAME
+         ,c.STANDARD_TERMS_NAME
+         ,MAX(a.trx_Number) as TRX_NUM
+         ,t.HOUSEBILL
+		 ,FK_StationID 
+         ,t.PRINTED_DATE
+         ,t.DaysSincePrinting
+         ,t.PODDate
+         ,t.PODLag
+         , CASE
+                     WHEN STANDARD_TERMS_NAME = 'NET 30' THEN DATEADD(DD,30,PRINTED_DATE)
+                     WHEN STANDARD_TERMS_NAME = 'NET 45' THEN DATEADD(DD,45,PRINTED_DATE)
+                     WHEN STANDARD_TERMS_NAME = 'NET 60' THEN DATEADD(DD,60,PRINTED_DATE)
+                     WHEN STANDARD_TERMS_NAME = 'CIA' THEN PRINTED_DATE
+           ELSE PODDate
+           END AS PrintedAgingDate
+       ,SUM(a.AMOUNT_DUE_REMAINING) AS AMOUNT_DUE
+INTO #tmp51
+FROM #tmp53 t
+LEFT JOIN tblOracleARData a on t.HOUSEBILL = a.INTERFACE_HEADER_ATTRIBUTE1 and a.INTERFACE_HEADER_ATTRIBUTE1 NOT LIKE '%[a-z]%' and a.INTERFACE_HEADER_CONTEXT = 'CSA'
+LEFT JOIN tblOracleCustTerms c on c.CUSTOMER_ID = a.BILL_TO_CUSTOMER_ID
+where t.Housebill <> 0
+GROUP BY a.CUSTOMER_NAME,c.STANDARD_TERMS_NAME,t.HOUSEBILL,t.PRINTED_DATE,t.DaysSincePrinting,t.PODDate,t.PODLag,FK_StationID 
+ORDER BY t.Housebill
+
+
+/*
+SELECT * from #tmp51 order by housebill
+where TRX_NUM like '70-139507%'
+DROP TABLE #tmp51
+*/
+
+TRUNCATE TABLE RptCSAPrintAging
+
+INSERT INTO RptCSAPrintAging
+SELECT t51.*,
+	CASE
+		WHEN STANDARD_TERMS_NAME = 'NET 60' AND AMOUNT_DUE <> 0 THEN DATEDIFF(DD,PrintedAgingDate, GETDATE())
+		WHEN STANDARD_TERMS_NAME = 'NET 30' AND AMOUNT_DUE <> 0 THEN DATEDIFF(DD,PrintedAgingDate, GETDATE())
+		WHEN STANDARD_TERMS_NAME = 'NET 30-D' AND AMOUNT_DUE <> 0 THEN DATEDIFF(DD,PrintedAgingDate, GETDATE())
+		WHEN STANDARD_TERMS_NAME = 'NET 45' AND AMOUNT_DUE <> 0 THEN DATEDIFF(DD,PrintedAgingDate, GETDATE())
+		WHEN STANDARD_TERMS_NAME = 'CIA' AND AMOUNT_DUE <> 0 THEN DATEDIFF(DD,PRINTED_DATE, GETDATE())
+		WHEN STANDARD_TERMS_NAME = 'COD' AND AMOUNT_DUE <> 0 THEN DATEDIFF(DD,PODDate,GETDATE()) 
+		WHEN STANDARD_TERMS_NAME IS NULL THEN DATEDIFF(DD,PRINTED_DATE,GETDATE())
+	ELSE 0
+	END AS DaysOutstanding, NULL, NULL, NULL, NULL, NULL, NULL, NULL 
+	FROM #tmp51 t51
+
+
+update t50 set PODDateAdded = EventDateTime
+from RptCSAPrintAging t50
+inner join (
+				SELECT MAX(t.EventDateTime) EventDateTime, i.Housebill
+				FROM USDCFCSASQL01.[AirTrak].[dbo].tbl_TrackingNotes t 
+				INNER JOIN USDCFCSASQL01.[AirTrak].[dbo].tbl_interfaceAPAR i on t.FK_OrderNo = i.FK_OrderNo
+				INNER JOIN (
+								SELECT Pk_SeqNo, Housebill, FK_StationID, CreateDate, ROW_NUMBER() OVER (PARTITION BY HouseBill Order By PK_SeqNo DESC) RN
+								FROM USDCFCSASQL01.[AirTrak].[dbo].tbl_interfaceAPAR 
+							) x on x.Pk_SeqNo = i.Pk_SeqNo
+				WHERE x.RN = 1
+				and note like 'POD%'
+				group by i.housebill
+			) y on y.housebill = t50.housebill
+
+update t50 set InvoiceFinalized = EventDateTime
+from RptCSAPrintAging t50
+inner join (
+				SELECT MAX(t.EventDateTime) EventDateTime, i.Housebill
+				FROM USDCFCSASQL01.[AirTrak].[dbo].tbl_TrackingNotes t 
+				INNER JOIN USDCFCSASQL01.[AirTrak].[dbo].tbl_interfaceAPAR i on t.FK_OrderNo = i.FK_OrderNo
+				INNER JOIN (
+								SELECT Pk_SeqNo, Housebill, FK_StationID, CreateDate, ROW_NUMBER() OVER (PARTITION BY HouseBill Order By PK_SeqNo DESC) RN
+								FROM USDCFCSASQL01.[AirTrak].[dbo].tbl_interfaceAPAR 
+							) x on x.Pk_SeqNo = i.Pk_SeqNo
+				WHERE x.RN = 1
+				and note like '%FINALIZED%'
+				and note NOT LIKE '%UNFINALIZED%'
+				group by i.housebill
+			) y on y.housebill = t50.housebill
+
+
+update t50 set FirstEmailed = CAST(EventDateTime AS DATE)
+from RptCSAPrintAging t50
+inner join (
+				SELECT MAX(t.EventDateTime) EventDateTime, i.Housebill
+				FROM USDCFCSASQL01.[AirTrak].[dbo].tbl_TrackingNotes t 
+				INNER JOIN USDCFCSASQL01.[AirTrak].[dbo].tbl_interfaceAPAR i on t.FK_OrderNo = i.FK_OrderNo
+				INNER JOIN (
+								SELECT Pk_SeqNo, Housebill, FK_StationID, CreateDate, ROW_NUMBER() OVER (PARTITION BY HouseBill Order By PK_SeqNo DESC) RN
+								FROM USDCFCSASQL01.[AirTrak].[dbo].tbl_interfaceAPAR 
+							) x on x.Pk_SeqNo = i.Pk_SeqNo
+				WHERE x.RN = 1
+				and note like '%EMAIL%'
+				group by i.housebill
+			) y on y.housebill = t50.housebill
+
+
+--pod lag, inv finalize lag, inv email lag, total inv lag, cust financial lag
+
+
+update RptCSAPrintAging set InvEmailLag = ISNULL(DATEDIFF(dd,InvoiceFinalized,FirstEmailed),0), 
+				TotalInvLag = ISNULL(DATEDIFF(dd,PODDate, FirstEmailed),0)
+where FirstEmailed is not null 
+
+
+update RptCSAPrintAging set InvFinalizeLag = DATEDIFF(dd,PODDateadded, InvoiceFinalized), 
+							CustFinancialLag = DATEDIFF(dd,PODDATE,PRINTED_DATE), PODLag = CASE WHEN PODDATE <> '1900-01-01 00:00:00.000' AND PRINTED_DATE IS NOT NULL THEN DATEDIFF(dd,PODDATE,PODDateadded)
+																								WHEN PODDATE <> '1900-01-01 00:00:00.000' AND PRINTED_DATE IS NULL THEN DATEDIFF(dd,GETDATE(),PODDATE)
+   																								END
+	  
+
+
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+END
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[sp-AJCDW_04-UPDTFACTCSA]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH

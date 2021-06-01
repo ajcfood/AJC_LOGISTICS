@@ -1,0 +1,1397 @@
+USE [AJCDW]
+GO
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 5/13/2021 3:12:46 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+-- ==================================================================================================================================
+-- Author: Salah El-Jamil
+-- Procedure Inital Create date: 1/15/19
+-- Description: Automatically calculates commission amounts per sales rep for a given year, starting with accounting year 2019
+-- Note: Created in this format because (1) multiple sales reps can gain commission on one load and (2) was the only way
+--        possible at the time to be able to take all different commission calculations into account and keep everything in one table
+-- ===================================================================================================================================
+
+ALTER procedure [dbo].[spAJCDW_LoadCommCalcTbl]
+as
+BEGIN TRY
+begin
+
+SET NOCOUNT ON;
+DECLARE @ProcName VARCHAR(100) = OBJECT_NAME(@@PROCID)
+
+
+/*****************************************************Begin Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 0, @ProcName = @ProcName
+
+ /*************************************************************************************************************************/
+
+/*
+05/17/2019 - SA - Added Error Logging
+6/1/2019 - SE - Stopped Commission Calculations for Ross, Natalia, and Brett as of April 2019
+6/1/2019 - SE - Added Manuel Yanez Commission Calculation and column to tblCommCalc
+8/16/19 - SE - Add Gerardo Martinez and Andres Izquierdo column to table and commission calculation formula
+8/19/19 - SE - Add Courtney Gray and Ryan Click column to table and commission calculation formula
+11/20/19 - SE - Add ST JAX team commissions
+
+*/
+
+
+-- ====================================================================================================================================================
+-- Step #1
+-- Description: Calculates discount for a particular customer order
+-- Note #1: if we have a new commission agent in the future, we need to add them as a column to the current table and then add them to this procedure
+-- Note #2: update i.ACCTYR in where clause at the beginning of each year once accounting team confirms final integration is completed for current year 
+-- ====================================================================================================================================================
+
+
+SELECT ACCTYR
+	,ACCTMONTH
+	,ACCTPERIODNAME
+	,i.ShipmentID
+	,InvLOB
+	,i.RefNo
+	,s.ShpBkgNum as CSAStation
+	,s.ShpController as Dispatcher
+	,s.ShpMoveType as ShipType
+	,SalesPName
+	,CAST(NULL as VARCHAR(255)) as HOUSE_ACCOUNT -- added /27/2021 for Comm reassignment per Ginger
+	,InvCustName
+	,cast(sum(InvRevenue) as decimal(18,2)) as Rev
+	,cast(sum(InvCost) as decimal(18,2)) as Cost
+	,cast(sum(InvGP) as decimal(18,2)) as GP
+	,Convert(decimal(18,2),0.00) as RPComm -- Randolph Page
+	,Convert(decimal(18,2),0.00) as MJComm -- Missy Jensen
+	,Convert(decimal(18,2),0.00) as LPComm -- Lee Pantesco
+	,Convert(decimal(18,2),0.00) as TCComm -- Tyler Clendenen
+	,Convert(decimal(18,2),0.00) as LSComm -- Leo Serna
+	,Convert(decimal(18,2),0.00) as AAComm -- Andres Alonso
+	,Convert(decimal(18,2),0.00) as MBComm -- Michael Browder
+	,Convert(decimal(18,2),0.00) as NDComm -- Natalia Duenas
+	,Convert(decimal(18,2),0.00) as RMComm -- Ross Mielich
+	,Convert(decimal(18,2),0.00) as IOComm -- Ioann Okolnichy (starts April 2019 and same calc as Ross)
+	,Convert(decimal(18,2),0.00) as QTComm -- Jorge Desiderio
+	,Convert(decimal(18,2),0.00) as BMComm -- Bridgette Maycott
+	,Convert(decimal(18,2),0.00) as JCComm -- Jackson Cerna
+	,Convert(decimal(18,2),0.00) as MRComm -- Max Ritter
+	,Convert(decimal(18,2),0.00) as BWComm -- Brawnson Walter
+	,Convert(decimal(18,2),0.00) as BRComm -- Brett Rasmussen
+	,Convert(decimal(18,2),0.00) as DYComm -- Dale Yanagihara
+	,Convert(decimal(18,2),0.00) as JWComm -- Jim Wyant
+	,Convert(decimal(18,2),0.00) as MTComm -- Monica Thornton
+	,Convert(decimal(18,2),0.00) as CMComm -- Christine McVay
+	,Convert(decimal(18,2),0.00) as SFComm -- Suzanne Fairbanks
+	,Convert(decimal(18,2),0.00) as RMontComm -- Ricardo Monteiro
+	,Convert(decimal(18,2),0.00) as MYComm -- Manuel Yanez
+	,Convert(decimal(18,2),0.00) as GMComm -- Gerardo Martinez
+	,Convert(decimal(18,2),0.00) as AIComm -- Andres Izquierdo
+	,Convert(decimal(18,2),0.00) as RCComm -- Ryan Click
+	,Convert(decimal(18,2),0.00) as CGComm -- Courtney Gray
+	,Convert(decimal(18,2),0.00) as AMComm -- Ari Matsumura
+	,Convert(decimal(18,2),0.00) as BSComm -- Bill Stallings
+	,Convert(decimal(18,2),0.00) as CARSONComm -- Carson Mendez
+	,Convert(decimal(18,2),0.00) as MMComm -- Mike Maroni
+	,Convert(decimal(18,2),0.00) as JHComm -- Jessie Higginbotham
+	,Convert(decimal(18,2),0.00) as NSComm -- Nick Seney
+	,Convert(decimal(18,2),0.00) as DTComm -- Dalton Thomas
+	,Convert(decimal(18,2),0.00) as DBComm -- Dana Beck
+	,Convert(decimal(18,2),0.00) as AUSTINComm -- Austin Miller
+	,Convert(decimal(18,2),0.00) as CLComm -- Crystal Lubin
+	,Convert(decimal(18,2),0.00) as AHComm -- Andrew Heavner
+	,Convert(decimal(18,2),0.00) as RRComm -- Ron Raif
+	,Convert(decimal(18,2),0.00) as CTComm -- Carleton Tokioka
+	,Convert(decimal(18,2),0.00) as CJComm -- Craig James
+	,Convert(decimal(18,2),0.00) as AGComm -- Alex Gonzalez
+	,Convert(decimal(18,2),0.00) as JLComm -- Jason Lewter
+	,Convert(decimal(18,2),0.00) as GDComm -- Greg Deal
+	,Convert(decimal(18,2),0.00) as CCComm -- Colton Clements
+	,Convert(decimal(18,2),0.00) as JTComm -- Justin Taylor
+	,Convert(decimal(18,2),0.00) as CWComm -- Christian White
+	,Convert(decimal(18,2),0.00) as JACKComm -- Jack Cumiskey
+	,Convert(decimal(18,2),0.00) as PMComm -- Phil Mitchell
+	,Convert(decimal(18,2),0.00) as DWComm -- Dave Wire
+	,Convert(decimal(18,2),0.00) as TRComm -- Terrance Reed
+	,Convert(decimal(18,2),0.00) as SBComm -- Stephanie Butts
+	,Convert(decimal(18,2),0.00) as KCComm -- Kellan Chrisman
+	,Convert(decimal(18,2),0.00) as SRComm -- Shari Robinson
+	,Convert(decimal(18,2),0.00) as OMComm -- Open Man Consulting ST ATL2 (Ginger email on 1/25/21)
+	,Convert(decimal(18,2),0.00) as ABComm -- Adam Bretz
+	,Convert(decimal(18,2),0.00) as ADComm -- Aiken Davis
+	,Convert(decimal(18,2),0.00) as MHComm -- Matt Higgins
+	,Convert(decimal(18,2),0.00) as WCComm -- Winston Crosse
+	,Convert(decimal(18,2),0.00) as THComm -- Tina Henley
+into #tmp1
+from tblInvoice i
+JOIN tblShipment s on i.ShipmentID = s.ShipmentID
+join tblSalesP sp on s.FK_SalesPID = sp.SalesPID
+where i.ACCTYR >= LEFT(CONVERT(varchar, DATEADD(MM, -24, GetDate()),112),4)  -- needs to be modified to include ACCTMONTH when we start having commission changes.  Do not want to change historical calculations
+group by ACCTYR, ACCTMONTH, ACCTPERIODNAME,InvLOB,i.RefNo,SalesPName,InvCustName, i.ACCTQTR,s.ShpBkgNum, i.ShipmentID, s.ShpController, s.ShpMoveType
+
+-- =================================================================================================================================
+-- Step #2
+-- Description: Maintenance of tblCommCalc
+-- Note #1: update ACCTYR at the end of each year once we confirm that all invoicing for the current year is complete.
+-- Note #2: need to add ACCTMONTH to both DELETE and INSERT clause once we start having calculation changes for current sales reps. 
+--          Do not want to affect historical calculations
+-- ==================================================================================================================================
+DELETE from tblCommCalc
+where ACCTYR >= LEFT(CONVERT(varchar, DATEADD(MM, -24, GetDate()),112),4) 
+
+INSERT INTO tblCommCalc
+SELECT * from #tmp1
+where ACCTYR >= LEFT(CONVERT(varchar, DATEADD(MM, -24, GetDate()),112),4) 
+
+--UPDATE HOUSE ACCOUNT COLUMN (1/27/2021)
+UPDATE tblCommCalc
+SET HOUSE_ACCOUNT = CASE
+		WHEN ( InvCustName IN (
+		'AJC BREAK BULK',
+		'AJC CARIBBEAN',
+		'AJC INTERNATIONAL',
+		'AJC MEXICO',
+		'AJC PAC ISLE',
+		'B & D',
+		'CALIFORNIA FRESH AND FROZEN INC',
+		--'CARIBBEAN PRODUCE EXCHANGE', -- Removed per Ginger on 2/8/2021
+		'COYOTE LOGISTICS LLC',
+		--'IMPEG SA DE CV', -- Removed per Ginger on 2/8/2021
+		'INTERNATIONAL MARKETING SYSTEM',
+		'OXBOW ANIMAL HEALTH',
+		--'PUEBLO INC', -- Removed per Ginger on 2/8/2021
+		--'PUERTO RICO SUPPLIES COMPANY', -- Removed per Ginger on 2/8/2021
+		'AJC - REPACK',
+		--'BEC CORPORATION INC', -- Removed per Ginger on 2/8/2021
+		'AJC INTERNATIONAL INC',	 
+		'CARGO LIVE WORLDWIDE',	 
+		'EAGLE LOGISTICS',	 
+		'Sysco International Food',	 
+		'AJC - S AMERICA',
+		'AJC AFRICA',
+		'AJC CARCASS',
+		'AJC VEGGIES'
+		)
+		) THEN 'YES'
+		ELSE 'NO'
+	END	
+WHERE HOUSE_ACCOUNT IS NULL
+
+UPDATE tblCommCalc
+SET Dispatcher = 'UNASSIGNED'
+where Dispatcher IS NULL
+AND InvLOB in ('9','10','11')
+
+-- ====================================================================================================================================
+-- Step #3
+-- Description: Update each sales reps column with their calculation
+-- Change History:
+--   3/20/19 Salah El-Jamil: Update Tyler Clendenen calculation for line of business 76.  He should get 6% GP of this line of business
+-- ====================================================================================================================================
+
+--HSI Calculations : 2% of settlement (Revenue) = total GP--
+update tblCommCalc
+set QTComm = (Rev*.02)/3, BMComm = (Rev*.02)/3, JCComm = (Rev*.02)/3
+where InvLOB = '12'
+	AND ACCTMONTH IN (1,2,3,4,5,6,7,8)
+	AND ACCTYR = 2019
+
+--HSI Calculations 2019 : FLAT $200 per month starting September 2019--
+update tblCommCalc
+set QTComm = '200.00', BMComm = '200.00', JCComm = '200.00'
+where InvLOB = '12'
+	AND RefNo LIKE '10%'
+	and InvCustName = 'HORIZON FREIGHT SYSTEM (EAGLE)     '
+	AND ACCTMONTH IN (9,10,11,12)
+	AND ACCTYR = 2019
+
+--HSI Calculations 2020 and onward : FLAT $200 per month starting September 2019--
+update tblCommCalc
+set QTComm = '200.00', BMComm = '200.00', JCComm = '200.00'
+where InvLOB = '12'
+    AND RefNo LIKE '10%'
+	and InvCustName = 'HORIZON FREIGHT SYSTEM (EAGLE)     '
+	AND ACCTYR >= 2020
+
+--Lee Pantesco Calculation: 0.5% of Surface Trans GP.
+-- Starting 8/3/20 team GP goes from 0.5% to 1%
+update tblCommCalc
+set LPComm = GP*.005
+where InvLOB = '11'
+	and InvCustName NOT LIKE 'SUK-EXPORT'
+	and ACCTYR < 2020
+
+update tblCommCalc
+set LPComm = GP*.005
+where InvLOB = '11'
+	and InvCustName NOT LIKE 'SUK-EXPORT'
+	and ACCTYR = 2020
+	and ACCTMONTH IN (1,2,3,4,5,6,7)
+
+update tblCommCalc
+set LPComm = GP*.01
+where InvLOB = '11'
+	and ACCTYR = 2020
+	and ACCTMONTH NOT IN (1,2,3,4,5,6,7)
+
+update tblCommCalc
+set LPComm = GP*.01
+where InvLOB = '11'
+	and ACCTMONTH IN (1,2,3,4)
+	and ACCTYR = 2021
+
+update tblCommCalc
+set LPComm = GP*.01
+where InvLOB = '11'
+	and InvCustName IN ('SUKARNE','SUK - NORTH BOUND','SUK-EXPORT')
+	and ACCTMONTH > 5
+	and ACCTYR = 2021
+
+update tblCommCalc
+set LPComm = GP*.01
+where InvLOB = '11'
+	and InvCustName IN ('SUKARNE','SUK - NORTH BOUND','SUK-EXPORT')
+	and ACCTYR > 2021
+
+update tblCommCalc
+set LPComm = GP*.01
+where InvLOB = '11'
+	and InvCustName IN ('UPS - Green Chef','UPS - HELLO FRESH')
+	and ACCTMONTH > 5
+	and ACCTYR = 2021
+
+update tblCommCalc
+set LPComm = GP*.01
+where InvLOB = '11'
+	and InvCustName IN ('UPS - Green Chef','UPS - HELLO FRESH')
+	and ACCTYR > 2021
+
+update tblCommCalc
+set LPComm = GP*.007
+where InvLOB = '10'
+	and ACCTMONTH > 5
+	and ACCTYR = 2021
+
+update tblCommCalc
+set LPComm = GP*.007
+where InvLOB = '10'
+	and ACCTYR > 2021
+		
+--Michael Browder Calculation: 18% of Surface Trans GP where he is Sales Rep
+update tblCommCalc
+set MBComm = GP*.18
+where SalesPName = 'Michael Browder'
+
+--Tyler Clendenen Calculation: 
+	--15% of GP where he is Sales Rep not in line of business 31,33,43, or 76.  Changed to 10% starting March 2020
+	--6% of GP where he is Sales Rep in line of business 31,33,43, or 76
+	--5% GP on 25, 41, & 31,33,43 loads where he is sales rep
+	-- 11/12/20 advised by Rachel to remove 6% for Seawide starting for October 2020 commission
+	-- 4% on LOB 11 House Accounts only where he is sales rep
+update tblCommCalc
+set TCComm = GP*.15
+where SalesPName = 'Tyler Clendenen'
+	and InvLOB NOT IN ('31,33,43','76')
+	and ACCTYR < 2020
+
+update tblCommCalc
+set TCComm = GP*.15
+where SalesPName = 'Tyler Clendenen'
+	and InvLOB NOT IN ('31,33,43','76')
+	and ACCTYR = 2020
+	and ACCTMONTH IN (1,2)
+
+update tblCommCalc --Changed to 10% starting March 2020
+set TCComm = GP*.10
+where SalesPName = 'Tyler Clendenen'
+	and InvLOB NOT IN ('31,33,43','76')
+	and ACCTYR = 2020
+	and ACCTMONTH NOT IN (1,2)
+
+update tblCommCalc
+set TCComm = GP*.06
+where SalesPName = 'Tyler Clendenen'
+	and InvLOB IN ('31,33,43','76')
+
+update tblCommCalc
+set TCComm = GP*.10
+where SalesPName = 'Tyler Clendenen'
+	and InvLOB = '11'
+	and InvCustName = 'JB HUNT'
+
+update tblCommCalc
+set TCComm = GP*.10
+where SalesPName = 'Tyler Clendenen'
+	and InvLOB = '11'
+	and ACCTYR >= 2020
+	and HOUSE_ACCOUNT = 'NO' --added per 1/26/2021 email from Ginger - Category #1
+
+update tblCommCalc
+set TCComm = GP*.04
+where SalesPName = 'Tyler Clendenen'
+	and InvLOB = '11'
+	and ACCTYR >= 2021
+	and HOUSE_ACCOUNT = 'YES' --added per 1/26/2021 email from Ginger - Category #1
+
+update tblCommCalc
+set TCComm = GP*.05
+where SalesPName = 'Tyler Clendenen'
+	and InvLOB IN ('25','41','31,33,43')
+	and ACCTMONTH in (8,9,10,11,12)
+	and ACCTYR = 2020
+
+update tblCommCalc
+set TCComm = GP*.05
+where SalesPName = 'Tyler Clendenen'
+	and InvLOB IN ('25','41','31,33,43')
+	and ACCTYR >= 2021
+
+update tblCommCalc
+set TCComm = 0
+where SalesPName = 'Tyler Clendenen'
+	and InvLOB IN ('76')
+	and ACCTYR = 2020
+	and ACCTMONTH IN (10,11,12)
+
+update tblCommCalc
+set TCComm = 0
+where SalesPName = 'Tyler Clendenen'
+	and InvLOB IN ('76')
+	and ACCTYR >= 2021
+
+
+
+--Brawnson Walter Calculation: 15% of Surface Trans GP where he is Sales Rep
+update tblCommCalc
+set BWComm = GP*.15
+where SalesPName = 'Brawnson Walter'
+
+--Brett Rasmussen Calculation: 16% of Surface Trans GP where he is Sales Rep (stopped commission calculations as of end of April 2019)
+--commented out because they dont work at AJCL anymore
+/*
+update tblCommCalc
+set BRComm = GP*.16
+where SalesPName = 'Brett Rasmussen'
+	AND ACCTMONTH IN (1,2,3,4)
+	AND ACCTYR = 2019
+
+
+--Max Ritter Calculation: 15% of Surface Trans GP where he is Sales Rep
+update tblCommCalc
+set MRComm = GP*.15
+where SalesPName = 'Max Ritter'
+
+
+--Natalia Duenas Calculation: 0.125% of Surface Trans GP for SUKARNE only.  Not SUKARNE EXPORT (stopped commission calculations as of end of April 2019)
+update tblCommCalc
+set NDComm = GP*.00125
+where InvLOB = '11'
+	AND InvCustName IN ('SUKARNE','SUK - NORTH BOUND')
+	AND ACCTMONTH IN (1,2,3,4)
+	AND ACCTYR = 2019
+
+--Ross Mielech Calculation: 0.125% of Surface Trans GP Minus Sukarne, Idaho Pacific, AGF Global, Dycinsa (stopped commission calculations as of end of April 2019)
+update tblCommCalc
+set RMComm = GP*.00125
+where InvLOB = '11'
+	AND InvCustName NOT LIKE 'SUK%'
+	AND InvCustName NOT LIKE 'IDAHO PACIFIC'
+	AND InvCustName NOT LIKE 'AGF GLOBAL'
+	AND InvCustName NOT LIKE 'DYCINSA'
+	AND ACCTMONTH IN (1,2,3,4)
+	AND ACCTYR = 2019
+*/
+	
+--Andres Alonso Calculation: 7% of his own GP, 0.5% of Surf Trans GP--
+-- per Rachel email on 8/20/2020, he only gets team commission now--
+update tblCommCalc
+set AAComm = GP*.07
+where salespname = 'Andres Alonso'
+AND ACCTYR < 2020
+
+update tblCommCalc
+set AAComm = GP*.07
+where salespname = 'Andres Alonso'
+AND ACCTYR =2020
+and ACCTMONTH IN (1,2,3,4,5,6,7)
+
+Update tblCommCalc
+set AAComm = GP*.005
+where InvLOB = '11'
+and SalesPName <> 'Andres Alonso'
+and InvCustName NOT LIKE 'SUK-EXPORT'
+
+Update tblCommCalc
+set AAComm = GP*.005
+where InvLOB = '11'
+and SalesPName <> 'Andres Alonso'
+and InvCustName NOT LIKE 'SUK-EXPORT'
+AND ACCTYR < 2020
+
+Update tblCommCalc
+set AAComm = GP*.005
+where InvLOB = '11'
+and SalesPName <> 'Andres Alonso'
+and InvCustName NOT LIKE 'SUK-EXPORT'
+AND ACCTYR = 2020
+and ACCTMONTH IN (1,2,3,4,5,6,7)
+
+Update tblCommCalc
+set AAComm = GP*.005
+where InvLOB = '11'
+AND ACCTYR = 2020
+and ACCTMONTH IN (8,9,10,11,12)
+
+Update tblCommCalc
+set AAComm = GP*.005
+where InvLOB = '11'
+AND ACCTYR >= 2020
+
+--Leo Serna Calculation:
+	--7% of ST GP assigned to LS
+	--1% of SUKARNE and DYCINSA
+	--4% of SUK - EXPORT
+/*
+--Does not work here anymore
+Update tblCommCalc
+set LSComm = GP*.07
+where SalesPName = 'Leo Serna'
+
+update tblCommCalc
+Set LSComm = GP*.04
+where InvCustName = 'SUK - EXPORT'
+
+update tblCommCalc
+set LSComm = GP*.01
+where InvCustName IN ('DYCINSA','SUKARNE', 'SUK - NORTH BOUND', 'SUKARNE SA DE CV', 'SUKARNE...')
+*/
+--Missy Jensen Calculation:
+	--5% of ST GP assigned to MJ
+	--2.75% of General Works Products GP
+	--2% of West Rock GP for LOB 41
+	--3% Sanderson Farms GP for LOB 11
+	--0.75% of RP GP minus Keystone and Sanderson Farms
+
+Update tblCommCalc
+set MJComm = GP*.05
+where SalesPName = 'Missy Jensen'
+and InvLOB = '11'
+
+Update tblCommCalc
+set MJComm = GP*.0275
+where InvCustName LIKE 'GENERAL WORK%'
+and InvLOB <> '11'
+
+update tblCommCalc
+set MJComm = GP*.02
+where InvCustName LIKE 'WESTROCK%'
+	and InvLOB = '41'
+
+update tblCommCalc
+set MJComm = GP*.03
+where InvCustName LIKE 'SAND%'
+	and InvLOB = '11'
+
+update tblCommCalc
+set MJComm = GP*.0075
+where SalesPName = 'Randolph Page'
+	AND InvCustName NOT LIKE 'KEYSTONE%'
+	AND InvCustName NOT LIKE 'SANDERSON%'
+	AND InvCustName NOT LIKE 'GENERAL WORK%'
+	AND InvLOB <> '76' -- removed for 2021
+
+update tblCommCalc -- added this per 2/19/19 email from Rachel to exclude AJC INC for LOB 25.  as of 4/14/2021, remove from NVOCC as well any AJC INC)
+set MJComm = 0
+where SalesPName = 'Randolph Page'
+	AND InvLOB IN ('25')
+	AND InvCustName = 'AJC INTERNATIONAL INC'
+
+update tblCommCalc 
+set MJComm = 0
+where SalesPName = 'Randolph Page'
+	AND InvLOB IN ('31,33,43')
+	AND InvCustName = 'AJC INTERNATIONAL INC'
+	AND ACCTMONTH NOT IN (1,2)
+	AND ACCTYR = 2021
+
+update tblCommCalc 
+set MJComm = 0
+where SalesPName = 'Randolph Page'
+	AND InvLOB IN ('31,33,43')
+	AND InvCustName = 'AJC INTERNATIONAL INC'
+	AND ACCTYR > 2021
+
+--Randolph Page Commission Calculation:
+	--6% GP for LOB 11, 21, 41, 43,76 where RP is sales rep (DIRECT)
+	--15% GP for LOB 25 where RP is sales rep, but not AJC INTERNATIONAL INC (DIRECT)
+	--3% GP on Surf Trans direct reports (not Ricardo): MB,TC,AA,BW,MR,MJ,CC,BR (INDIRECT)
+	--4% GP on LOB 41&43 files under DT,CC,Ricardo,TC,MJ,MB
+	-- 11/12/20 advised by Rachel to remove 6% for Seawide starting for October 2020 commission
+
+update tblCommCalc
+set RPComm = GP*.06
+where InvLOB IN ('11','21','41','31,33,43','76')
+	AND SalesPName = 'Randolph Page'
+	AND RefNo NOT LIKE '30%'
+
+update tblCommCalc
+set RPComm = 0
+where InvLOB = '76'
+	and SalesPName = 'Randolph Page'
+	and ACCTMONTH in (10,11,12)
+	and ACCTYR = 2020
+
+update tblCommCalc
+set RPComm = 0
+where InvLOB = '76'
+	and SalesPName = 'Randolph Page'
+	and ACCTYR >= 2021
+
+update tblCommCalc
+set RPComm = GP*.15
+where InvLOB = '25'
+	AND SalesPName = 'Randolph Page'
+	AND InvCustName <> 'AJC INTERNATIONAL INC'
+
+update tblCommCalc
+set RPComm = GP*.03
+where InvLOB = '11'
+	AND SalesPName IN ('Carmen Colon'
+		,'Damaris Torres'
+		,'Tyler Clendenen'
+		,'Michael Browder'
+		,'Max Ritter'
+		,'Brett Rasmussen'
+		,'Missy Jensen'
+		,'Andres Alonso'
+		,'Brawnson Walter'
+		,'Alex Gonzalez')
+	AND ACCTYR < 2021
+
+update tblCommCalc --added August 2020
+set RPComm = GP*.03
+where InvLOB = '11'
+	AND SalesPName NOT IN ('Ricardo Monteiro', 'Randolph Page')
+	AND ACCTYR = 2020
+	AND ACCTMONTH IN (8,9,10,11,12)
+
+--RP ST Team commission starting 2021
+update tblCommCalc
+set RPComm = GP*.02
+where InvLOB = '11'
+	AND SalesPName IN (
+		 'Tyler Clendenen'
+		,'Ryan Click'
+		,'Alex Gonzalez')
+	AND ACCTYR >= 2021
+
+update tblCommCalc
+set RPComm = GP*.04
+where InvLOB in ('41','31,33,43')
+	AND SalesPName IN ('Carmen Colon'
+		,'Damaris Torres'
+		,'Tyler Clendenen'
+		,'Ricardo Monteiro'
+		,'Max Ritter'
+		,'Brett Rasmussen'
+		,'Missy Jensen'
+		,'Andres Alonso'
+		,'Brawnson Walter'
+		,'Alex Gonzalez')
+	AND InvCustName <> 'BALLESTER HERMANOS, INC'
+	AND ACCTYR < 2021
+
+update tblCommCalc
+set RPComm = GP*.03
+where InvLOB in ('31,33,43')
+	AND SalesPName NOT IN ('Randolph Page','Chris Swartz')
+	AND RefNo NOT LIKE '30%'
+	and InvCustName NOT IN ('WAYNE FARMS LLC')
+	AND ACCTYR >= 2021
+
+update tblCommCalc
+set RPComm = GP*.03
+where InvLOB in ('41')
+	AND SalesPName NOT IN ('Randolph Page','Chris Swartz')
+	AND ACCTYR >= 2021
+
+--3% of KEYSTONE loads no matter what LOB
+update tblCommCalc
+set RPComm = GP*.03
+where InvLOB IN ('9','10','11')
+	AND InvCustName LIKE 'KEYSTONE%'
+	AND ACCTYR = 2020
+	AND ACCTMONTH IN (8,9,10,11,12)
+
+--Dale Yanagihara Calculation:
+	--4.2% of GP of own accounts in LOB 76 GP less 7% overhead
+update tblCommCalc
+set DYComm = (GP*.93)*.042
+where InvLOB = '76'
+	AND SalesPName = 'Dale Yanagihara'
+
+update tblCommCalc
+set DYComm = 0
+where InvLOB = '76'
+	AND ACCTMONTH IN (9,10,11,12)
+	AND ACCTYR = 2020
+
+update tblCommCalc
+set DYComm = 0
+where InvLOB = '76'
+	AND ACCTYR >= 2020
+
+--Jim Wyant Calculation:
+	--15% of GP of own accounts in LOB 76 GP less 7% overhead
+update tblCommCalc
+set JWComm = (GP*.93)*.15
+where InvLOB = '76'
+	AND SalesPName = 'Jim Wyant'
+
+--Suzanne Fairbanks Calculation:
+	--15% of GP of own accounts in LOB 76 GP less 7% overhead
+update tblCommCalc
+set SFComm = (GP*.93)*.15
+where InvLOB = '76'
+	AND SalesPName = 'Suzanne Fairbanks'
+
+--Monica Thornton Calculation:
+	--4.2% of GP of own accounts in LOB 76 GP less 7% overhead
+update tblCommCalc
+set MTComm = (GP*.93)*.042
+where InvLOB = '76'
+	AND SalesPName = 'Monica Thornton'
+
+--Christine McVay Calculation: 1% GP on ANG & SEA Stations LOB 76
+-- As of May 2021, changed from 2% to 1.25%
+update tblCommCalc
+set CMComm = GP*.02
+where InvLOB = '76'
+	AND CSAStation IN ('ANG','SEA')
+	AND ACCTYR < 2021
+
+update tblCommCalc
+set CMComm = GP*.02
+where InvLOB = '76'
+	AND CSAStation IN ('ANG','SEA')
+	AND ACCTMONTH < 5
+	AND ACCTYR = 2021
+
+update tblCommCalc
+set CMComm = GP*.0125
+where InvLOB = '76'
+	AND CSAStation IN ('ANG','SEA')
+	AND ACCTMONTH >= 5
+	AND ACCTYR >= 2021
+
+update tblCommCalc
+set CMComm = GP*.01
+where InvLOB = '76'
+	AND CSAStation IN ('ANG','SEA')
+	AND ACCTMONTH IN (1,2,3,4,5,6,7,8,9)
+	AND ACCTYR = 2019 --Kept hardcoded date due to commission increase in October onwards
+
+--Ricardo Monteiro Calculation: 5% of all GP where he is Sales Rep
+update tblCommCalc
+set RMontComm = GP*.05
+where SalesPName = 'Ricardo Monteiro'
+
+--Manual Yanez Calculation: 5% of all GP where he is Sales Rep for LOB 41 or 43 and 10% of all ST GP where he is the sales rep
+Update tblCommCalc
+set MYComm = GP*.10
+where SalesPName = 'Manuel Yanez'
+and InvLOB = '11'
+
+Update tblCommCalc
+set MYComm = GP*.05
+where SalesPName = 'Manuel Yanez'
+	AND InvLOB in ('41','31,33,43')
+
+-- AI = .25% ST GP.  Starting in August 2019
+update tblCommCalc
+set AIComm = (GP*.0025)
+where InvLOB = '11'
+and ACCTMONTH NOT IN (1,2,3,4,5,6,7)
+and ACCTYR = 2019
+
+update tblCommCalc
+set AIComm = (GP*.0025)
+where InvLOB = '11'
+and ACCTYR >= 2019
+
+--Courtney Gray Comm: 0.25% of Cargo Live WorldWide loads starting August 1 2019
+Update tblCommCalc
+set CGComm = GP * .0025
+where InvCustName = 'CARGO LIVE WORLDWIDE'
+and InvLOB = '11'
+and ACCTMONTH NOT IN (1,2,3,4,5,6,7)
+and ACCTYR = 2019
+
+--Ryan Click Comm: 0.5% of total team GP effective September 3 2019
+update tblCommCalc
+set RCComm = GP *.005
+where InvLOB = '11'
+and ACCTMONTH NOT IN (1,2,3,4,5,6,7,8)
+and ACCTYR = 2019
+
+--Ryan Click Comm: 1.0% of total team GP effective January 1,2020
+update tblCommCalc
+set RCComm = GP *.01
+where InvLOB = '11'
+and ACCTMONTH IN (1,2,3,4,5,6,7)
+and ACCTYR = 2020
+
+--Ryan Click Comm: 10% on own loads for LOB 11 starting August 2020, 4% only for HOUSE accounts
+update tblCommCalc
+set RCComm = GP *.10
+where InvLOB = '11'
+and SalesPName = 'Ryan Click'
+and ACCTMONTH NOT IN (1,2,3,4,5,6,7)
+and ACCTYR = 2020
+
+update tblCommCalc
+set RCComm = GP *.10
+where InvLOB = '11'
+and SalesPName = 'Ryan Click'
+and HOUSE_ACCOUNT = 'NO' --added per 1/26/2021 email from Ginger - Category #1
+and ACCTYR >= 2021
+
+update tblCommCalc
+set RCComm = GP *.04
+where InvLOB = '11'
+and SalesPName = 'Ryan Click'
+and HOUSE_ACCOUNT = 'YES' --added per 1/26/2021 email from Ginger - Category #1
+and ACCTYR >= 2021
+
+--Ryan Click Comm: 5% on own loads for LOB 25,41, & 31,33,43 starting August 2020
+update tblCommCalc
+set RCComm = GP *.05
+where InvLOB IN ('25','41','31,33,43')
+and SalesPName = 'Ryan Click'
+and ACCTMONTH NOT IN (1,2,3,4,5,6,7)
+and ACCTYR = 2020
+
+update tblCommCalc
+set RCComm = GP *.05
+where InvLOB IN ('25','41','31,33,43')
+and SalesPName = 'Ryan Click'
+and ACCTYR >= 2021
+
+--Ryan Click Comm: 5% on UPS Daily Harvest and UPS Spot loads for LOB 11 starting August 2020
+--Daily Harvest ends December of 2020 for Ryan per 1/26/2021 email from Ginger - Category #5
+update tblCommCalc
+set RCComm = GP *.05
+where InvLOB = ('11')
+and InvCustName like 'UPS - Daily%'
+and ACCTMONTH NOT IN (1,2,3,4,5,6,7)
+and ACCTYR = 2020
+
+update tblCommCalc
+set RCComm = GP *.05
+where InvLOB = ('11')
+and ShipType = 'SPOT'
+and InvCustName like 'UPS%'
+and ACCTMONTH NOT IN (1,2,3,4,5,6,7)
+and ACCTYR = 2020
+
+update tblCommCalc
+set RCComm = GP *.05
+where InvLOB = ('11')
+and ShipType = 'SPOT'
+and InvCustName like 'UPS%'
+and ACCTYR >= 2021
+
+-- Ari Matsumura Comm: 7% of GP for his loads for SeaWide
+Update tblCommCalc
+set AMComm = (GP*.93) * .07
+where SalesPName = 'Ari Matsumura'
+and InvLOB = '76'
+
+-- Bill Stallings Comm: 2% of Team GP 
+Update tblCommCalc
+set BSComm = GP * .02
+where InvLOB = '10'
+
+-- Carson Mendez Comm: 2% of Team GP 
+Update tblCommCalc
+set CARSONComm = GP * .02
+where InvLOB = '10'
+
+-- Mike Maroni Comm: 9% of own GP in LOB 10
+-- Effective September 2020 Mike M. will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
+Update tblCommCalc
+set MMComm = GP * .09
+where InvLOB = '10'
+and SalesPName = 'Mike Maroni'
+
+Update tblCommCalc
+set MMComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName = 'Mike Maroni'
+and ACCTMONTH IN (9,10,11,12)
+and ACCTYR = 2020
+
+Update tblCommCalc
+set MMComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName = 'Mike Maroni'
+and ACCTYR > 2020
+
+-- Jessie Higginbotham Comm: 6.5% of own GP in LOB 10
+Update tblCommCalc
+set JHComm = GP * .065
+where InvLOB = '10'
+and SalesPName = 'Jesse Higginbotham'
+
+-- Nick Seney Comm: 8.5% of own GP in LOB 10 and 4% of LOB 76
+-- Effective September 2020 Nick will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
+Update tblCommCalc
+set NSComm = GP * .085
+where InvLOB = '10'
+and SalesPName = 'Nick Seney'
+
+Update tblCommCalc
+set NSComm = GP * .04
+where InvLOB = '76'
+and SalesPName = 'Nick Seney'
+
+Update tblCommCalc
+set NSComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName = 'Nick Seney'
+and ACCTMONTH IN (9,10,11,12)
+and ACCTYR = 2020
+
+Update tblCommCalc
+set NSComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName = 'Nick Seney'
+and ACCTYR > 2020
+
+-- Dalton Thomas Comm: 4% of team GP divided by number of CSR's.  As of 11/20/19, he is only CSR.  Austin Added in 2020
+-- Per Rachel email on 1/21/20 - set to 2.5% for Jan - Mar 2020, put him to 2% in April
+Update tblCommCalc
+set DTComm = (GP * .04) -- change divisible amount by number of CSRs when needing to be updated
+where InvLOB = '10'
+and ACCTYR = 2019
+
+Update tblCommCalc
+set DTComm = (GP * .04) / 2 -- change divisible amount by number of CSRs when needing to be updated
+where InvLOB = '10'
+and ACCTYR = 2020
+and ACCTMONTH IN (4,5)
+
+Update tblCommCalc
+set DTComm = GP * .025
+where InvLOB = '10'
+and ACCTYR = 2020
+and ACCTMONTH NOT IN (4,5)
+
+--Ron Raif
+Update tblCommCalc
+set RRComm = GP * .02
+where InvLOB = '10'
+and ACCTYR = 2020
+and ACCTMONTH >= 6
+
+/*
+removed per request from Rachel Tierney on 6/12/2020
+
+-- Austin Miller Comm: 4% of team GP divided by number of CSR's.  As of 11/20/19, he is only CSR.  Austin Added in 2020
+Update tblCommCalc
+set AUSTINComm = (GP * .04) / 2 -- change divisible amount by number of CSRs when needing to be updated
+where InvLOB = '10'
+*/
+
+--Austin Miller Comm: $15 per load he books (where he is the dispatcher).  Request by Rachel on 7/14/20 via email
+Update tblCommCalc
+set AUSTINComm = 15 -- 
+where InvLOB = '10' and Dispatcher = 'austinm'
+AND ACCTYR = 2020
+
+-- Dana Beck Comm: 1% of team GP
+Update tblCommCalc
+set DBComm = GP * .01
+where InvLOB = '10'
+
+-- Crystal Lubin: 8.5% GP of her own GP
+-- Effective September 2020 Crystal will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
+Update tblCommCalc
+set CLComm = GP * .085
+where InvLOB = '10'
+and SalesPName = 'Crystal Lubin'
+
+Update tblCommCalc
+set CLComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName = 'Crystal Lubin'
+and ACCTMONTH IN (9,10,11,12)
+and ACCTYR = 2020
+
+Update tblCommCalc
+set CLComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName = 'Crystal Lubin'
+and ACCTYR > 2020
+
+-- Andrew Heavner: 8.5% GP of own GP
+-- Effective September 2020 Andrew will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
+Update tblCommCalc
+set AHComm = GP * .085
+where InvLOB = '10'
+and SalesPName = 'Andrew Heavner'
+
+Update tblCommCalc
+set AHComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName = 'Andrew Heavner'
+and ACCTMONTH IN (9,10,11,12)
+and ACCTYR = 2020
+
+Update tblCommCalc
+set AHComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName = 'Andrew Heavner'
+and ACCTYR > 2020
+
+-- Carleton Tokioka: 4% GP of own GP less 7% overhead
+Update tblCommCalc
+set CTComm = (GP*.93) * .04
+where InvLOB = '76'
+and SalesPName = 'Carleton Tokioka'
+
+--Craig James Calculation: 1% GP on Hawaii based accounts (Station codes = HON, MAU, HLO, KON, KAU, LAN, MOL, LOS)
+-- May 2021 and forward =  0.75% of the Hawaii market and 0.25% of the Alaska market.
+update tblCommCalc
+set CJComm = GP*.01
+where InvLOB = '76'
+	AND CSAStation IN ('HON', 'MAU', 'HLO', 'KON', 'KAU', 'LAN', 'MOL', 'LOS')
+	AND ACCTYR < 2021
+
+update tblCommCalc
+set CJComm = GP*.01
+where InvLOB = '76'
+	AND CSAStation IN ('HON', 'MAU', 'HLO', 'KON', 'KAU', 'LAN', 'MOL', 'LOS')
+	AND ACCTMONTH < 5 
+	AND ACCTYR = 2021
+
+update tblCommCalc
+set CJComm = GP*.0075
+where InvLOB = '76'
+	AND CSAStation IN ('HON', 'MAU', 'HLO', 'KON', 'KAU', 'LAN', 'MOL', 'LOS')
+	AND ACCTMONTH >= 5
+	AND ACCTYR = 2021
+
+update tblCommCalc
+set CJComm = GP*.0075
+where InvLOB = '76'
+	AND CSAStation IN ('HON', 'MAU', 'HLO', 'KON', 'KAU', 'LAN', 'MOL', 'LOS')
+	AND ACCTYR > 2021
+
+update tblCommCalc
+set CJComm = GP*.0025
+where InvLOB = '76'
+	AND CSAStation IN ('ANG','JUN')
+	AND ACCTMONTH >= 5
+	AND ACCTYR = 2021
+
+update tblCommCalc
+set CJComm = GP*.0025
+where InvLOB = '76'
+	AND CSAStation IN ('ANG','JUN')
+	AND ACCTYR > 2021
+
+
+-- Alex Gonzalez: 8% GP of own GP LOB 11 and 5% own GP in LOBs 41,43,25.  4% only on LOB 11,9,10 HOUSE accounts.
+Update tblCommCalc
+set AGComm = GP * .08
+where InvLOB IN ('9','10','11')
+and SalesPName = 'Alex Gonzalez'
+and HOUSE_ACCOUNT = 'NO' --added per 1/26/2021 email from Ginger - Category #1
+
+Update tblCommCalc
+set AGComm = GP * .04
+where InvLOB IN ('9','10','11')
+and SalesPName = 'Alex Gonzalez'
+and HOUSE_ACCOUNT = 'YES' --added per 1/26/2021 email from Ginger - Category #1
+
+Update tblCommCalc
+set AGComm = GP * .05
+where InvLOB IN ('41','31,33,43','25')
+and SalesPName = 'Alex Gonzalez'
+
+update tblCommCalc
+set SalesPName = 'Alex Gonzalez', AGComm = GP * .05
+where InvLOB IN ('31,33,43','41')
+and InvCustName IN (
+'BALLESTER HERMANOS, INC',            
+'PLAZA FOOD SYSTEMS',                 
+'REFRIGERAMA INC',                    
+'ABLE SALES COMPANY',                 
+'BEST BENNER BUILDING CORP',          
+'JC TIRE',                            
+'IMPERIAL DADE PAPER',                
+'AMERICAN PAPER CORPORATION')         
+
+-- Jason Lewter: 4% of his team's GP (Greg Deal and Colton Clements)
+-- Effective September 2020 Jason will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
+Update tblCommCalc
+set JLComm = GP * .04
+where InvLOB = '9'
+and SalesPName IN ('Greg Deal', 'Colton Clements')
+
+Update tblCommCalc
+set JLComm = GP * .05
+where InvLOB = '9'
+and SalesPName IN ('Jason Lewter')
+
+Update tblCommCalc
+set JLComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Jason Lewter')
+and ACCTMONTH IN (9,10,11,12)
+and ACCTYR = 2020
+
+Update tblCommCalc
+set JLComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Jason Lewter')
+and ACCTYR > 2020
+
+-- Justin Taylor: 4% of his team's GP (Christian White and Jack Cumiskey), also 5% on his own loads
+-- Effective September 2020 Justin T. will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
+Update tblCommCalc
+set JTComm = GP * .04
+where InvLOB = '9'
+and SalesPName IN ('Christian White', 'Jack Cumiskey','Justin Taylor')
+
+/* -- removed for 2021 and on per Rachel on 2/1/2021
+Update tblCommCalc
+set JTComm = GP * .05
+where InvLOB = '9'
+and SalesPName IN ('Justin Taylor')
+*/
+
+Update tblCommCalc
+set JTComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Justin Taylor')
+and ACCTMONTH IN (9,10,11,12)
+and ACCTYR = 2020
+
+Update tblCommCalc
+set JTComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Justin Taylor')
+and ACCTYR > 2020
+
+-- Greg Deal: 8.5% of his own GP
+-- Effective September 2020 Greg will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
+Update tblCommCalc
+set GDComm = GP * .085
+where InvLOB = '9'
+and SalesPName = 'Greg Deal'
+
+Update tblCommCalc
+set GDComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Greg Deal')
+and ACCTMONTH IN (9,10,11,12)
+and ACCTYR = 2020
+
+Update tblCommCalc
+set GDComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Greg Deal')
+and ACCTYR > 2020
+
+-- Colton Clements: 8.5% of his own GP
+-- Effective September 2020 Colton will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
+Update tblCommCalc
+set CCComm = GP * .085
+where InvLOB = '9'
+and SalesPName = 'Colton Clements'
+
+Update tblCommCalc
+set CCComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Colton Clements')
+and ACCTMONTH IN (9,10,11,12)
+and ACCTYR = 2020
+
+Update tblCommCalc
+set CCComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Colton Clements')
+and ACCTYR > 2020
+
+-- Christian White: 8.5% of his own GP
+-- Effective September 2020 Christian will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
+Update tblCommCalc
+set CWComm = GP * .085
+where InvLOB = '9'
+and SalesPName = 'Christian White'
+
+Update tblCommCalc
+set CWComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Christian White')
+and ACCTMONTH IN (9,10,11,12)
+and ACCTYR = 2020
+
+Update tblCommCalc
+set CWComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Christian White')
+and ACCTYR > 2020
+
+-- Jack Cumiskey: 8.5% of his own GP
+-- Effective September 2020 Jack will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
+Update tblCommCalc
+set JACKComm = GP * .085
+where InvLOB = '9'
+and SalesPName = 'Jack Cumiskey'
+
+Update tblCommCalc
+set JACKComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Jack Cumiskey')
+and ACCTMONTH IN (9,10,11,12)
+and ACCTYR = 2020
+
+Update tblCommCalc
+set JACKComm = GP * .05
+where InvLOB IN ('41','31,33,43')
+and SalesPName IN ('Jack Cumiskey')
+and ACCTYR > 2020
+
+-- Phil Mitchell 4% of team GP
+Update tblCommCalc
+set PMComm = GP * .04
+where InvLOB = '9'
+
+-- Dave Wire 4% of team GP
+Update tblCommCalc
+set DWComm = GP * .04
+where InvLOB = '9'
+
+-- Kellan Chrisman, Stephanie Butts, Terrance Reed 0.25% of team GP.  Kellan effective 8/1/2020 and Stephanie & Terrance Effective 9/1/2020
+-- 4/15/2021 Rachel Email: Stephanie and Terrance get 2.75% GP where they are the dispatcher on any loads in ST JAX or ATL 2.  Effective May 2021
+
+Update tblCommCalc
+set KCComm = GP * .0025
+where InvLOB = '11'
+and ACCTYR = 2020
+AND ACCTMONTH IN (8,9,10,11,12)
+
+Update tblCommCalc
+set KCComm = GP * .0025
+where InvLOB = '11'
+and ACCTYR > 2020
+
+Update tblCommCalc
+set TRComm = GP * .0025, SBComm = GP * .0025
+where InvLOB = '11'
+and InvCustName NOT LIKE 'DYCINSA%'
+and InvCustName NOT LIKE 'SUK%'
+and ACCTYR = 2020
+AND ACCTMONTH IN (9,10,11,12)
+
+Update tblCommCalc
+set TRComm = GP * .0025, SBComm = GP * .0025
+where InvLOB = '11'
+and InvCustName NOT LIKE 'DYCINSA%'
+and InvCustName NOT LIKE 'SUK%'
+and ACCTYR > 2020
+
+Update tblCommCalc
+set SBComm = GP * .0275
+where InvLOB IN ('9','10')
+and Dispatcher IN ('sbutts','sbuttsadmin')
+and ACCTMONTH > 5
+and ACCTYR = 2021
+
+Update tblCommCalc
+set SBComm = GP * .0275
+where InvLOB IN ('9','10')
+and Dispatcher IN ('sbutts','sbuttsadmin')
+and ACCTYR > 2021
+
+Update tblCommCalc
+set TRComm = GP * .0275
+where InvLOB IN ('9','10')
+and Dispatcher IN ('treed','treedadmin')
+and ACCTMONTH > 5
+and ACCTYR = 2021
+
+Update tblCommCalc
+set TRComm = GP * .0275
+where InvLOB IN ('9','10')
+and Dispatcher IN ('treed','treedadmin')
+and ACCTYR > 2021
+
+--Shari Robinson Calculation:  4% of GP of own accounts in LOB 76 GP less 7% overhead
+update tblCommCalc
+set SRComm = (GP*.93)*.04
+where InvLOB = '76'
+	AND SalesPName = 'Shari Robinson'
+
+--Open Man Consulting ST ATL 2: 30% of GP for all loads where they are sales rep
+update tblCommCalc
+set OMComm = GP*.3
+where InvLOB = '9'
+	AND SalesPName = 'Open Man Consulting'
+
+--Tina Henley: 8.5% of GP on own accounts in LOB 9
+update tblCommCalc
+set THComm = GP*.085
+where InvLOB = '9'
+	AND SalesPName = 'Tina Henley'
+	
+--ST CSR Comm Calcs--
+---------------------
+
+--Matt Higgins: 5% of GP where he is the CSR Rep
+update tblCommCalc
+set MHComm = GP*.05
+where InvLOB IN ('9','10','11')
+	AND Dispatcher IN ('matth','mhiggins','mattatl1','mattadmin')
+	AND ACCTYR >= 2021
+
+--Adam Bretz: 2.75% of GP where he is the CSR Rep and 1% Team GP
+update tblCommCalc
+set ABComm = GP*.0375
+where InvLOB IN ('9','10')
+	AND Dispatcher IN ('abretz','adamjax','abretzadmin')
+	AND ACCTYR >= 2021
+
+update tblCommCalc
+set ABComm = GP*.01
+where InvLOB IN ('9')
+	AND Dispatcher NOT IN ('abretz','adamjax','abretzadmin', 'mhiggins','mattadmin','matth')
+	AND ACCTYR >= 2021
+
+--Austin Miller: 2.75% of GP where he is the CSR Rep
+update tblCommCalc
+set AUSTINComm = GP*.0275
+where InvLOB IN ('9')
+	AND Dispatcher IN ('austinm')
+	AND ACCTYR >= 2021
+
+--Aiken Davis 2021 and on: 2.75% of own GP where he is the CSR Rep & 1% GP where LOB = 9 and dispatcher is not Matt.
+
+update tblCommCalc
+set ADComm = GP*.0375
+where InvLOB IN ('9')
+	AND Dispatcher IN ('adavis','adavisadmin')
+	AND ACCTYR >= 2021
+
+update tblCommCalc
+set ADComm = GP*.01
+where InvLOB IN ('9')
+	AND Dispatcher NOT IN ('mhiggins','adavis','adavisadmin','mattadmin')
+	AND ACCTMONTH < 5
+	AND ACCTYR = 2021
+
+update tblCommCalc
+set ADComm = GP*.01
+where InvLOB IN ('9')
+	AND Dispatcher NOT IN ('mhiggins','adavis','adavisadmin','mattadmin')
+	AND ACCTYR < 2021
+
+-- May 2021 and forward = 1.5% team GP instead of 1%
+update tblCommCalc
+set ADComm = GP*.015
+where InvLOB IN ('9')
+	AND Dispatcher NOT IN ('mhiggins','adavis','adavisadmin','mattadmin')
+	AND ACCTMONTH >= 5
+	AND ACCTYR = 2021
+
+update tblCommCalc
+set ADComm = GP*.015
+where InvLOB IN ('9')
+	AND Dispatcher NOT IN ('mhiggins','adavis','adavisadmin','mattadmin')
+	AND ACCTYR > 2021
+
+--Dalton Thomas 2021 and on: 2.75% of own GP where he is the CSR Rep & 1% GP where LOB = 9 and dispatcher is not Matt.
+update tblCommCalc
+set DTComm = GP*.0375
+where InvLOB IN ('10')
+	AND Dispatcher IN ('daltont','daltonadmin')
+	AND ACCTYR >= 2021
+
+update tblCommCalc
+set DTComm = GP*.01
+where InvLOB IN ('10')
+	AND Dispatcher NOT IN ('matth','daltont','daltonadmin','mattadmin')
+	AND ACCTYR >= 2021
+
+--Ron Raif 2021 and on: 2.75% of own GP where he is the CSR Rep & 1% GP where LOB = 9 and dispatcher is not Matt.
+update tblCommCalc
+set RRComm = GP*.0375
+where InvLOB IN ('10')
+	AND Dispatcher IN ('rraif','ronadmin')
+	AND ACCTYR >= 2021
+
+update tblCommCalc
+set RRComm = GP*.01
+where InvLOB IN ('10')
+	AND Dispatcher NOT IN ('matth','rraif','ronadmin','mattadmin')
+	AND ACCTYR >= 2021
+
+--Winston Crosse 2021 and on: 2.75% of own GP where he is the CSR Rep & 1% GP where LOB = 9 and dispatcher is not Matt.
+update tblCommCalc
+set WCComm = GP*.0375
+where InvLOB IN ('9','10')
+	AND Dispatcher IN ('wcrosse','winstonjax','winstonadmin')
+	AND ACCTYR >= 2021
+
+update tblCommCalc
+set WCComm = GP*.01
+where InvLOB IN ('9')
+	AND Dispatcher NOT IN ('mhiggins','wcrosse','winstonadmin','mattadmin')
+	AND ACCTYR >= 2021
+
+--Ioann Okolnichyi 2021 and on: 2.75% of own GP where he is the CSR Rep & 1% GP where LOB = 10 and dispatcher is not Matt.
+update tblCommCalc
+set IOComm = GP*.0375
+where InvLOB IN ('10')
+	AND Dispatcher IN ('iokolnichyisat','ioannadmin')
+	AND ACCTYR >= 2021
+
+update tblCommCalc
+set IOComm = GP*.01
+where InvLOB IN ('10')
+	AND Dispatcher NOT IN ('matth','iokolnichyisat','ioannadmin','mattadmin')
+	AND ACCTYR >= 2021
+	
+--SELECT * from #tmp1
+--drop table #tmp1
+/*****************************************************End Logging*******************************************************/
+
+ EXEC AJCDW.dbo.spAJCDW_Logging @StepID = 1, @BeginOrEnd = 1, @RecordsProcessed = @@ROWCOUNT, @ProcName = @ProcName
+
+ /***********************************************************************************************************************/
+
+end
+
+End Try
+
+
+
+BEGIN CATCH
+
+
+              DECLARE @ErrorMessage NVARCHAR(4000), @ErrorLine INT, @ErrorDate DATETIME;
+
+              
+              SELECT @ErrorMessage = ERROR_MESSAGE(), @ErrorLine = ERROR_LINE(), @ErrorDate = GETDATE();
+              
+              Insert into AJCDW.dbo.tblProcedureErrorLog ([ProcedureName], [ErrorMessage], [ErrorLine], [ErrorDate])
+              Select '[spAJCDW_LoadCommCalcTbl]', @ErrorMessage, @ErrorLine, @ErrorDate
+
+
+
+END CATCH
