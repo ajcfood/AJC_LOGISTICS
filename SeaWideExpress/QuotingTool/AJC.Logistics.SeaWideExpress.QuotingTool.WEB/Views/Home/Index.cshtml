@@ -1,0 +1,67 @@
+﻿@using AJC.Logistics.SeaWideExpress.QuotingTool.Models;
+@functions{
+    public string GetValores()
+    {
+        using (QuotingToolRepository db = new QuotingToolRepository())
+        {
+            var campo1 = db.Test.First(); return campo1.id.ToString();
+        }
+    }
+}
+@*<div>@GetValores()</div>*@
+
+<script src="~/assets/ag-grid/ag-grid-enterprise.min.js"></script>
+<script src="~/assets/ag-grid/ag-grid-servermanager.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+<div id="myGrid" style="height: 600px;width:100%;" class="ag-theme-balham"></div>
+
+<script>
+    // specify the columns.
+    var columnDefs = [
+        { headerName: "id", field: "id" },
+        { headerName: "fechadesde", field: "fechadesde" },
+        { headerName: "fechahasta", field: "fechahasta" },
+        { headerName: "zona", field: "zona" },
+        { headerName: "zonaDescripcion", field: "zonaDescripcion" },
+        { headerName: "precio", field: "precio" }
+    ];
+
+    // let the grid know which columns has to use.
+    var gridOptions = {
+        columnDefs: columnDefs,
+        defaultColDef: {
+            sortable: true,
+            filter: true
+        },
+        defaultColDef: {
+            flex: 1,
+            minWidth: 100,
+        },
+
+        // use the server-side row model instead of the default 'client-side'.
+        rowModelType: 'serverSide',
+        serverSideStoreType: 'partial',
+        // items to take by request.
+        cacheBlockSize: 4,
+        // enables pagination in the grid
+        pagination: true,
+        // sets rows qunatity to show per page (default is 100)
+        paginationPageSize: 4,
+    };
+
+    var _endPoint = '@Url.Action("getTestData", "AG")';
+    var agServerSideManagement = new AGGridManager();
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var gridDiv = document.querySelector('#myGrid');
+        new agGrid.Grid(gridDiv, gridOptions);
+        
+        // setup the server with a first call.
+        var server = agServerSideManagement.createServer(_endPoint);
+        // create datasource with a reference to the server.
+        var datasource = agServerSideManagement.createServerSideDatasource(server);
+        // set serverside datasource.
+        gridOptions.api.setServerSideDatasource(datasource);
+    });
+</script>

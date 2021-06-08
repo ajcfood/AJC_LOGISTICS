@@ -1,0 +1,12 @@
+﻿You can do a bin deploy like this:
+
+Right click your project and choose "Add Library Package Reference" - check ASP.NET MVC
+Install .Net Framework 4.5 on the server
+Publish the project on the server
+Set the AppPool for the website to .NET Framework 4 Integrated
+ver cgi isapi si no levanta.
+repetir ruta de recursos para minifiyin de mvc (Tengo la carpeta de imagenes repetidas por los comandos url de los css)
+Cambiar cultura de iis globalization a es-Ar para no tener problemas con decimales.
+Configurar 
+	webConfig
+	Ver la version de system.mvc. Puede que se deba seleccionar 4.0.0."1" (con cero al final, a veces el IIS, rechaza segun contextos.)
