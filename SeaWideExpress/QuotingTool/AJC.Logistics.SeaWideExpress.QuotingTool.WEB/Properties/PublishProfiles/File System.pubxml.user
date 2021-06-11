@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+This file is used by the publish/package process of your Web project. You can customize the behavior of this process
+by editing this MSBuild file. In order to learn more about this please visit https://go.microsoft.com/fwlink/?LinkID=208121. 
+-->
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_PublishTargetUrl>C:\inetpub\wwwroot\QuotingTool</_PublishTargetUrl>
+    <History>True|2021-06-10T00:14:47.5118606Z;</History>
+  </PropertyGroup>
+  <ItemGroup>
+    <File Include="aDocuments/DDL.sql">
+      <publishTime>06/07/2021 21:00:18</publishTime>
+    </File>
+    <File Include="aDocuments/Instalacion.txt">
+      <publishTime>06/07/2021 21:00:00</publishTime>
+    </File>
+    <File Include="assets/ag-grid/ag-grid-enterprise.min.js">
+      <publishTime>06/02/2021 19:17:18</publishTime>
+    </File>
+    <File Include="assets/ag-grid/ag-grid-servermanager.js">
+      <publishTime>06/05/2021 19:47:40</publishTime>
+    </File>
+    <File Include="assets/bootstrap/css/bootstrap.min.css">
+      <publishTime>05/13/2021 19:05:26</publishTime>
+    </File>
+    <File Include="assets/bootstrap/css/bootstrap.min.css.map">
+      <publishTime>05/13/2021 19:05:26</publishTime>
+    </File>
+    <File Include="assets/bootstrap/css/bootstrap.rtl.min.css">
+      <publishTime>05/13/2021 19:05:26</publishTime>
+    </File>
+    <File Include="assets/bootstrap/css/bootstrap.rtl.min.css.map">
+      <publishTime>05/13/2021 19:05:26</publishTime>
+    </File>
+    <File Include="assets/bootstrap/headers.css">
+      <publishTime>05/13/2021 19:05:26</publishTime>
+    </File>
+    <File Include="assets/bootstrap/js/bootstrap.bundle.min.js">
+      <publishTime>05/13/2021 19:05:26</publishTime>
+    </File>
+    <File Include="assets/bootstrap/js/bootstrap.bundle.min.js.map">
+      <publishTime>05/13/2021 19:05:26</publishTime>
+    </File>
+    <File Include="assets/scripts/index.js">
+      <publishTime>06/05/2021 10:28:50</publishTime>
+    </File>
+    <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Business.dll">
+      <publishTime>06/09/2021 20:14:43</publishTime>
+    </File>
+    <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Business.dll.config">
+      <publishTime>06/02/2021 19:33:40</publishTime>
+    </File>
+    <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Business.pdb">
+      <publishTime>06/09/2021 20:14:43</publishTime>
+    </File>
+    <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Controllers.dll">
+      <publishTime>06/09/2021 20:14:43</publishTime>
+    </File>
+    <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Controllers.dll.config">
+      <publishTime>06/05/2021 19:14:28</publishTime>
+    </File>
+    <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Controllers.pdb">
+      <publishTime>06/09/2021 20:14:43</publishTime>
+    </File>
+    <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Helpers.dll">
+      <publishTime>06/09/2021 20:14:42</publishTime>
+    </File>
+    <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Helpers.dll.config">
+      <publishTime>06/02/2021 19:23:46</publishTime>
+    </File>
+    <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Helpers.pdb">
+      <publishTime>06/09/2021 20:14:42</publishTime>
+    </File>
+    <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Models.dll">
+      <publishTime>06/09/2021 20:14:42</publishTime>
+    </File>
+    <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Models.dll.config">
+      <publishTime>05/25/2021 11:42:32</publishTime>
+    </File>
+    <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Models.pdb">
+      <publishTime>06/09/2021 20:14:42</publishTime>
+    </File>
+    <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Web.dll">
+      <publishTime>06/09/2021 20:14:44</publishTime>
+    </File>
+    <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Web.pdb">
+      <publishTime>06/09/2021 20:14:44</publishTime>
+    </File>
+    <File Include="bin/Antlr3.Runtime.dll">
+      <publishTime>01/27/2017 09:56:08</publishTime>
+    </File>
+    <File Include="bin/DotNetOpenAuth.AspNet.dll">
+      <publishTime>01/27/2017 09:56:10</publishTime>
+    </File>
+    <File Include="bin/DotNetOpenAuth.Core.dll">
+      <publishTime>01/27/2017 09:56:16</publishTime>
+    </File>
+    <File Include="bin/DotNetOpenAuth.OAuth.Consumer.dll">
+      <publishTime>01/27/2017 09:55:50</publishTime>
+    </File>
+    <File Include="bin/DotNetOpenAuth.OAuth.dll">
+      <publishTime>01/27/2017 09:55:48</publishTime>
+    </File>
+    <File Include="bin/DotNetOpenAuth.OpenId.dll">
+      <publishTime>01/27/2017 09:56:12</publishTime>
+    </File>
+    <File Include="bin/DotNetOpenAuth.OpenId.RelyingParty.dll">
+      <publishTime>01/27/2017 09:55:48</publishTime>
+    </File>
+    <File Include="bin/EntityFramework.dll">
+      <publishTime>01/27/2017 09:55:54</publishTime>
+    </File>
+    <File Include="bin/Microsoft.Web.Infrastructure.dll">
+      <publishTime>01/27/2017 09:55:52</publishTime>
+    </File>
+    <File Include="bin/Microsoft.Web.WebPages.OAuth.dll">
+      <publishTime>01/27/2017 09:56:20</publishTime>
+    </File>
+    <File Include="bin/Mono.Math.dll">
+      <publishTime>06/27/2012 01:48:32</publishTime>
+    </File>
+    <File Include="bin/Newtonsoft.Json.dll">
+      <publishTime>01/27/2017 09:55:50</publishTime>
+    </File>
+    <File Include="bin/Org.Mentalis.Security.Cryptography.dll">
+      <publishTime>06/27/2012 01:48:32</publishTime>
+    </File>
+    <File Include="bin/System.Net.Http.dll">
+      <publishTime>01/27/2017 09:56:20</publishTime>
+    </File>
+    <File Include="bin/System.Net.Http.Formatting.dll">
+      <publishTime>01/27/2017 09:56:14</publishTime>
+    </File>
+    <File Include="bin/System.Net.Http.WebRequest.dll">
+      <publishTime>01/27/2017 09:56:20</publishTime>
+    </File>
+    <File Include="bin/System.Web.Helpers.dll">
+      <publishTime>01/27/2017 09:55:54</publishTime>
+    </File>
+    <File Include="bin/System.Web.Http.dll">
+      <publishTime>01/27/2017 09:56:16</publishTime>
+    </File>
+    <File Include="bin/System.Web.Http.WebHost.dll">
+      <publishTime>01/27/2017 09:56:12</publishTime>
+    </File>
+    <File Include="bin/System.Web.Mvc.dll">
+      <publishTime>01/27/2017 09:56:14</publishTime>
+    </File>
+    <File Include="bin/System.Web.Optimization.dll">
+      <publishTime>01/27/2017 09:56:16</publishTime>
+    </File>
+    <File Include="bin/System.Web.Razor.dll">
+      <publishTime>01/27/2017 09:55:56</publishTime>
+    </File>
+    <File Include="bin/System.Web.WebPages.Deployment.dll">
+      <publishTime>01/27/2017 09:55:54</publishTime>
+    </File>
+    <File Include="bin/System.Web.WebPages.dll">
+      <publishTime>01/27/2017 09:55:54</publishTime>
+    </File>
+    <File Include="bin/System.Web.WebPages.Razor.dll">
+      <publishTime>01/27/2017 09:55:54</publishTime>
+    </File>
+    <File Include="bin/WebGrease.dll">
+      <publishTime>01/27/2017 09:56:08</publishTime>
+    </File>
+    <File Include="bin/WebMatrix.Data.dll">
+      <publishTime>01/27/2017 09:56:10</publishTime>
+    </File>
+    <File Include="bin/WebMatrix.WebData.dll">
+      <publishTime>01/27/2017 09:56:18</publishTime>
+    </File>
+    <File Include="Global.asax">
+      <publishTime>06/07/2021 19:10:04</publishTime>
+    </File>
+    <File Include="packages.config">
+      <publishTime>01/27/2017 09:52:46</publishTime>
+    </File>
+    <File Include="Views/Home/Index.cshtml">
+      <publishTime>06/07/2021 20:51:58</publishTime>
+    </File>
+    <File Include="Views/Shared/Layout.cshtml">
+      <publishTime>06/07/2021 19:32:16</publishTime>
+    </File>
+    <File Include="Views/Web.config">
+      <publishTime>01/27/2017 09:53:04</publishTime>
+    </File>
+    <File Include="Views/_ViewStart.cshtml">
+      <publishTime>06/13/2018 19:35:00</publishTime>
+    </File>
+    <File Include="Web.config">
+      <publishTime>06/09/2021 20:14:44</publishTime>
+    </File>
+  </ItemGroup>
+</Project>

@@ -31,22 +31,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="itextsharp, Version=5.4.3.0, Culture=neutral, PublicKeyToken=8354ae6d2174ddca, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>iTextSharpDlls\itextsharp.dll</HintPath>
-    </Reference>
-    <Reference Include="itextsharp.pdfa, Version=5.4.3.0, Culture=neutral, PublicKeyToken=8354ae6d2174ddca, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>iTextSharpDlls\itextsharp.pdfa.dll</HintPath>
-    </Reference>
-    <Reference Include="itextsharp.xtra, Version=5.4.3.0, Culture=neutral, PublicKeyToken=8354ae6d2174ddca, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>iTextSharpDlls\itextsharp.xtra.dll</HintPath>
-    </Reference>
-    <Reference Include="Recaptcha, Version=1.0.5.0, Culture=neutral, PublicKeyToken=9afc4d65b28c38c2, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>reCaptchaDlls\Recaptcha.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.Entity" />
