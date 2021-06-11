@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 6/11/2021 1:59:54 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 6/11/2021 2:42:10 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -128,6 +128,8 @@ SELECT ACCTYR
 	,Convert(decimal(18,2),0.00) as JORDANComm -- Jordan Williams
 	,Convert(decimal(18,2),0.00) as PWComm -- Patrick Wilkins
 	,Convert(decimal(18,2),0.00) as GHComm -- Grant Hicks
+	,Convert(decimal(18,2),0.00) as RWComm -- Rose White
+	,Convert(decimal(18,2),0.00) as RJComm -- Raphael Jones
 into #tmp1
 from tblInvoice i
 JOIN tblShipment s on i.ShipmentID = s.ShipmentID
@@ -232,6 +234,7 @@ where InvLOB = '12'
 
 --Lee Pantesco Calculation: 0.5% of Surface Trans GP.
 -- Starting 8/3/20 team GP goes from 0.5% to 1%
+-- starting June 2021 he gets 1% tam GO on LOB 10 (ST JAX) and 1% on any load in any LOB that he is the CSR
 update tblCommCalc
 set LPComm = GP*.005
 where InvLOB = '11'
@@ -254,7 +257,45 @@ where InvLOB = '11'
 update tblCommCalc
 set LPComm = GP*.01
 where InvLOB = '11'
-and ACCTYR >= 2021
+and ACCTMONTH < 6
+and ACCTYR = 2021
+
+update tblCommCalc
+set LPComm = GP*.01
+where InvLOB = '10'
+and ACCTMONTH >= 6
+and ACCTYR = 2021
+
+update tblCommCalc
+set LPComm = GP*.01
+where InvLOB = '10'
+and ACCTYR > 2021
+
+update tblCommCalc
+set LPComm = GP*.02 --1% on team GP for LOB 10 and 1% if he is dispatcher
+where InvLOB = '10'
+and Dispatcher = 'lpantesco'
+and ACCTMONTH >= 6
+and ACCTYR = 2021
+
+update tblCommCalc
+set LPComm = GP*.02 --1% on team GP for LOB 10 and 1% if he is dispatcher
+where InvLOB = '10'
+and Dispatcher = 'lpantesco'
+and ACCTYR > 2021
+
+update tblCommCalc
+set LPComm = GP*.01 
+where InvLOB IN ('11','9')
+and Dispatcher = 'lpantesco'
+and ACCTMONTH >= 6
+and ACCTYR = 2021
+
+update tblCommCalc
+set LPComm = GP*.01 
+where InvLOB IN ('11','9')
+and Dispatcher = 'lpantesco'
+and ACCTYR > 2021
 
 /*
 update tblCommCalc
@@ -1483,6 +1524,18 @@ set GHComm = GP*.01
 where Dispatcher NOT IN ('matth','mattatl1','mhiggins','mattadmin','ghick')
 and InvLOB IN ('9')
 	
+--Account Manager Calculations starting June 2021
+update tblCommCalc
+set KCComm = GP*.01, RWComm = GP*.25, RJComm = GP*.25
+where ACCTMGR <> 'UNASSIGNED'
+	and ACCTMONTH >= 6
+	and ACCTYR = 2021
+
+update tblCommCalc
+set KCComm = GP*.01, RWComm = GP*.25, RJComm = GP*.25
+where ACCTMGR <> 'UNASSIGNED'
+	and ACCTYR > 2021
+
 --SELECT * from #tmp1
 --drop table #tmp1
 /*****************************************************End Logging*******************************************************/
