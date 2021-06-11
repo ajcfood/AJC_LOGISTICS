@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 6/11/2021 8:35:20 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 6/11/2021 1:59:54 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -59,6 +59,7 @@ SELECT ACCTYR
 	,s.ShpController as Dispatcher
 	,s.ShpMoveType as ShipType
 	,SalesPName
+	,CAST(NULL as VARCHAR(255)) as ACCTMGR -- added 6/11/2021
 	,CAST(NULL as VARCHAR(255)) as HOUSE_ACCOUNT -- added /27/2021 for Comm reassignment per Ginger
 	,InvCustName
 	,cast(sum(InvRevenue) as decimal(18,2)) as Rev
@@ -186,6 +187,17 @@ UPDATE tblCommCalc
 SET Dispatcher = 'UNASSIGNED'
 where Dispatcher IS NULL
 AND InvLOB in ('9','10','11')
+
+--UPDATE ACCT MGR (6/11/2021)
+UPDATE tblCommCalc
+SET ACCTMGR = Account_Manager
+FROM
+tblCommCalc
+join AcctManagerMaster on InvCustName = CustomerName
+
+UPDATE tblCommCalc
+SET ACCTMGR = 'UNASSIGNED'
+where ACCTMGR IS NULL
 
 -- ====================================================================================================================================
 -- Step #3
