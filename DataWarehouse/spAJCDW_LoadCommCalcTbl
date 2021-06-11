@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 5/13/2021 3:12:46 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 6/11/2021 8:35:20 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -124,6 +124,9 @@ SELECT ACCTYR
 	,Convert(decimal(18,2),0.00) as MHComm -- Matt Higgins
 	,Convert(decimal(18,2),0.00) as WCComm -- Winston Crosse
 	,Convert(decimal(18,2),0.00) as THComm -- Tina Henley
+	,Convert(decimal(18,2),0.00) as JORDANComm -- Jordan Williams
+	,Convert(decimal(18,2),0.00) as PWComm -- Patrick Wilkins
+	,Convert(decimal(18,2),0.00) as GHComm -- Grant Hicks
 into #tmp1
 from tblInvoice i
 JOIN tblShipment s on i.ShipmentID = s.ShipmentID
@@ -239,6 +242,12 @@ where InvLOB = '11'
 update tblCommCalc
 set LPComm = GP*.01
 where InvLOB = '11'
+and ACCTYR >= 2021
+
+/*
+update tblCommCalc
+set LPComm = GP*.01
+where InvLOB = '11'
 	and ACCTMONTH IN (1,2,3,4)
 	and ACCTYR = 2021
 
@@ -278,7 +287,7 @@ update tblCommCalc
 set LPComm = GP*.007
 where InvLOB = '10'
 	and ACCTYR > 2021
-		
+*/		
 --Michael Browder Calculation: 18% of Surface Trans GP where he is Sales Rep
 update tblCommCalc
 set MBComm = GP*.18
@@ -406,6 +415,10 @@ where InvLOB = '11'
 	
 --Andres Alonso Calculation: 7% of his own GP, 0.5% of Surf Trans GP--
 -- per Rachel email on 8/20/2020, he only gets team commission now--
+-- 6/11/2021 email, new calculations starting JULY 2021
+		--2.75% of GP on any load where Andres is the Assign To or Dispatcher
+		--0.5% of GP on total ST JAX team
+		--0.5% of GP on Sukarne GP.  Calculation should be under LOB 11
 update tblCommCalc
 set AAComm = GP*.07
 where salespname = 'Andres Alonso'
@@ -447,7 +460,48 @@ and ACCTMONTH IN (8,9,10,11,12)
 Update tblCommCalc
 set AAComm = GP*.005
 where InvLOB = '11'
-AND ACCTYR >= 2020
+AND ACCTYR = 2020
+
+Update tblCommCalc
+set AAComm = GP*.005
+where InvLOB = '11'
+and ACCTMONTH < 6
+AND ACCTYR = 2021
+
+update tblCommCalc
+set AAComm = GP*.0275
+where Dispatcher IN ('aalonsoadmin','aalonso')
+	AND ACCTYR = 2021
+	and ACCTMONTH > 6
+
+update tblCommCalc
+set AAComm = GP*.0275
+where Dispatcher IN ('aalonsoadmin','aalonso')
+	AND ACCTYR > 2021
+	
+update tblCommCalc
+set AAComm = GP*.005
+where InvLOB IN ('10')
+	AND Dispatcher NOT IN ('matth','aalonsoadmin','aalonso')
+	AND ACCTYR = 2021
+	and ACCTMONTH > 6
+
+update tblCommCalc
+set AAComm = GP*.005
+where InvLOB IN ('10')
+	AND Dispatcher NOT IN ('matth','aalonsoadmin','aalonso')
+	AND ACCTYR > 2021
+	
+update tblCommCalc
+set AAComm = GP*.0325
+Where InvCustName IN ('SUKARNE','SUK - NORTH BOUND','SUK-EXPORT')
+	AND ACCTYR = 2021
+	and ACCTMONTH > 6
+
+update tblCommCalc
+set AAComm = GP*.0325
+Where InvCustName IN ('SUKARNE','SUK - NORTH BOUND','SUK-EXPORT')
+	AND ACCTYR > 2021
 
 --Leo Serna Calculation:
 	--7% of ST GP assigned to LS
@@ -1005,6 +1059,7 @@ where InvLOB = '76'
 
 
 -- Alex Gonzalez: 8% GP of own GP LOB 11 and 5% own GP in LOBs 41,43,25.  4% only on LOB 11,9,10 HOUSE accounts.
+-- Starting May 2021, 1.5% GP on SUK loads in 40-43.  Changed to June 2021 on email from Rachel on 6/9/2021
 Update tblCommCalc
 set AGComm = GP * .08
 where InvLOB IN ('9','10','11')
@@ -1033,7 +1088,20 @@ and InvCustName IN (
 'BEST BENNER BUILDING CORP',          
 'JC TIRE',                            
 'IMPERIAL DADE PAPER',                
-'AMERICAN PAPER CORPORATION')         
+'AMERICAN PAPER CORPORATION')
+
+update tblCommCalc
+set AGComm = GP * .015
+where InvLOB = '31,33,43'
+	and InvCustName like 'SUK%'
+	and ACCTMONTH >= 6
+	and ACCTYR = 2021
+
+update tblCommCalc
+set AGComm = GP * .015
+where InvLOB = '31,33,43'
+	and InvCustName like 'SUK%'
+	and ACCTYR > 2021
 
 -- Jason Lewter: 4% of his team's GP (Greg Deal and Colton Clements)
 -- Effective September 2020 Jason will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
@@ -1179,6 +1247,7 @@ where InvLOB = '9'
 
 -- Kellan Chrisman, Stephanie Butts, Terrance Reed 0.25% of team GP.  Kellan effective 8/1/2020 and Stephanie & Terrance Effective 9/1/2020
 -- 4/15/2021 Rachel Email: Stephanie and Terrance get 2.75% GP where they are the dispatcher on any loads in ST JAX or ATL 2.  Effective May 2021
+-- 6/10/2021 Rachel Email: Stephanie and Terrance get 2.75% GP on ATL1 loads too where they are the dispatcher.  Effective June 2021
 
 Update tblCommCalc
 set KCComm = GP * .0025
@@ -1210,12 +1279,19 @@ Update tblCommCalc
 set SBComm = GP * .0275
 where InvLOB IN ('9','10')
 and Dispatcher IN ('sbutts','sbuttsadmin')
-and ACCTMONTH > 5
+and ACCTMONTH < 6
 and ACCTYR = 2021
 
 Update tblCommCalc
 set SBComm = GP * .0275
-where InvLOB IN ('9','10')
+where InvLOB IN ('9','10','11')
+and Dispatcher IN ('sbutts','sbuttsadmin')
+and ACCTMONTH >= 6
+and ACCTYR = 2021
+
+Update tblCommCalc
+set SBComm = GP * .0275
+where InvLOB IN ('9','10','11')
 and Dispatcher IN ('sbutts','sbuttsadmin')
 and ACCTYR > 2021
 
@@ -1223,12 +1299,20 @@ Update tblCommCalc
 set TRComm = GP * .0275
 where InvLOB IN ('9','10')
 and Dispatcher IN ('treed','treedadmin')
-and ACCTMONTH > 5
+and ACCTMONTH < 6
 and ACCTYR = 2021
 
 Update tblCommCalc
 set TRComm = GP * .0275
-where InvLOB IN ('9','10')
+where InvLOB IN ('9','10','11')
+and Dispatcher IN ('treed','treedadmin')
+and ACCTMONTH >= 6
+and ACCTYR = 2021
+
+
+Update tblCommCalc
+set TRComm = GP * .0275
+where InvLOB IN ('9','10','11')
 and Dispatcher IN ('treed','treedadmin')
 and ACCTYR > 2021
 
@@ -1249,6 +1333,16 @@ update tblCommCalc
 set THComm = GP*.085
 where InvLOB = '9'
 	AND SalesPName = 'Tina Henley'
+
+--Jordan Williams: 8.5% of GP on own accounts
+update tblCommCalc
+set JORDANComm = GP*.085
+where SalesPName = 'Jordan Williams'
+
+--Patrick Wilkins: 8.5% of GP on own accounts
+update tblCommCalc
+set PWComm = GP*.085
+where SalesPName = 'Patrick Wilkins'
 	
 --ST CSR Comm Calcs--
 ---------------------
@@ -1366,6 +1460,16 @@ set IOComm = GP*.01
 where InvLOB IN ('10')
 	AND Dispatcher NOT IN ('matth','iokolnichyisat','ioannadmin','mattadmin')
 	AND ACCTYR >= 2021
+
+--Grant Hicks: 2.75% of own GP where he is the CSR Rep & 1% GP dispatcher is not Matt.
+update tblCommCalc
+set GHComm = GP*.0375
+where Dispatcher = 'ghick'
+
+update tblCommCalc
+set GHComm = GP*.01
+where Dispatcher NOT IN ('matth','mattatl1','mhiggins','mattadmin','ghick')
+and InvLOB IN ('9')
 	
 --SELECT * from #tmp1
 --drop table #tmp1
