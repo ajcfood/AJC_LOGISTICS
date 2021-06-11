@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 6/11/2021 2:42:10 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 6/11/2021 3:05:15 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -196,10 +196,12 @@ SET ACCTMGR = Account_Manager
 FROM
 tblCommCalc
 join AcctManagerMaster on InvCustName = CustomerName
+where InvLOB IN ('9','10','11')
 
 UPDATE tblCommCalc
 SET ACCTMGR = 'UNASSIGNED'
 where ACCTMGR IS NULL
+and InvLOB IN ('9','10','11')
 
 -- ====================================================================================================================================
 -- Step #3
@@ -518,7 +520,7 @@ AND ACCTYR = 2020
 Update tblCommCalc
 set AAComm = GP*.005
 where InvLOB = '11'
-and ACCTMONTH < 6
+and ACCTMONTH <= 6
 AND ACCTYR = 2021
 
 update tblCommCalc
@@ -1526,14 +1528,16 @@ and InvLOB IN ('9')
 	
 --Account Manager Calculations starting June 2021
 update tblCommCalc
-set KCComm = GP*.01, RWComm = GP*.25, RJComm = GP*.25
+set KCComm = GP*.01, RWComm = GP*.0025, RJComm = GP*.0025
 where ACCTMGR <> 'UNASSIGNED'
+	and InvLOB IN ('9','10','11')
 	and ACCTMONTH >= 6
 	and ACCTYR = 2021
 
 update tblCommCalc
-set KCComm = GP*.01, RWComm = GP*.25, RJComm = GP*.25
+set KCComm = GP*.01, RWComm = GP*.0025, RJComm = GP*.0025
 where ACCTMGR <> 'UNASSIGNED'
+	and InvLOB IN ('9','10','11')
 	and ACCTYR > 2021
 
 --SELECT * from #tmp1
