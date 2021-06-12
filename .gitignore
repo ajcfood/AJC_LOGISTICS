@@ -1,0 +1,6 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/SeaWideExpress/QuotingTool/AJC.Logistics.SeaWideExpress.QuotingTool.Data/AJC.Logistics.SeaWideExpress.QuotingTool.Data.jfm
+/SeaWideExpress/QuotingTool/AJC.Logistics.SeaWideExpress.QuotingTool.Data/AJC.Logistics.SeaWideExpress.QuotingTool.Data.dbmdl
