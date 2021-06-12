@@ -5,6 +5,82 @@
     <!-- SSDL content -->
     <edmx:StorageModels>
     <Schema Namespace="QuotingToolModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2008" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/02/edm/ssdl">
+        <EntityType Name="QuotingV2_Fees">
+          <Key>
+            <PropertyRef Name="FeeID" />
+          </Key>
+          <Property Name="FeeID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="FeeTypeID" Type="int" Nullable="false" />
+          <Property Name="State" Type="varchar" MaxLength="2" />
+          <Property Name="IslandID" Type="int" />
+          <Property Name="ZoneID" Type="int" />
+          <Property Name="CityID" Type="int" />
+          <Property Name="ZipCodes" Type="varchar" MaxLength="4000" />
+          <Property Name="CustomerID" Type="int" />
+          <Property Name="Fee" Type="decimal" Precision="5" Scale="2" />
+          <Property Name="ByUomID" Type="int" />
+          <Property Name="Discount" Type="decimal" Precision="3" Scale="3" />
+          <Property Name="FeeMin" Type="decimal" Precision="7" Scale="2" />
+          <Property Name="FeeMax" Type="decimal" Precision="7" Scale="2" />
+          <Property Name="RangeByUomID" Type="int" />
+          <Property Name="ParentFeeID" Type="int" />
+          <Property Name="RangeFrom" Type="decimal" Precision="7" Scale="2" />
+          <Property Name="RangeTo" Type="decimal" Precision="7" Scale="2" />
+          <Property Name="ValidFrom" Type="datetime" />
+          <Property Name="ValidUntil" Type="datetime" />
+          <Property Name="Notes" Type="varchar" MaxLength="100" />
+          <Property Name="DateAdded" Type="datetime" Nullable="false" />
+          <Property Name="AddedBy" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="DateUpdated" Type="datetime" />
+          <Property Name="UpdatedBy" Type="varchar" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="QuotingV2_FeeTypes">
+          <Key>
+            <PropertyRef Name="FeeTypeID" />
+          </Key>
+          <Property Name="FeeTypeID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="Description" Type="varchar" MaxLength="400" />
+          <Property Name="ParentFeeTypeID" Type="int" />
+          <Property Name="DateAdded" Type="datetime" Nullable="false" />
+          <Property Name="AddedBy" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="DateUpdated" Type="datetime" />
+          <Property Name="UpdatedBy" Type="varchar" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="QuotingV2_ServiceTypeFees">
+          <Key>
+            <PropertyRef Name="ServiceTypeChargeID" />
+          </Key>
+          <Property Name="ServiceTypeChargeID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ServiceTypeID" Type="int" Nullable="false" />
+          <Property Name="FeeTypeID" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="QuotingV2_ServiceTypes">
+          <Key>
+            <PropertyRef Name="ServiceTypeID" />
+          </Key>
+          <Property Name="ServiceTypeID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="Description" Type="varchar" MaxLength="400" />
+          <Property Name="Show" Type="varchar" MaxLength="1" Nullable="false" />
+          <Property Name="Position" Type="int" />
+          <Property Name="DateAdded" Type="datetime" Nullable="false" />
+          <Property Name="AddedBy" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="DateUpdated" Type="datetime" />
+          <Property Name="UpdatedBy" Type="varchar" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="QuotingV2_UOMs">
+          <Key>
+            <PropertyRef Name="UomID" />
+          </Key>
+          <Property Name="UomID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="Description" Type="varchar" MaxLength="400" />
+          <Property Name="DateAdded" Type="datetime" Nullable="false" />
+          <Property Name="AddedBy" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="DateUpdated" Type="datetime" />
+          <Property Name="UpdatedBy" Type="varchar" MaxLength="100" />
+        </EntityType>
         <EntityType Name="Test">
           <Key>
             <PropertyRef Name="id" />
@@ -16,8 +92,125 @@
           <Property Name="zonaDescripcion" Type="varchar" MaxLength="50" />
           <Property Name="precio" Type="decimal" Precision="18" Scale="3" />
         </EntityType>
+        <Association Name="QuotingV2_Fees_Parent_FK">
+          <End Role="QuotingV2_Fees" Type="Self.QuotingV2_Fees" Multiplicity="0..1" />
+          <End Role="QuotingV2_Fees1" Type="Self.QuotingV2_Fees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_Fees">
+              <PropertyRef Name="FeeID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Fees1">
+              <PropertyRef Name="ParentFeeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Fees_RangeUom_FK">
+          <End Role="QuotingV2_UOMs" Type="Self.QuotingV2_UOMs" Multiplicity="0..1" />
+          <End Role="QuotingV2_Fees" Type="Self.QuotingV2_Fees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_UOMs">
+              <PropertyRef Name="UomID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Fees">
+              <PropertyRef Name="RangeByUomID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Fees_Types_FK">
+          <End Role="QuotingV2_FeeTypes" Type="Self.QuotingV2_FeeTypes" Multiplicity="1" />
+          <End Role="QuotingV2_Fees" Type="Self.QuotingV2_Fees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_FeeTypes">
+              <PropertyRef Name="FeeTypeID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Fees">
+              <PropertyRef Name="FeeTypeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Fees_Uom_FK">
+          <End Role="QuotingV2_UOMs" Type="Self.QuotingV2_UOMs" Multiplicity="0..1" />
+          <End Role="QuotingV2_Fees" Type="Self.QuotingV2_Fees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_UOMs">
+              <PropertyRef Name="UomID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Fees">
+              <PropertyRef Name="ByUomID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_FeeTypes_Parent_FK">
+          <End Role="QuotingV2_FeeTypes" Type="Self.QuotingV2_FeeTypes" Multiplicity="0..1" />
+          <End Role="QuotingV2_FeeTypes1" Type="Self.QuotingV2_FeeTypes" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_FeeTypes">
+              <PropertyRef Name="FeeTypeID" />
+            </Principal>
+            <Dependent Role="QuotingV2_FeeTypes1">
+              <PropertyRef Name="ParentFeeTypeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_ServiceTypeCharges_FeeType_FK">
+          <End Role="QuotingV2_FeeTypes" Type="Self.QuotingV2_FeeTypes" Multiplicity="1" />
+          <End Role="QuotingV2_ServiceTypeFees" Type="Self.QuotingV2_ServiceTypeFees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_FeeTypes">
+              <PropertyRef Name="FeeTypeID" />
+            </Principal>
+            <Dependent Role="QuotingV2_ServiceTypeFees">
+              <PropertyRef Name="FeeTypeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_ServiceTypeCharges_ServiceType_FK">
+          <End Role="QuotingV2_ServiceTypes" Type="Self.QuotingV2_ServiceTypes" Multiplicity="1" />
+          <End Role="QuotingV2_ServiceTypeFees" Type="Self.QuotingV2_ServiceTypeFees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_ServiceTypes">
+              <PropertyRef Name="ServiceTypeID" />
+            </Principal>
+            <Dependent Role="QuotingV2_ServiceTypeFees">
+              <PropertyRef Name="ServiceTypeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <EntityContainer Name="QuotingToolModelStoreContainer">
+          <EntitySet Name="QuotingV2_Fees" EntityType="Self.QuotingV2_Fees" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="QuotingV2_FeeTypes" EntityType="Self.QuotingV2_FeeTypes" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="QuotingV2_ServiceTypeFees" EntityType="Self.QuotingV2_ServiceTypeFees" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="QuotingV2_ServiceTypes" EntityType="Self.QuotingV2_ServiceTypes" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="QuotingV2_UOMs" EntityType="Self.QuotingV2_UOMs" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Test" EntityType="Self.Test" Schema="dbo" store:Type="Tables" />
+          <AssociationSet Name="QuotingV2_Fees_Parent_FK" Association="Self.QuotingV2_Fees_Parent_FK">
+            <End Role="QuotingV2_Fees" EntitySet="QuotingV2_Fees" />
+            <End Role="QuotingV2_Fees1" EntitySet="QuotingV2_Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Fees_RangeUom_FK" Association="Self.QuotingV2_Fees_RangeUom_FK">
+            <End Role="QuotingV2_UOMs" EntitySet="QuotingV2_UOMs" />
+            <End Role="QuotingV2_Fees" EntitySet="QuotingV2_Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Fees_Types_FK" Association="Self.QuotingV2_Fees_Types_FK">
+            <End Role="QuotingV2_FeeTypes" EntitySet="QuotingV2_FeeTypes" />
+            <End Role="QuotingV2_Fees" EntitySet="QuotingV2_Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Fees_Uom_FK" Association="Self.QuotingV2_Fees_Uom_FK">
+            <End Role="QuotingV2_UOMs" EntitySet="QuotingV2_UOMs" />
+            <End Role="QuotingV2_Fees" EntitySet="QuotingV2_Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_FeeTypes_Parent_FK" Association="Self.QuotingV2_FeeTypes_Parent_FK">
+            <End Role="QuotingV2_FeeTypes" EntitySet="QuotingV2_FeeTypes" />
+            <End Role="QuotingV2_FeeTypes1" EntitySet="QuotingV2_FeeTypes" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_ServiceTypeCharges_FeeType_FK" Association="Self.QuotingV2_ServiceTypeCharges_FeeType_FK">
+            <End Role="QuotingV2_FeeTypes" EntitySet="QuotingV2_FeeTypes" />
+            <End Role="QuotingV2_ServiceTypeFees" EntitySet="QuotingV2_ServiceTypeFees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_ServiceTypeCharges_ServiceType_FK" Association="Self.QuotingV2_ServiceTypeCharges_ServiceType_FK">
+            <End Role="QuotingV2_ServiceTypes" EntitySet="QuotingV2_ServiceTypes" />
+            <End Role="QuotingV2_ServiceTypeFees" EntitySet="QuotingV2_ServiceTypeFees" />
+          </AssociationSet>
         </EntityContainer>
       </Schema></edmx:StorageModels>
     <!-- CSDL content -->
@@ -25,6 +218,39 @@
       <Schema Namespace="QuotingToolModel" Alias="Self" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
         <EntityContainer Name="QuotingToolRepository" annotation:LazyLoadingEnabled="true" >
           <EntitySet Name="Test" EntityType="QuotingToolModel.Test" />
+          <EntitySet Name="QuotingV2_Fees" EntityType="QuotingToolModel.QuotingV2_Fees" />
+          <EntitySet Name="QuotingV2_FeeTypes" EntityType="QuotingToolModel.QuotingV2_FeeTypes" />
+          <EntitySet Name="QuotingV2_ServiceTypeFees" EntityType="QuotingToolModel.QuotingV2_ServiceTypeFees" />
+          <EntitySet Name="QuotingV2_ServiceTypes" EntityType="QuotingToolModel.QuotingV2_ServiceTypes" />
+          <EntitySet Name="QuotingV2_UOMs" EntityType="QuotingToolModel.QuotingV2_UOMs" />
+          <AssociationSet Name="QuotingV2_Fees_Parent_FK" Association="QuotingToolModel.QuotingV2_Fees_Parent_FK">
+            <End Role="QuotingV2_Fees" EntitySet="QuotingV2_Fees" />
+            <End Role="QuotingV2_Fees1" EntitySet="QuotingV2_Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Fees_RangeUom_FK" Association="QuotingToolModel.QuotingV2_Fees_RangeUom_FK">
+            <End Role="QuotingV2_UOMs" EntitySet="QuotingV2_UOMs" />
+            <End Role="QuotingV2_Fees" EntitySet="QuotingV2_Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Fees_Types_FK" Association="QuotingToolModel.QuotingV2_Fees_Types_FK">
+            <End Role="QuotingV2_FeeTypes" EntitySet="QuotingV2_FeeTypes" />
+            <End Role="QuotingV2_Fees" EntitySet="QuotingV2_Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Fees_Uom_FK" Association="QuotingToolModel.QuotingV2_Fees_Uom_FK">
+            <End Role="QuotingV2_UOMs" EntitySet="QuotingV2_UOMs" />
+            <End Role="QuotingV2_Fees" EntitySet="QuotingV2_Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_FeeTypes_Parent_FK" Association="QuotingToolModel.QuotingV2_FeeTypes_Parent_FK">
+            <End Role="QuotingV2_FeeTypes" EntitySet="QuotingV2_FeeTypes" />
+            <End Role="QuotingV2_FeeTypes1" EntitySet="QuotingV2_FeeTypes" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_ServiceTypeCharges_FeeType_FK" Association="QuotingToolModel.QuotingV2_ServiceTypeCharges_FeeType_FK">
+            <End Role="QuotingV2_FeeTypes" EntitySet="QuotingV2_FeeTypes" />
+            <End Role="QuotingV2_ServiceTypeFees" EntitySet="QuotingV2_ServiceTypeFees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_ServiceTypeCharges_ServiceType_FK" Association="QuotingToolModel.QuotingV2_ServiceTypeCharges_ServiceType_FK">
+            <End Role="QuotingV2_ServiceTypes" EntitySet="QuotingV2_ServiceTypes" />
+            <End Role="QuotingV2_ServiceTypeFees" EntitySet="QuotingV2_ServiceTypeFees" />
+          </AssociationSet>
         </EntityContainer>
         <EntityType Name="Test">
           <Key>
@@ -37,6 +263,180 @@
           <Property Name="zonaDescripcion" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
           <Property Name="precio" Type="Decimal" Precision="18" Scale="3" />
         </EntityType>
+        <EntityType Name="QuotingV2_Fees">
+          <Key>
+            <PropertyRef Name="FeeID" />
+          </Key>
+          <Property Name="FeeID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="FeeTypeID" Type="Int32" Nullable="false" />
+          <Property Name="State" Type="String" MaxLength="2" FixedLength="false" Unicode="false" />
+          <Property Name="IslandID" Type="Int32" />
+          <Property Name="ZoneID" Type="Int32" />
+          <Property Name="CityID" Type="Int32" />
+          <Property Name="ZipCodes" Type="String" MaxLength="4000" FixedLength="false" Unicode="false" />
+          <Property Name="CustomerID" Type="Int32" />
+          <Property Name="Fee" Type="Decimal" Precision="5" Scale="2" />
+          <Property Name="ByUomID" Type="Int32" />
+          <Property Name="Discount" Type="Decimal" Precision="3" Scale="3" />
+          <Property Name="FeeMin" Type="Decimal" Precision="7" Scale="2" />
+          <Property Name="FeeMax" Type="Decimal" Precision="7" Scale="2" />
+          <Property Name="RangeByUomID" Type="Int32" />
+          <Property Name="ParentFeeID" Type="Int32" />
+          <Property Name="RangeFrom" Type="Decimal" Precision="7" Scale="2" />
+          <Property Name="RangeTo" Type="Decimal" Precision="7" Scale="2" />
+          <Property Name="ValidFrom" Type="DateTime" Precision="3" />
+          <Property Name="ValidUntil" Type="DateTime" Precision="3" />
+          <Property Name="Notes" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="DateAdded" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="AddedBy" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="DateUpdated" Type="DateTime" Precision="3" />
+          <Property Name="UpdatedBy" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="QuotingV2_Fees1" Relationship="QuotingToolModel.QuotingV2_Fees_Parent_FK" FromRole="QuotingV2_Fees" ToRole="QuotingV2_Fees1" />
+          <NavigationProperty Name="QuotingV2_Fees2" Relationship="QuotingToolModel.QuotingV2_Fees_Parent_FK" FromRole="QuotingV2_Fees1" ToRole="QuotingV2_Fees" />
+          <NavigationProperty Name="QuotingV2_UOMs" Relationship="QuotingToolModel.QuotingV2_Fees_RangeUom_FK" FromRole="QuotingV2_Fees" ToRole="QuotingV2_UOMs" />
+          <NavigationProperty Name="QuotingV2_FeeTypes" Relationship="QuotingToolModel.QuotingV2_Fees_Types_FK" FromRole="QuotingV2_Fees" ToRole="QuotingV2_FeeTypes" />
+          <NavigationProperty Name="QuotingV2_UOMs1" Relationship="QuotingToolModel.QuotingV2_Fees_Uom_FK" FromRole="QuotingV2_Fees" ToRole="QuotingV2_UOMs" />
+        </EntityType>
+        <EntityType Name="QuotingV2_FeeTypes">
+          <Key>
+            <PropertyRef Name="FeeTypeID" />
+          </Key>
+          <Property Name="FeeTypeID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="Description" Type="String" MaxLength="400" FixedLength="false" Unicode="false" />
+          <Property Name="ParentFeeTypeID" Type="Int32" />
+          <Property Name="DateAdded" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="AddedBy" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="DateUpdated" Type="DateTime" Precision="3" />
+          <Property Name="UpdatedBy" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="QuotingV2_Fees" Relationship="QuotingToolModel.QuotingV2_Fees_Types_FK" FromRole="QuotingV2_FeeTypes" ToRole="QuotingV2_Fees" />
+          <NavigationProperty Name="QuotingV2_FeeTypes1" Relationship="QuotingToolModel.QuotingV2_FeeTypes_Parent_FK" FromRole="QuotingV2_FeeTypes" ToRole="QuotingV2_FeeTypes1" />
+          <NavigationProperty Name="QuotingV2_FeeTypes2" Relationship="QuotingToolModel.QuotingV2_FeeTypes_Parent_FK" FromRole="QuotingV2_FeeTypes1" ToRole="QuotingV2_FeeTypes" />
+          <NavigationProperty Name="QuotingV2_ServiceTypeFees" Relationship="QuotingToolModel.QuotingV2_ServiceTypeCharges_FeeType_FK" FromRole="QuotingV2_FeeTypes" ToRole="QuotingV2_ServiceTypeFees" />
+        </EntityType>
+        <EntityType Name="QuotingV2_ServiceTypeFees">
+          <Key>
+            <PropertyRef Name="ServiceTypeChargeID" />
+          </Key>
+          <Property Name="ServiceTypeChargeID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ServiceTypeID" Type="Int32" Nullable="false" />
+          <Property Name="FeeTypeID" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="QuotingV2_FeeTypes" Relationship="QuotingToolModel.QuotingV2_ServiceTypeCharges_FeeType_FK" FromRole="QuotingV2_ServiceTypeFees" ToRole="QuotingV2_FeeTypes" />
+          <NavigationProperty Name="QuotingV2_ServiceTypes" Relationship="QuotingToolModel.QuotingV2_ServiceTypeCharges_ServiceType_FK" FromRole="QuotingV2_ServiceTypeFees" ToRole="QuotingV2_ServiceTypes" />
+        </EntityType>
+        <EntityType Name="QuotingV2_ServiceTypes">
+          <Key>
+            <PropertyRef Name="ServiceTypeID" />
+          </Key>
+          <Property Name="ServiceTypeID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="Description" Type="String" MaxLength="400" FixedLength="false" Unicode="false" />
+          <Property Name="Show" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
+          <Property Name="Position" Type="Int32" />
+          <Property Name="DateAdded" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="AddedBy" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="DateUpdated" Type="DateTime" Precision="3" />
+          <Property Name="UpdatedBy" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="QuotingV2_ServiceTypeFees" Relationship="QuotingToolModel.QuotingV2_ServiceTypeCharges_ServiceType_FK" FromRole="QuotingV2_ServiceTypes" ToRole="QuotingV2_ServiceTypeFees" />
+        </EntityType>
+        <EntityType Name="QuotingV2_UOMs">
+          <Key>
+            <PropertyRef Name="UomID" />
+          </Key>
+          <Property Name="UomID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="Description" Type="String" MaxLength="400" FixedLength="false" Unicode="false" />
+          <Property Name="DateAdded" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="AddedBy" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="DateUpdated" Type="DateTime" Precision="3" />
+          <Property Name="UpdatedBy" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="QuotingV2_Fees" Relationship="QuotingToolModel.QuotingV2_Fees_RangeUom_FK" FromRole="QuotingV2_UOMs" ToRole="QuotingV2_Fees" />
+          <NavigationProperty Name="QuotingV2_Fees1" Relationship="QuotingToolModel.QuotingV2_Fees_Uom_FK" FromRole="QuotingV2_UOMs" ToRole="QuotingV2_Fees" />
+        </EntityType>
+        <Association Name="QuotingV2_Fees_Parent_FK">
+          <End Type="QuotingToolModel.QuotingV2_Fees" Role="QuotingV2_Fees" Multiplicity="0..1" />
+          <End Type="QuotingToolModel.QuotingV2_Fees" Role="QuotingV2_Fees1" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_Fees">
+              <PropertyRef Name="FeeID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Fees1">
+              <PropertyRef Name="ParentFeeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Fees_RangeUom_FK">
+          <End Type="QuotingToolModel.QuotingV2_UOMs" Role="QuotingV2_UOMs" Multiplicity="0..1" />
+          <End Type="QuotingToolModel.QuotingV2_Fees" Role="QuotingV2_Fees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_UOMs">
+              <PropertyRef Name="UomID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Fees">
+              <PropertyRef Name="RangeByUomID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Fees_Types_FK">
+          <End Type="QuotingToolModel.QuotingV2_FeeTypes" Role="QuotingV2_FeeTypes" Multiplicity="1" />
+          <End Type="QuotingToolModel.QuotingV2_Fees" Role="QuotingV2_Fees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_FeeTypes">
+              <PropertyRef Name="FeeTypeID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Fees">
+              <PropertyRef Name="FeeTypeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Fees_Uom_FK">
+          <End Type="QuotingToolModel.QuotingV2_UOMs" Role="QuotingV2_UOMs" Multiplicity="0..1" />
+          <End Type="QuotingToolModel.QuotingV2_Fees" Role="QuotingV2_Fees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_UOMs">
+              <PropertyRef Name="UomID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Fees">
+              <PropertyRef Name="ByUomID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_FeeTypes_Parent_FK">
+          <End Type="QuotingToolModel.QuotingV2_FeeTypes" Role="QuotingV2_FeeTypes" Multiplicity="0..1" />
+          <End Type="QuotingToolModel.QuotingV2_FeeTypes" Role="QuotingV2_FeeTypes1" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_FeeTypes">
+              <PropertyRef Name="FeeTypeID" />
+            </Principal>
+            <Dependent Role="QuotingV2_FeeTypes1">
+              <PropertyRef Name="ParentFeeTypeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_ServiceTypeCharges_FeeType_FK">
+          <End Type="QuotingToolModel.QuotingV2_FeeTypes" Role="QuotingV2_FeeTypes" Multiplicity="1" />
+          <End Type="QuotingToolModel.QuotingV2_ServiceTypeFees" Role="QuotingV2_ServiceTypeFees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_FeeTypes">
+              <PropertyRef Name="FeeTypeID" />
+            </Principal>
+            <Dependent Role="QuotingV2_ServiceTypeFees">
+              <PropertyRef Name="FeeTypeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_ServiceTypeCharges_ServiceType_FK">
+          <End Type="QuotingToolModel.QuotingV2_ServiceTypes" Role="QuotingV2_ServiceTypes" Multiplicity="1" />
+          <End Type="QuotingToolModel.QuotingV2_ServiceTypeFees" Role="QuotingV2_ServiceTypeFees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_ServiceTypes">
+              <PropertyRef Name="ServiceTypeID" />
+            </Principal>
+            <Dependent Role="QuotingV2_ServiceTypeFees">
+              <PropertyRef Name="ServiceTypeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -52,6 +452,87 @@
                 <ScalarProperty Name="fechahasta" ColumnName="fechahasta" />
                 <ScalarProperty Name="fechadesde" ColumnName="fechadesde" />
                 <ScalarProperty Name="id" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="QuotingV2_Fees">
+            <EntityTypeMapping TypeName="QuotingToolModel.QuotingV2_Fees">
+              <MappingFragment StoreEntitySet="QuotingV2_Fees">
+                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
+                <ScalarProperty Name="DateUpdated" ColumnName="DateUpdated" />
+                <ScalarProperty Name="AddedBy" ColumnName="AddedBy" />
+                <ScalarProperty Name="DateAdded" ColumnName="DateAdded" />
+                <ScalarProperty Name="Notes" ColumnName="Notes" />
+                <ScalarProperty Name="ValidUntil" ColumnName="ValidUntil" />
+                <ScalarProperty Name="ValidFrom" ColumnName="ValidFrom" />
+                <ScalarProperty Name="RangeTo" ColumnName="RangeTo" />
+                <ScalarProperty Name="RangeFrom" ColumnName="RangeFrom" />
+                <ScalarProperty Name="ParentFeeID" ColumnName="ParentFeeID" />
+                <ScalarProperty Name="RangeByUomID" ColumnName="RangeByUomID" />
+                <ScalarProperty Name="FeeMax" ColumnName="FeeMax" />
+                <ScalarProperty Name="FeeMin" ColumnName="FeeMin" />
+                <ScalarProperty Name="Discount" ColumnName="Discount" />
+                <ScalarProperty Name="ByUomID" ColumnName="ByUomID" />
+                <ScalarProperty Name="Fee" ColumnName="Fee" />
+                <ScalarProperty Name="CustomerID" ColumnName="CustomerID" />
+                <ScalarProperty Name="ZipCodes" ColumnName="ZipCodes" />
+                <ScalarProperty Name="CityID" ColumnName="CityID" />
+                <ScalarProperty Name="ZoneID" ColumnName="ZoneID" />
+                <ScalarProperty Name="IslandID" ColumnName="IslandID" />
+                <ScalarProperty Name="State" ColumnName="State" />
+                <ScalarProperty Name="FeeTypeID" ColumnName="FeeTypeID" />
+                <ScalarProperty Name="FeeID" ColumnName="FeeID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="QuotingV2_FeeTypes">
+            <EntityTypeMapping TypeName="QuotingToolModel.QuotingV2_FeeTypes">
+              <MappingFragment StoreEntitySet="QuotingV2_FeeTypes">
+                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
+                <ScalarProperty Name="DateUpdated" ColumnName="DateUpdated" />
+                <ScalarProperty Name="AddedBy" ColumnName="AddedBy" />
+                <ScalarProperty Name="DateAdded" ColumnName="DateAdded" />
+                <ScalarProperty Name="ParentFeeTypeID" ColumnName="ParentFeeTypeID" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="FeeTypeID" ColumnName="FeeTypeID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="QuotingV2_ServiceTypeFees">
+            <EntityTypeMapping TypeName="QuotingToolModel.QuotingV2_ServiceTypeFees">
+              <MappingFragment StoreEntitySet="QuotingV2_ServiceTypeFees">
+                <ScalarProperty Name="FeeTypeID" ColumnName="FeeTypeID" />
+                <ScalarProperty Name="ServiceTypeID" ColumnName="ServiceTypeID" />
+                <ScalarProperty Name="ServiceTypeChargeID" ColumnName="ServiceTypeChargeID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="QuotingV2_ServiceTypes">
+            <EntityTypeMapping TypeName="QuotingToolModel.QuotingV2_ServiceTypes">
+              <MappingFragment StoreEntitySet="QuotingV2_ServiceTypes">
+                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
+                <ScalarProperty Name="DateUpdated" ColumnName="DateUpdated" />
+                <ScalarProperty Name="AddedBy" ColumnName="AddedBy" />
+                <ScalarProperty Name="DateAdded" ColumnName="DateAdded" />
+                <ScalarProperty Name="Position" ColumnName="Position" />
+                <ScalarProperty Name="Show" ColumnName="Show" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="ServiceTypeID" ColumnName="ServiceTypeID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="QuotingV2_UOMs">
+            <EntityTypeMapping TypeName="QuotingToolModel.QuotingV2_UOMs">
+              <MappingFragment StoreEntitySet="QuotingV2_UOMs">
+                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
+                <ScalarProperty Name="DateUpdated" ColumnName="DateUpdated" />
+                <ScalarProperty Name="AddedBy" ColumnName="AddedBy" />
+                <ScalarProperty Name="DateAdded" ColumnName="DateAdded" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="UomID" ColumnName="UomID" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

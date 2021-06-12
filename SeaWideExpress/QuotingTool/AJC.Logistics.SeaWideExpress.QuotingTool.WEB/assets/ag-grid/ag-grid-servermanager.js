@@ -53,6 +53,11 @@
             },
         };
     };
+
+    this.saveChanges = function (gridMode, model) {
+        console.log(gridMode);
+        console.log(model);
+    };
 }
 
 
