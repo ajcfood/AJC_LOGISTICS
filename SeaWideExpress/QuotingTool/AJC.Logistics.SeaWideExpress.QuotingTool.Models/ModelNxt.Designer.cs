@@ -19,13 +19,13 @@ using System.Xml.Serialization;
 [assembly: EdmSchemaAttribute()]
 #region EDM Relationship Metadata
 
-[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_Fees_Parent_FK", "QuotingV2_Fees", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.QuotingV2_Fees), "QuotingV2_Fees1", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.QuotingV2_Fees), true)]
-[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_Fees_RangeUom_FK", "QuotingV2_UOMs", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.QuotingV2_UOMs), "QuotingV2_Fees", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.QuotingV2_Fees), true)]
-[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_Fees_Types_FK", "QuotingV2_FeeTypes", System.Data.Metadata.Edm.RelationshipMultiplicity.One, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.QuotingV2_FeeTypes), "QuotingV2_Fees", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.QuotingV2_Fees), true)]
-[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_Fees_Uom_FK", "QuotingV2_UOMs", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.QuotingV2_UOMs), "QuotingV2_Fees", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.QuotingV2_Fees), true)]
-[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_FeeTypes_Parent_FK", "QuotingV2_FeeTypes", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.QuotingV2_FeeTypes), "QuotingV2_FeeTypes1", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.QuotingV2_FeeTypes), true)]
-[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_ServiceTypeCharges_FeeType_FK", "QuotingV2_FeeTypes", System.Data.Metadata.Edm.RelationshipMultiplicity.One, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.QuotingV2_FeeTypes), "QuotingV2_ServiceTypeFees", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.QuotingV2_ServiceTypeFees), true)]
-[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_ServiceTypeCharges_ServiceType_FK", "QuotingV2_ServiceTypes", System.Data.Metadata.Edm.RelationshipMultiplicity.One, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.QuotingV2_ServiceTypes), "QuotingV2_ServiceTypeFees", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.QuotingV2_ServiceTypeFees), true)]
+[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_Fees_Parent_FK", "QuotingV2_Fees", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.Fees), "QuotingV2_Fees1", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.Fees), true)]
+[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_Fees_RangeUom_FK", "QuotingV2_UOMs", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.UOM), "QuotingV2_Fees", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.Fees), true)]
+[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_Fees_Types_FK", "QuotingV2_FeeTypes", System.Data.Metadata.Edm.RelationshipMultiplicity.One, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.FeeType), "QuotingV2_Fees", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.Fees), true)]
+[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_Fees_Uom_FK", "QuotingV2_UOMs", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.UOM), "QuotingV2_Fees", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.Fees), true)]
+[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_FeeTypes_Parent_FK", "QuotingV2_FeeTypes", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.FeeType), "QuotingV2_FeeTypes1", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.FeeType), true)]
+[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_ServiceTypeCharges_FeeType_FK", "QuotingV2_FeeTypes", System.Data.Metadata.Edm.RelationshipMultiplicity.One, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.FeeType), "QuotingV2_ServiceTypeFees", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.ServiceTypeFee), true)]
+[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_ServiceTypeCharges_ServiceType_FK", "QuotingV2_ServiceTypes", System.Data.Metadata.Edm.RelationshipMultiplicity.One, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.ServiceType), "QuotingV2_ServiceTypeFees", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.ServiceTypeFee), true)]
 
 #endregion
 
@@ -96,82 +96,98 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         /// <summary>
         /// No Metadata Documentation available.
         /// </summary>
-        public ObjectSet<QuotingV2_Fees> QuotingV2_Fees
+        public ObjectSet<Fees> Fees
         {
             get
             {
-                if ((_QuotingV2_Fees == null))
+                if ((_Fees == null))
                 {
-                    _QuotingV2_Fees = base.CreateObjectSet<QuotingV2_Fees>("QuotingV2_Fees");
+                    _Fees = base.CreateObjectSet<Fees>("Fees");
                 }
-                return _QuotingV2_Fees;
+                return _Fees;
             }
         }
-        private ObjectSet<QuotingV2_Fees> _QuotingV2_Fees;
+        private ObjectSet<Fees> _Fees;
     
         /// <summary>
         /// No Metadata Documentation available.
         /// </summary>
-        public ObjectSet<QuotingV2_FeeTypes> QuotingV2_FeeTypes
+        public ObjectSet<FeeType> FeeTypes
         {
             get
             {
-                if ((_QuotingV2_FeeTypes == null))
+                if ((_FeeTypes == null))
                 {
-                    _QuotingV2_FeeTypes = base.CreateObjectSet<QuotingV2_FeeTypes>("QuotingV2_FeeTypes");
+                    _FeeTypes = base.CreateObjectSet<FeeType>("FeeTypes");
                 }
-                return _QuotingV2_FeeTypes;
+                return _FeeTypes;
             }
         }
-        private ObjectSet<QuotingV2_FeeTypes> _QuotingV2_FeeTypes;
+        private ObjectSet<FeeType> _FeeTypes;
     
         /// <summary>
         /// No Metadata Documentation available.
         /// </summary>
-        public ObjectSet<QuotingV2_ServiceTypeFees> QuotingV2_ServiceTypeFees
+        public ObjectSet<ServiceTypeFee> ServiceTypeFees
         {
             get
             {
-                if ((_QuotingV2_ServiceTypeFees == null))
+                if ((_ServiceTypeFees == null))
                 {
-                    _QuotingV2_ServiceTypeFees = base.CreateObjectSet<QuotingV2_ServiceTypeFees>("QuotingV2_ServiceTypeFees");
+                    _ServiceTypeFees = base.CreateObjectSet<ServiceTypeFee>("ServiceTypeFees");
                 }
-                return _QuotingV2_ServiceTypeFees;
+                return _ServiceTypeFees;
             }
         }
-        private ObjectSet<QuotingV2_ServiceTypeFees> _QuotingV2_ServiceTypeFees;
+        private ObjectSet<ServiceTypeFee> _ServiceTypeFees;
     
         /// <summary>
         /// No Metadata Documentation available.
         /// </summary>
-        public ObjectSet<QuotingV2_ServiceTypes> QuotingV2_ServiceTypes
+        public ObjectSet<ServiceType> ServiceTypes
         {
             get
             {
-                if ((_QuotingV2_ServiceTypes == null))
+                if ((_ServiceTypes == null))
                 {
-                    _QuotingV2_ServiceTypes = base.CreateObjectSet<QuotingV2_ServiceTypes>("QuotingV2_ServiceTypes");
+                    _ServiceTypes = base.CreateObjectSet<ServiceType>("ServiceTypes");
                 }
-                return _QuotingV2_ServiceTypes;
+                return _ServiceTypes;
             }
         }
-        private ObjectSet<QuotingV2_ServiceTypes> _QuotingV2_ServiceTypes;
+        private ObjectSet<ServiceType> _ServiceTypes;
     
         /// <summary>
         /// No Metadata Documentation available.
         /// </summary>
-        public ObjectSet<QuotingV2_UOMs> QuotingV2_UOMs
+        public ObjectSet<UOM> UOMs
         {
             get
             {
-                if ((_QuotingV2_UOMs == null))
+                if ((_UOMs == null))
                 {
-                    _QuotingV2_UOMs = base.CreateObjectSet<QuotingV2_UOMs>("QuotingV2_UOMs");
+                    _UOMs = base.CreateObjectSet<UOM>("UOMs");
                 }
-                return _QuotingV2_UOMs;
+                return _UOMs;
             }
         }
-        private ObjectSet<QuotingV2_UOMs> _QuotingV2_UOMs;
+        private ObjectSet<UOM> _UOMs;
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        public ObjectSet<States> States
+        {
+            get
+            {
+                if ((_States == null))
+                {
+                    _States = base.CreateObjectSet<States>("States");
+                }
+                return _States;
+            }
+        }
+        private ObjectSet<States> _States;
 
         #endregion
 
@@ -186,43 +202,51 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         }
     
         /// <summary>
-        /// Deprecated Method for adding a new object to the QuotingV2_Fees EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
+        /// Deprecated Method for adding a new object to the Fees EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
         /// </summary>
-        public void AddToQuotingV2_Fees(QuotingV2_Fees quotingV2_Fees)
+        public void AddToFees(Fees fees)
         {
-            base.AddObject("QuotingV2_Fees", quotingV2_Fees);
+            base.AddObject("Fees", fees);
         }
     
         /// <summary>
-        /// Deprecated Method for adding a new object to the QuotingV2_FeeTypes EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
+        /// Deprecated Method for adding a new object to the FeeTypes EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
         /// </summary>
-        public void AddToQuotingV2_FeeTypes(QuotingV2_FeeTypes quotingV2_FeeTypes)
+        public void AddToFeeTypes(FeeType feeType)
         {
-            base.AddObject("QuotingV2_FeeTypes", quotingV2_FeeTypes);
+            base.AddObject("FeeTypes", feeType);
         }
     
         /// <summary>
-        /// Deprecated Method for adding a new object to the QuotingV2_ServiceTypeFees EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
+        /// Deprecated Method for adding a new object to the ServiceTypeFees EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
         /// </summary>
-        public void AddToQuotingV2_ServiceTypeFees(QuotingV2_ServiceTypeFees quotingV2_ServiceTypeFees)
+        public void AddToServiceTypeFees(ServiceTypeFee serviceTypeFee)
         {
-            base.AddObject("QuotingV2_ServiceTypeFees", quotingV2_ServiceTypeFees);
+            base.AddObject("ServiceTypeFees", serviceTypeFee);
         }
     
         /// <summary>
-        /// Deprecated Method for adding a new object to the QuotingV2_ServiceTypes EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
+        /// Deprecated Method for adding a new object to the ServiceTypes EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
         /// </summary>
-        public void AddToQuotingV2_ServiceTypes(QuotingV2_ServiceTypes quotingV2_ServiceTypes)
+        public void AddToServiceTypes(ServiceType serviceType)
         {
-            base.AddObject("QuotingV2_ServiceTypes", quotingV2_ServiceTypes);
+            base.AddObject("ServiceTypes", serviceType);
         }
     
         /// <summary>
-        /// Deprecated Method for adding a new object to the QuotingV2_UOMs EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
+        /// Deprecated Method for adding a new object to the UOMs EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
         /// </summary>
-        public void AddToQuotingV2_UOMs(QuotingV2_UOMs quotingV2_UOMs)
+        public void AddToUOMs(UOM uOM)
         {
-            base.AddObject("QuotingV2_UOMs", quotingV2_UOMs);
+            base.AddObject("UOMs", uOM);
+        }
+    
+        /// <summary>
+        /// Deprecated Method for adding a new object to the States EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
+        /// </summary>
+        public void AddToStates(States states)
+        {
+            base.AddObject("States", states);
         }
 
         #endregion
@@ -236,28 +260,28 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
     /// <summary>
     /// No Metadata Documentation available.
     /// </summary>
-    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="QuotingV2_Fees")]
+    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="Fees")]
     [Serializable()]
     [DataContractAttribute(IsReference=true)]
-    public partial class QuotingV2_Fees : EntityObject
+    public partial class Fees : EntityObject
     {
         #region Factory Method
     
         /// <summary>
-        /// Create a new QuotingV2_Fees object.
+        /// Create a new Fees object.
         /// </summary>
         /// <param name="feeID">Initial value of the FeeID property.</param>
         /// <param name="feeTypeID">Initial value of the FeeTypeID property.</param>
         /// <param name="dateAdded">Initial value of the DateAdded property.</param>
         /// <param name="addedBy">Initial value of the AddedBy property.</param>
-        public static QuotingV2_Fees CreateQuotingV2_Fees(global::System.Int32 feeID, global::System.Int32 feeTypeID, global::System.DateTime dateAdded, global::System.String addedBy)
+        public static Fees CreateFees(global::System.Int32 feeID, global::System.Int32 feeTypeID, global::System.DateTime dateAdded, global::System.String addedBy)
         {
-            QuotingV2_Fees quotingV2_Fees = new QuotingV2_Fees();
-            quotingV2_Fees.FeeID = feeID;
-            quotingV2_Fees.FeeTypeID = feeTypeID;
-            quotingV2_Fees.DateAdded = dateAdded;
-            quotingV2_Fees.AddedBy = addedBy;
-            return quotingV2_Fees;
+            Fees fees = new Fees();
+            fees.FeeID = feeID;
+            fees.FeeTypeID = feeTypeID;
+            fees.DateAdded = dateAdded;
+            fees.AddedBy = addedBy;
+            return fees;
         }
 
         #endregion
@@ -855,17 +879,17 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         [SoapIgnoreAttribute()]
         [DataMemberAttribute()]
         [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Fees_Parent_FK", "QuotingV2_Fees1")]
-        public EntityCollection<QuotingV2_Fees> QuotingV2_Fees1
+        public EntityCollection<Fees> QuotingV2_Fees1
         {
             get
             {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<QuotingV2_Fees>("QuotingToolModel.QuotingV2_Fees_Parent_FK", "QuotingV2_Fees1");
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<Fees>("QuotingToolModel.QuotingV2_Fees_Parent_FK", "QuotingV2_Fees1");
             }
             set
             {
                 if ((value != null))
                 {
-                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<QuotingV2_Fees>("QuotingToolModel.QuotingV2_Fees_Parent_FK", "QuotingV2_Fees1", value);
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<Fees>("QuotingToolModel.QuotingV2_Fees_Parent_FK", "QuotingV2_Fees1", value);
                 }
             }
         }
@@ -877,15 +901,15 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         [SoapIgnoreAttribute()]
         [DataMemberAttribute()]
         [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Fees_Parent_FK", "QuotingV2_Fees")]
-        public QuotingV2_Fees QuotingV2_Fees2
+        public Fees QuotingV2_Fees2
         {
             get
             {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<QuotingV2_Fees>("QuotingToolModel.QuotingV2_Fees_Parent_FK", "QuotingV2_Fees").Value;
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Fees>("QuotingToolModel.QuotingV2_Fees_Parent_FK", "QuotingV2_Fees").Value;
             }
             set
             {
-                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<QuotingV2_Fees>("QuotingToolModel.QuotingV2_Fees_Parent_FK", "QuotingV2_Fees").Value = value;
+                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Fees>("QuotingToolModel.QuotingV2_Fees_Parent_FK", "QuotingV2_Fees").Value = value;
             }
         }
         /// <summary>
@@ -893,17 +917,17 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         /// </summary>
         [BrowsableAttribute(false)]
         [DataMemberAttribute()]
-        public EntityReference<QuotingV2_Fees> QuotingV2_Fees2Reference
+        public EntityReference<Fees> QuotingV2_Fees2Reference
         {
             get
             {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<QuotingV2_Fees>("QuotingToolModel.QuotingV2_Fees_Parent_FK", "QuotingV2_Fees");
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Fees>("QuotingToolModel.QuotingV2_Fees_Parent_FK", "QuotingV2_Fees");
             }
             set
             {
                 if ((value != null))
                 {
-                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<QuotingV2_Fees>("QuotingToolModel.QuotingV2_Fees_Parent_FK", "QuotingV2_Fees", value);
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<Fees>("QuotingToolModel.QuotingV2_Fees_Parent_FK", "QuotingV2_Fees", value);
                 }
             }
         }
@@ -915,15 +939,15 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         [SoapIgnoreAttribute()]
         [DataMemberAttribute()]
         [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Fees_RangeUom_FK", "QuotingV2_UOMs")]
-        public QuotingV2_UOMs QuotingV2_UOMs
+        public UOM QuotingV2_UOMs
         {
             get
             {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<QuotingV2_UOMs>("QuotingToolModel.QuotingV2_Fees_RangeUom_FK", "QuotingV2_UOMs").Value;
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<UOM>("QuotingToolModel.QuotingV2_Fees_RangeUom_FK", "QuotingV2_UOMs").Value;
             }
             set
             {
-                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<QuotingV2_UOMs>("QuotingToolModel.QuotingV2_Fees_RangeUom_FK", "QuotingV2_UOMs").Value = value;
+                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<UOM>("QuotingToolModel.QuotingV2_Fees_RangeUom_FK", "QuotingV2_UOMs").Value = value;
             }
         }
         /// <summary>
@@ -931,17 +955,17 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         /// </summary>
         [BrowsableAttribute(false)]
         [DataMemberAttribute()]
-        public EntityReference<QuotingV2_UOMs> QuotingV2_UOMsReference
+        public EntityReference<UOM> QuotingV2_UOMsReference
         {
             get
             {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<QuotingV2_UOMs>("QuotingToolModel.QuotingV2_Fees_RangeUom_FK", "QuotingV2_UOMs");
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<UOM>("QuotingToolModel.QuotingV2_Fees_RangeUom_FK", "QuotingV2_UOMs");
             }
             set
             {
                 if ((value != null))
                 {
-                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<QuotingV2_UOMs>("QuotingToolModel.QuotingV2_Fees_RangeUom_FK", "QuotingV2_UOMs", value);
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<UOM>("QuotingToolModel.QuotingV2_Fees_RangeUom_FK", "QuotingV2_UOMs", value);
                 }
             }
         }
@@ -953,15 +977,15 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         [SoapIgnoreAttribute()]
         [DataMemberAttribute()]
         [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Fees_Types_FK", "QuotingV2_FeeTypes")]
-        public QuotingV2_FeeTypes QuotingV2_FeeTypes
+        public FeeType QuotingV2_FeeTypes
         {
             get
             {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<QuotingV2_FeeTypes>("QuotingToolModel.QuotingV2_Fees_Types_FK", "QuotingV2_FeeTypes").Value;
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<FeeType>("QuotingToolModel.QuotingV2_Fees_Types_FK", "QuotingV2_FeeTypes").Value;
             }
             set
             {
-                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<QuotingV2_FeeTypes>("QuotingToolModel.QuotingV2_Fees_Types_FK", "QuotingV2_FeeTypes").Value = value;
+                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<FeeType>("QuotingToolModel.QuotingV2_Fees_Types_FK", "QuotingV2_FeeTypes").Value = value;
             }
         }
         /// <summary>
@@ -969,17 +993,17 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         /// </summary>
         [BrowsableAttribute(false)]
         [DataMemberAttribute()]
-        public EntityReference<QuotingV2_FeeTypes> QuotingV2_FeeTypesReference
+        public EntityReference<FeeType> QuotingV2_FeeTypesReference
         {
             get
             {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<QuotingV2_FeeTypes>("QuotingToolModel.QuotingV2_Fees_Types_FK", "QuotingV2_FeeTypes");
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<FeeType>("QuotingToolModel.QuotingV2_Fees_Types_FK", "QuotingV2_FeeTypes");
             }
             set
             {
                 if ((value != null))
                 {
-                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<QuotingV2_FeeTypes>("QuotingToolModel.QuotingV2_Fees_Types_FK", "QuotingV2_FeeTypes", value);
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<FeeType>("QuotingToolModel.QuotingV2_Fees_Types_FK", "QuotingV2_FeeTypes", value);
                 }
             }
         }
@@ -991,15 +1015,15 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         [SoapIgnoreAttribute()]
         [DataMemberAttribute()]
         [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Fees_Uom_FK", "QuotingV2_UOMs")]
-        public QuotingV2_UOMs QuotingV2_UOMs1
+        public UOM QuotingV2_UOMs1
         {
             get
             {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<QuotingV2_UOMs>("QuotingToolModel.QuotingV2_Fees_Uom_FK", "QuotingV2_UOMs").Value;
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<UOM>("QuotingToolModel.QuotingV2_Fees_Uom_FK", "QuotingV2_UOMs").Value;
             }
             set
             {
-                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<QuotingV2_UOMs>("QuotingToolModel.QuotingV2_Fees_Uom_FK", "QuotingV2_UOMs").Value = value;
+                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<UOM>("QuotingToolModel.QuotingV2_Fees_Uom_FK", "QuotingV2_UOMs").Value = value;
             }
         }
         /// <summary>
@@ -1007,17 +1031,17 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         /// </summary>
         [BrowsableAttribute(false)]
         [DataMemberAttribute()]
-        public EntityReference<QuotingV2_UOMs> QuotingV2_UOMs1Reference
+        public EntityReference<UOM> QuotingV2_UOMs1Reference
         {
             get
             {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<QuotingV2_UOMs>("QuotingToolModel.QuotingV2_Fees_Uom_FK", "QuotingV2_UOMs");
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<UOM>("QuotingToolModel.QuotingV2_Fees_Uom_FK", "QuotingV2_UOMs");
             }
             set
             {
                 if ((value != null))
                 {
-                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<QuotingV2_UOMs>("QuotingToolModel.QuotingV2_Fees_Uom_FK", "QuotingV2_UOMs", value);
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<UOM>("QuotingToolModel.QuotingV2_Fees_Uom_FK", "QuotingV2_UOMs", value);
                 }
             }
         }
@@ -1029,28 +1053,28 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
     /// <summary>
     /// No Metadata Documentation available.
     /// </summary>
-    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="QuotingV2_FeeTypes")]
+    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="FeeType")]
     [Serializable()]
     [DataContractAttribute(IsReference=true)]
-    public partial class QuotingV2_FeeTypes : EntityObject
+    public partial class FeeType : EntityObject
     {
         #region Factory Method
     
         /// <summary>
-        /// Create a new QuotingV2_FeeTypes object.
+        /// Create a new FeeType object.
         /// </summary>
         /// <param name="feeTypeID">Initial value of the FeeTypeID property.</param>
         /// <param name="name">Initial value of the Name property.</param>
         /// <param name="dateAdded">Initial value of the DateAdded property.</param>
         /// <param name="addedBy">Initial value of the AddedBy property.</param>
-        public static QuotingV2_FeeTypes CreateQuotingV2_FeeTypes(global::System.Int32 feeTypeID, global::System.String name, global::System.DateTime dateAdded, global::System.String addedBy)
+        public static FeeType CreateFeeType(global::System.Int32 feeTypeID, global::System.String name, global::System.DateTime dateAdded, global::System.String addedBy)
         {
-            QuotingV2_FeeTypes quotingV2_FeeTypes = new QuotingV2_FeeTypes();
-            quotingV2_FeeTypes.FeeTypeID = feeTypeID;
-            quotingV2_FeeTypes.Name = name;
-            quotingV2_FeeTypes.DateAdded = dateAdded;
-            quotingV2_FeeTypes.AddedBy = addedBy;
-            return quotingV2_FeeTypes;
+            FeeType feeType = new FeeType();
+            feeType.FeeTypeID = feeTypeID;
+            feeType.Name = name;
+            feeType.DateAdded = dateAdded;
+            feeType.AddedBy = addedBy;
+            return feeType;
         }
 
         #endregion
@@ -1264,17 +1288,17 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         [SoapIgnoreAttribute()]
         [DataMemberAttribute()]
         [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Fees_Types_FK", "QuotingV2_Fees")]
-        public EntityCollection<QuotingV2_Fees> QuotingV2_Fees
+        public EntityCollection<Fees> QuotingV2_Fees
         {
             get
             {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<QuotingV2_Fees>("QuotingToolModel.QuotingV2_Fees_Types_FK", "QuotingV2_Fees");
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<Fees>("QuotingToolModel.QuotingV2_Fees_Types_FK", "QuotingV2_Fees");
             }
             set
             {
                 if ((value != null))
                 {
-                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<QuotingV2_Fees>("QuotingToolModel.QuotingV2_Fees_Types_FK", "QuotingV2_Fees", value);
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<Fees>("QuotingToolModel.QuotingV2_Fees_Types_FK", "QuotingV2_Fees", value);
                 }
             }
         }
@@ -1286,17 +1310,17 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         [SoapIgnoreAttribute()]
         [DataMemberAttribute()]
         [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_FeeTypes_Parent_FK", "QuotingV2_FeeTypes1")]
-        public EntityCollection<QuotingV2_FeeTypes> QuotingV2_FeeTypes1
+        public EntityCollection<FeeType> QuotingV2_FeeTypes1
         {
             get
             {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<QuotingV2_FeeTypes>("QuotingToolModel.QuotingV2_FeeTypes_Parent_FK", "QuotingV2_FeeTypes1");
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<FeeType>("QuotingToolModel.QuotingV2_FeeTypes_Parent_FK", "QuotingV2_FeeTypes1");
             }
             set
             {
                 if ((value != null))
                 {
-                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<QuotingV2_FeeTypes>("QuotingToolModel.QuotingV2_FeeTypes_Parent_FK", "QuotingV2_FeeTypes1", value);
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<FeeType>("QuotingToolModel.QuotingV2_FeeTypes_Parent_FK", "QuotingV2_FeeTypes1", value);
                 }
             }
         }
@@ -1308,15 +1332,15 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         [SoapIgnoreAttribute()]
         [DataMemberAttribute()]
         [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_FeeTypes_Parent_FK", "QuotingV2_FeeTypes")]
-        public QuotingV2_FeeTypes QuotingV2_FeeTypes2
+        public FeeType QuotingV2_FeeTypes2
         {
             get
             {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<QuotingV2_FeeTypes>("QuotingToolModel.QuotingV2_FeeTypes_Parent_FK", "QuotingV2_FeeTypes").Value;
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<FeeType>("QuotingToolModel.QuotingV2_FeeTypes_Parent_FK", "QuotingV2_FeeTypes").Value;
             }
             set
             {
-                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<QuotingV2_FeeTypes>("QuotingToolModel.QuotingV2_FeeTypes_Parent_FK", "QuotingV2_FeeTypes").Value = value;
+                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<FeeType>("QuotingToolModel.QuotingV2_FeeTypes_Parent_FK", "QuotingV2_FeeTypes").Value = value;
             }
         }
         /// <summary>
@@ -1324,17 +1348,17 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         /// </summary>
         [BrowsableAttribute(false)]
         [DataMemberAttribute()]
-        public EntityReference<QuotingV2_FeeTypes> QuotingV2_FeeTypes2Reference
+        public EntityReference<FeeType> QuotingV2_FeeTypes2Reference
         {
             get
             {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<QuotingV2_FeeTypes>("QuotingToolModel.QuotingV2_FeeTypes_Parent_FK", "QuotingV2_FeeTypes");
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<FeeType>("QuotingToolModel.QuotingV2_FeeTypes_Parent_FK", "QuotingV2_FeeTypes");
             }
             set
             {
                 if ((value != null))
                 {
-                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<QuotingV2_FeeTypes>("QuotingToolModel.QuotingV2_FeeTypes_Parent_FK", "QuotingV2_FeeTypes", value);
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<FeeType>("QuotingToolModel.QuotingV2_FeeTypes_Parent_FK", "QuotingV2_FeeTypes", value);
                 }
             }
         }
@@ -1346,17 +1370,17 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         [SoapIgnoreAttribute()]
         [DataMemberAttribute()]
         [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_ServiceTypeCharges_FeeType_FK", "QuotingV2_ServiceTypeFees")]
-        public EntityCollection<QuotingV2_ServiceTypeFees> QuotingV2_ServiceTypeFees
+        public EntityCollection<ServiceTypeFee> QuotingV2_ServiceTypeFees
         {
             get
             {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<QuotingV2_ServiceTypeFees>("QuotingToolModel.QuotingV2_ServiceTypeCharges_FeeType_FK", "QuotingV2_ServiceTypeFees");
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<ServiceTypeFee>("QuotingToolModel.QuotingV2_ServiceTypeCharges_FeeType_FK", "QuotingV2_ServiceTypeFees");
             }
             set
             {
                 if ((value != null))
                 {
-                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<QuotingV2_ServiceTypeFees>("QuotingToolModel.QuotingV2_ServiceTypeCharges_FeeType_FK", "QuotingV2_ServiceTypeFees", value);
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<ServiceTypeFee>("QuotingToolModel.QuotingV2_ServiceTypeCharges_FeeType_FK", "QuotingV2_ServiceTypeFees", value);
                 }
             }
         }
@@ -1368,219 +1392,30 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
     /// <summary>
     /// No Metadata Documentation available.
     /// </summary>
-    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="QuotingV2_ServiceTypeFees")]
+    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="ServiceType")]
     [Serializable()]
     [DataContractAttribute(IsReference=true)]
-    public partial class QuotingV2_ServiceTypeFees : EntityObject
+    public partial class ServiceType : EntityObject
     {
         #region Factory Method
     
         /// <summary>
-        /// Create a new QuotingV2_ServiceTypeFees object.
-        /// </summary>
-        /// <param name="serviceTypeChargeID">Initial value of the ServiceTypeChargeID property.</param>
-        /// <param name="serviceTypeID">Initial value of the ServiceTypeID property.</param>
-        /// <param name="feeTypeID">Initial value of the FeeTypeID property.</param>
-        public static QuotingV2_ServiceTypeFees CreateQuotingV2_ServiceTypeFees(global::System.Int32 serviceTypeChargeID, global::System.Int32 serviceTypeID, global::System.Int32 feeTypeID)
-        {
-            QuotingV2_ServiceTypeFees quotingV2_ServiceTypeFees = new QuotingV2_ServiceTypeFees();
-            quotingV2_ServiceTypeFees.ServiceTypeChargeID = serviceTypeChargeID;
-            quotingV2_ServiceTypeFees.ServiceTypeID = serviceTypeID;
-            quotingV2_ServiceTypeFees.FeeTypeID = feeTypeID;
-            return quotingV2_ServiceTypeFees;
-        }
-
-        #endregion
-
-        #region Primitive Properties
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=true, IsNullable=false)]
-        [DataMemberAttribute()]
-        public global::System.Int32 ServiceTypeChargeID
-        {
-            get
-            {
-                return _ServiceTypeChargeID;
-            }
-            set
-            {
-                if (_ServiceTypeChargeID != value)
-                {
-                    OnServiceTypeChargeIDChanging(value);
-                    ReportPropertyChanging("ServiceTypeChargeID");
-                    _ServiceTypeChargeID = StructuralObject.SetValidValue(value);
-                    ReportPropertyChanged("ServiceTypeChargeID");
-                    OnServiceTypeChargeIDChanged();
-                }
-            }
-        }
-        private global::System.Int32 _ServiceTypeChargeID;
-        partial void OnServiceTypeChargeIDChanging(global::System.Int32 value);
-        partial void OnServiceTypeChargeIDChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
-        [DataMemberAttribute()]
-        public global::System.Int32 ServiceTypeID
-        {
-            get
-            {
-                return _ServiceTypeID;
-            }
-            set
-            {
-                OnServiceTypeIDChanging(value);
-                ReportPropertyChanging("ServiceTypeID");
-                _ServiceTypeID = StructuralObject.SetValidValue(value);
-                ReportPropertyChanged("ServiceTypeID");
-                OnServiceTypeIDChanged();
-            }
-        }
-        private global::System.Int32 _ServiceTypeID;
-        partial void OnServiceTypeIDChanging(global::System.Int32 value);
-        partial void OnServiceTypeIDChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
-        [DataMemberAttribute()]
-        public global::System.Int32 FeeTypeID
-        {
-            get
-            {
-                return _FeeTypeID;
-            }
-            set
-            {
-                OnFeeTypeIDChanging(value);
-                ReportPropertyChanging("FeeTypeID");
-                _FeeTypeID = StructuralObject.SetValidValue(value);
-                ReportPropertyChanged("FeeTypeID");
-                OnFeeTypeIDChanged();
-            }
-        }
-        private global::System.Int32 _FeeTypeID;
-        partial void OnFeeTypeIDChanging(global::System.Int32 value);
-        partial void OnFeeTypeIDChanged();
-
-        #endregion
-
-    
-        #region Navigation Properties
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [XmlIgnoreAttribute()]
-        [SoapIgnoreAttribute()]
-        [DataMemberAttribute()]
-        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_ServiceTypeCharges_FeeType_FK", "QuotingV2_FeeTypes")]
-        public QuotingV2_FeeTypes QuotingV2_FeeTypes
-        {
-            get
-            {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<QuotingV2_FeeTypes>("QuotingToolModel.QuotingV2_ServiceTypeCharges_FeeType_FK", "QuotingV2_FeeTypes").Value;
-            }
-            set
-            {
-                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<QuotingV2_FeeTypes>("QuotingToolModel.QuotingV2_ServiceTypeCharges_FeeType_FK", "QuotingV2_FeeTypes").Value = value;
-            }
-        }
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [BrowsableAttribute(false)]
-        [DataMemberAttribute()]
-        public EntityReference<QuotingV2_FeeTypes> QuotingV2_FeeTypesReference
-        {
-            get
-            {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<QuotingV2_FeeTypes>("QuotingToolModel.QuotingV2_ServiceTypeCharges_FeeType_FK", "QuotingV2_FeeTypes");
-            }
-            set
-            {
-                if ((value != null))
-                {
-                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<QuotingV2_FeeTypes>("QuotingToolModel.QuotingV2_ServiceTypeCharges_FeeType_FK", "QuotingV2_FeeTypes", value);
-                }
-            }
-        }
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [XmlIgnoreAttribute()]
-        [SoapIgnoreAttribute()]
-        [DataMemberAttribute()]
-        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_ServiceTypeCharges_ServiceType_FK", "QuotingV2_ServiceTypes")]
-        public QuotingV2_ServiceTypes QuotingV2_ServiceTypes
-        {
-            get
-            {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<QuotingV2_ServiceTypes>("QuotingToolModel.QuotingV2_ServiceTypeCharges_ServiceType_FK", "QuotingV2_ServiceTypes").Value;
-            }
-            set
-            {
-                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<QuotingV2_ServiceTypes>("QuotingToolModel.QuotingV2_ServiceTypeCharges_ServiceType_FK", "QuotingV2_ServiceTypes").Value = value;
-            }
-        }
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [BrowsableAttribute(false)]
-        [DataMemberAttribute()]
-        public EntityReference<QuotingV2_ServiceTypes> QuotingV2_ServiceTypesReference
-        {
-            get
-            {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<QuotingV2_ServiceTypes>("QuotingToolModel.QuotingV2_ServiceTypeCharges_ServiceType_FK", "QuotingV2_ServiceTypes");
-            }
-            set
-            {
-                if ((value != null))
-                {
-                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<QuotingV2_ServiceTypes>("QuotingToolModel.QuotingV2_ServiceTypeCharges_ServiceType_FK", "QuotingV2_ServiceTypes", value);
-                }
-            }
-        }
-
-        #endregion
-
-    }
-    
-    /// <summary>
-    /// No Metadata Documentation available.
-    /// </summary>
-    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="QuotingV2_ServiceTypes")]
-    [Serializable()]
-    [DataContractAttribute(IsReference=true)]
-    public partial class QuotingV2_ServiceTypes : EntityObject
-    {
-        #region Factory Method
-    
-        /// <summary>
-        /// Create a new QuotingV2_ServiceTypes object.
+        /// Create a new ServiceType object.
         /// </summary>
         /// <param name="serviceTypeID">Initial value of the ServiceTypeID property.</param>
         /// <param name="name">Initial value of the Name property.</param>
         /// <param name="show">Initial value of the Show property.</param>
         /// <param name="dateAdded">Initial value of the DateAdded property.</param>
         /// <param name="addedBy">Initial value of the AddedBy property.</param>
-        public static QuotingV2_ServiceTypes CreateQuotingV2_ServiceTypes(global::System.Int32 serviceTypeID, global::System.String name, global::System.String show, global::System.DateTime dateAdded, global::System.String addedBy)
+        public static ServiceType CreateServiceType(global::System.Int32 serviceTypeID, global::System.String name, global::System.String show, global::System.DateTime dateAdded, global::System.String addedBy)
         {
-            QuotingV2_ServiceTypes quotingV2_ServiceTypes = new QuotingV2_ServiceTypes();
-            quotingV2_ServiceTypes.ServiceTypeID = serviceTypeID;
-            quotingV2_ServiceTypes.Name = name;
-            quotingV2_ServiceTypes.Show = show;
-            quotingV2_ServiceTypes.DateAdded = dateAdded;
-            quotingV2_ServiceTypes.AddedBy = addedBy;
-            return quotingV2_ServiceTypes;
+            ServiceType serviceType = new ServiceType();
+            serviceType.ServiceTypeID = serviceTypeID;
+            serviceType.Name = name;
+            serviceType.Show = show;
+            serviceType.DateAdded = dateAdded;
+            serviceType.AddedBy = addedBy;
+            return serviceType;
         }
 
         #endregion
@@ -1818,17 +1653,17 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         [SoapIgnoreAttribute()]
         [DataMemberAttribute()]
         [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_ServiceTypeCharges_ServiceType_FK", "QuotingV2_ServiceTypeFees")]
-        public EntityCollection<QuotingV2_ServiceTypeFees> QuotingV2_ServiceTypeFees
+        public EntityCollection<ServiceTypeFee> QuotingV2_ServiceTypeFees
         {
             get
             {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<QuotingV2_ServiceTypeFees>("QuotingToolModel.QuotingV2_ServiceTypeCharges_ServiceType_FK", "QuotingV2_ServiceTypeFees");
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<ServiceTypeFee>("QuotingToolModel.QuotingV2_ServiceTypeCharges_ServiceType_FK", "QuotingV2_ServiceTypeFees");
             }
             set
             {
                 if ((value != null))
                 {
-                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<QuotingV2_ServiceTypeFees>("QuotingToolModel.QuotingV2_ServiceTypeCharges_ServiceType_FK", "QuotingV2_ServiceTypeFees", value);
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<ServiceTypeFee>("QuotingToolModel.QuotingV2_ServiceTypeCharges_ServiceType_FK", "QuotingV2_ServiceTypeFees", value);
                 }
             }
         }
@@ -1840,28 +1675,571 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
     /// <summary>
     /// No Metadata Documentation available.
     /// </summary>
-    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="QuotingV2_UOMs")]
+    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="ServiceTypeFee")]
     [Serializable()]
     [DataContractAttribute(IsReference=true)]
-    public partial class QuotingV2_UOMs : EntityObject
+    public partial class ServiceTypeFee : EntityObject
     {
         #region Factory Method
     
         /// <summary>
-        /// Create a new QuotingV2_UOMs object.
+        /// Create a new ServiceTypeFee object.
+        /// </summary>
+        /// <param name="serviceTypeChargeID">Initial value of the ServiceTypeChargeID property.</param>
+        /// <param name="serviceTypeID">Initial value of the ServiceTypeID property.</param>
+        /// <param name="feeTypeID">Initial value of the FeeTypeID property.</param>
+        public static ServiceTypeFee CreateServiceTypeFee(global::System.Int32 serviceTypeChargeID, global::System.Int32 serviceTypeID, global::System.Int32 feeTypeID)
+        {
+            ServiceTypeFee serviceTypeFee = new ServiceTypeFee();
+            serviceTypeFee.ServiceTypeChargeID = serviceTypeChargeID;
+            serviceTypeFee.ServiceTypeID = serviceTypeID;
+            serviceTypeFee.FeeTypeID = feeTypeID;
+            return serviceTypeFee;
+        }
+
+        #endregion
+
+        #region Primitive Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=true, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.Int32 ServiceTypeChargeID
+        {
+            get
+            {
+                return _ServiceTypeChargeID;
+            }
+            set
+            {
+                if (_ServiceTypeChargeID != value)
+                {
+                    OnServiceTypeChargeIDChanging(value);
+                    ReportPropertyChanging("ServiceTypeChargeID");
+                    _ServiceTypeChargeID = StructuralObject.SetValidValue(value);
+                    ReportPropertyChanged("ServiceTypeChargeID");
+                    OnServiceTypeChargeIDChanged();
+                }
+            }
+        }
+        private global::System.Int32 _ServiceTypeChargeID;
+        partial void OnServiceTypeChargeIDChanging(global::System.Int32 value);
+        partial void OnServiceTypeChargeIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.Int32 ServiceTypeID
+        {
+            get
+            {
+                return _ServiceTypeID;
+            }
+            set
+            {
+                OnServiceTypeIDChanging(value);
+                ReportPropertyChanging("ServiceTypeID");
+                _ServiceTypeID = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("ServiceTypeID");
+                OnServiceTypeIDChanged();
+            }
+        }
+        private global::System.Int32 _ServiceTypeID;
+        partial void OnServiceTypeIDChanging(global::System.Int32 value);
+        partial void OnServiceTypeIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.Int32 FeeTypeID
+        {
+            get
+            {
+                return _FeeTypeID;
+            }
+            set
+            {
+                OnFeeTypeIDChanging(value);
+                ReportPropertyChanging("FeeTypeID");
+                _FeeTypeID = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("FeeTypeID");
+                OnFeeTypeIDChanged();
+            }
+        }
+        private global::System.Int32 _FeeTypeID;
+        partial void OnFeeTypeIDChanging(global::System.Int32 value);
+        partial void OnFeeTypeIDChanged();
+
+        #endregion
+
+    
+        #region Navigation Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_ServiceTypeCharges_FeeType_FK", "QuotingV2_FeeTypes")]
+        public FeeType QuotingV2_FeeTypes
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<FeeType>("QuotingToolModel.QuotingV2_ServiceTypeCharges_FeeType_FK", "QuotingV2_FeeTypes").Value;
+            }
+            set
+            {
+                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<FeeType>("QuotingToolModel.QuotingV2_ServiceTypeCharges_FeeType_FK", "QuotingV2_FeeTypes").Value = value;
+            }
+        }
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [BrowsableAttribute(false)]
+        [DataMemberAttribute()]
+        public EntityReference<FeeType> QuotingV2_FeeTypesReference
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<FeeType>("QuotingToolModel.QuotingV2_ServiceTypeCharges_FeeType_FK", "QuotingV2_FeeTypes");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<FeeType>("QuotingToolModel.QuotingV2_ServiceTypeCharges_FeeType_FK", "QuotingV2_FeeTypes", value);
+                }
+            }
+        }
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_ServiceTypeCharges_ServiceType_FK", "QuotingV2_ServiceTypes")]
+        public ServiceType QuotingV2_ServiceTypes
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<ServiceType>("QuotingToolModel.QuotingV2_ServiceTypeCharges_ServiceType_FK", "QuotingV2_ServiceTypes").Value;
+            }
+            set
+            {
+                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<ServiceType>("QuotingToolModel.QuotingV2_ServiceTypeCharges_ServiceType_FK", "QuotingV2_ServiceTypes").Value = value;
+            }
+        }
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [BrowsableAttribute(false)]
+        [DataMemberAttribute()]
+        public EntityReference<ServiceType> QuotingV2_ServiceTypesReference
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<ServiceType>("QuotingToolModel.QuotingV2_ServiceTypeCharges_ServiceType_FK", "QuotingV2_ServiceTypes");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<ServiceType>("QuotingToolModel.QuotingV2_ServiceTypeCharges_ServiceType_FK", "QuotingV2_ServiceTypes", value);
+                }
+            }
+        }
+
+        #endregion
+
+    }
+    
+    /// <summary>
+    /// No Metadata Documentation available.
+    /// </summary>
+    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="States")]
+    [Serializable()]
+    [DataContractAttribute(IsReference=true)]
+    public partial class States : EntityObject
+    {
+        #region Factory Method
+    
+        /// <summary>
+        /// Create a new States object.
+        /// </summary>
+        /// <param name="pK_StateID">Initial value of the PK_StateID property.</param>
+        public static States CreateStates(global::System.String pK_StateID)
+        {
+            States states = new States();
+            states.PK_StateID = pK_StateID;
+            return states;
+        }
+
+        #endregion
+
+        #region Primitive Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=true, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String PK_StateID
+        {
+            get
+            {
+                return _PK_StateID;
+            }
+            set
+            {
+                if (_PK_StateID != value)
+                {
+                    OnPK_StateIDChanging(value);
+                    ReportPropertyChanging("PK_StateID");
+                    _PK_StateID = StructuralObject.SetValidValue(value, false);
+                    ReportPropertyChanged("PK_StateID");
+                    OnPK_StateIDChanged();
+                }
+            }
+        }
+        private global::System.String _PK_StateID;
+        partial void OnPK_StateIDChanging(global::System.String value);
+        partial void OnPK_StateIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public global::System.String State
+        {
+            get
+            {
+                return _State;
+            }
+            set
+            {
+                OnStateChanging(value);
+                ReportPropertyChanging("State");
+                _State = StructuralObject.SetValidValue(value, true);
+                ReportPropertyChanged("State");
+                OnStateChanged();
+            }
+        }
+        private global::System.String _State;
+        partial void OnStateChanging(global::System.String value);
+        partial void OnStateChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.Int32> Hours
+        {
+            get
+            {
+                return _Hours;
+            }
+            set
+            {
+                OnHoursChanging(value);
+                ReportPropertyChanging("Hours");
+                _Hours = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("Hours");
+                OnHoursChanged();
+            }
+        }
+        private Nullable<global::System.Int32> _Hours;
+        partial void OnHoursChanging(Nullable<global::System.Int32> value);
+        partial void OnHoursChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public global::System.String FK_CountryId
+        {
+            get
+            {
+                return _FK_CountryId;
+            }
+            set
+            {
+                OnFK_CountryIdChanging(value);
+                ReportPropertyChanging("FK_CountryId");
+                _FK_CountryId = StructuralObject.SetValidValue(value, true);
+                ReportPropertyChanged("FK_CountryId");
+                OnFK_CountryIdChanged();
+            }
+        }
+        private global::System.String _FK_CountryId;
+        partial void OnFK_CountryIdChanging(global::System.String value);
+        partial void OnFK_CountryIdChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public global::System.String IsDomBookShip
+        {
+            get
+            {
+                return _IsDomBookShip;
+            }
+            set
+            {
+                OnIsDomBookShipChanging(value);
+                ReportPropertyChanging("IsDomBookShip");
+                _IsDomBookShip = StructuralObject.SetValidValue(value, true);
+                ReportPropertyChanged("IsDomBookShip");
+                OnIsDomBookShipChanged();
+            }
+        }
+        private global::System.String _IsDomBookShip;
+        partial void OnIsDomBookShipChanging(global::System.String value);
+        partial void OnIsDomBookShipChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public global::System.String FK_RegionCode
+        {
+            get
+            {
+                return _FK_RegionCode;
+            }
+            set
+            {
+                OnFK_RegionCodeChanging(value);
+                ReportPropertyChanging("FK_RegionCode");
+                _FK_RegionCode = StructuralObject.SetValidValue(value, true);
+                ReportPropertyChanged("FK_RegionCode");
+                OnFK_RegionCodeChanged();
+            }
+        }
+        private global::System.String _FK_RegionCode;
+        partial void OnFK_RegionCodeChanging(global::System.String value);
+        partial void OnFK_RegionCodeChanged();
+
+        #endregion
+
+    
+    }
+    
+    /// <summary>
+    /// No Metadata Documentation available.
+    /// </summary>
+    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="Test")]
+    [Serializable()]
+    [DataContractAttribute(IsReference=true)]
+    public partial class Test : EntityObject
+    {
+        #region Factory Method
+    
+        /// <summary>
+        /// Create a new Test object.
+        /// </summary>
+        /// <param name="id">Initial value of the id property.</param>
+        public static Test CreateTest(global::System.Int32 id)
+        {
+            Test test = new Test();
+            test.id = id;
+            return test;
+        }
+
+        #endregion
+
+        #region Primitive Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=true, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.Int32 id
+        {
+            get
+            {
+                return _id;
+            }
+            set
+            {
+                if (_id != value)
+                {
+                    OnidChanging(value);
+                    ReportPropertyChanging("id");
+                    _id = StructuralObject.SetValidValue(value);
+                    ReportPropertyChanged("id");
+                    OnidChanged();
+                }
+            }
+        }
+        private global::System.Int32 _id;
+        partial void OnidChanging(global::System.Int32 value);
+        partial void OnidChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.DateTime> fechadesde
+        {
+            get
+            {
+                return _fechadesde;
+            }
+            set
+            {
+                OnfechadesdeChanging(value);
+                ReportPropertyChanging("fechadesde");
+                _fechadesde = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("fechadesde");
+                OnfechadesdeChanged();
+            }
+        }
+        private Nullable<global::System.DateTime> _fechadesde;
+        partial void OnfechadesdeChanging(Nullable<global::System.DateTime> value);
+        partial void OnfechadesdeChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.DateTime> fechahasta
+        {
+            get
+            {
+                return _fechahasta;
+            }
+            set
+            {
+                OnfechahastaChanging(value);
+                ReportPropertyChanging("fechahasta");
+                _fechahasta = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("fechahasta");
+                OnfechahastaChanged();
+            }
+        }
+        private Nullable<global::System.DateTime> _fechahasta;
+        partial void OnfechahastaChanging(Nullable<global::System.DateTime> value);
+        partial void OnfechahastaChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.Int32> zona
+        {
+            get
+            {
+                return _zona;
+            }
+            set
+            {
+                OnzonaChanging(value);
+                ReportPropertyChanging("zona");
+                _zona = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("zona");
+                OnzonaChanged();
+            }
+        }
+        private Nullable<global::System.Int32> _zona;
+        partial void OnzonaChanging(Nullable<global::System.Int32> value);
+        partial void OnzonaChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public global::System.String zonaDescripcion
+        {
+            get
+            {
+                return _zonaDescripcion;
+            }
+            set
+            {
+                OnzonaDescripcionChanging(value);
+                ReportPropertyChanging("zonaDescripcion");
+                _zonaDescripcion = StructuralObject.SetValidValue(value, true);
+                ReportPropertyChanged("zonaDescripcion");
+                OnzonaDescripcionChanged();
+            }
+        }
+        private global::System.String _zonaDescripcion;
+        partial void OnzonaDescripcionChanging(global::System.String value);
+        partial void OnzonaDescripcionChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.Decimal> precio
+        {
+            get
+            {
+                return _precio;
+            }
+            set
+            {
+                OnprecioChanging(value);
+                ReportPropertyChanging("precio");
+                _precio = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("precio");
+                OnprecioChanged();
+            }
+        }
+        private Nullable<global::System.Decimal> _precio;
+        partial void OnprecioChanging(Nullable<global::System.Decimal> value);
+        partial void OnprecioChanged();
+
+        #endregion
+
+    
+    }
+    
+    /// <summary>
+    /// No Metadata Documentation available.
+    /// </summary>
+    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="UOM")]
+    [Serializable()]
+    [DataContractAttribute(IsReference=true)]
+    public partial class UOM : EntityObject
+    {
+        #region Factory Method
+    
+        /// <summary>
+        /// Create a new UOM object.
         /// </summary>
         /// <param name="uomID">Initial value of the UomID property.</param>
         /// <param name="name">Initial value of the Name property.</param>
         /// <param name="dateAdded">Initial value of the DateAdded property.</param>
         /// <param name="addedBy">Initial value of the AddedBy property.</param>
-        public static QuotingV2_UOMs CreateQuotingV2_UOMs(global::System.Int32 uomID, global::System.String name, global::System.DateTime dateAdded, global::System.String addedBy)
+        public static UOM CreateUOM(global::System.Int32 uomID, global::System.String name, global::System.DateTime dateAdded, global::System.String addedBy)
         {
-            QuotingV2_UOMs quotingV2_UOMs = new QuotingV2_UOMs();
-            quotingV2_UOMs.UomID = uomID;
-            quotingV2_UOMs.Name = name;
-            quotingV2_UOMs.DateAdded = dateAdded;
-            quotingV2_UOMs.AddedBy = addedBy;
-            return quotingV2_UOMs;
+            UOM uOM = new UOM();
+            uOM.UomID = uomID;
+            uOM.Name = name;
+            uOM.DateAdded = dateAdded;
+            uOM.AddedBy = addedBy;
+            return uOM;
         }
 
         #endregion
@@ -2051,17 +2429,17 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         [SoapIgnoreAttribute()]
         [DataMemberAttribute()]
         [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Fees_RangeUom_FK", "QuotingV2_Fees")]
-        public EntityCollection<QuotingV2_Fees> QuotingV2_Fees
+        public EntityCollection<Fees> QuotingV2_Fees
         {
             get
             {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<QuotingV2_Fees>("QuotingToolModel.QuotingV2_Fees_RangeUom_FK", "QuotingV2_Fees");
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<Fees>("QuotingToolModel.QuotingV2_Fees_RangeUom_FK", "QuotingV2_Fees");
             }
             set
             {
                 if ((value != null))
                 {
-                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<QuotingV2_Fees>("QuotingToolModel.QuotingV2_Fees_RangeUom_FK", "QuotingV2_Fees", value);
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<Fees>("QuotingToolModel.QuotingV2_Fees_RangeUom_FK", "QuotingV2_Fees", value);
                 }
             }
         }
@@ -2073,200 +2451,23 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         [SoapIgnoreAttribute()]
         [DataMemberAttribute()]
         [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Fees_Uom_FK", "QuotingV2_Fees")]
-        public EntityCollection<QuotingV2_Fees> QuotingV2_Fees1
+        public EntityCollection<Fees> QuotingV2_Fees1
         {
             get
             {
-                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<QuotingV2_Fees>("QuotingToolModel.QuotingV2_Fees_Uom_FK", "QuotingV2_Fees");
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<Fees>("QuotingToolModel.QuotingV2_Fees_Uom_FK", "QuotingV2_Fees");
             }
             set
             {
                 if ((value != null))
                 {
-                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<QuotingV2_Fees>("QuotingToolModel.QuotingV2_Fees_Uom_FK", "QuotingV2_Fees", value);
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<Fees>("QuotingToolModel.QuotingV2_Fees_Uom_FK", "QuotingV2_Fees", value);
                 }
             }
         }
 
         #endregion
 
-    }
-    
-    /// <summary>
-    /// No Metadata Documentation available.
-    /// </summary>
-    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="Test")]
-    [Serializable()]
-    [DataContractAttribute(IsReference=true)]
-    public partial class Test : EntityObject
-    {
-        #region Factory Method
-    
-        /// <summary>
-        /// Create a new Test object.
-        /// </summary>
-        /// <param name="id">Initial value of the id property.</param>
-        public static Test CreateTest(global::System.Int32 id)
-        {
-            Test test = new Test();
-            test.id = id;
-            return test;
-        }
-
-        #endregion
-
-        #region Primitive Properties
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=true, IsNullable=false)]
-        [DataMemberAttribute()]
-        public global::System.Int32 id
-        {
-            get
-            {
-                return _id;
-            }
-            set
-            {
-                if (_id != value)
-                {
-                    OnidChanging(value);
-                    ReportPropertyChanging("id");
-                    _id = StructuralObject.SetValidValue(value);
-                    ReportPropertyChanged("id");
-                    OnidChanged();
-                }
-            }
-        }
-        private global::System.Int32 _id;
-        partial void OnidChanging(global::System.Int32 value);
-        partial void OnidChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
-        [DataMemberAttribute()]
-        public Nullable<global::System.DateTime> fechadesde
-        {
-            get
-            {
-                return _fechadesde;
-            }
-            set
-            {
-                OnfechadesdeChanging(value);
-                ReportPropertyChanging("fechadesde");
-                _fechadesde = StructuralObject.SetValidValue(value);
-                ReportPropertyChanged("fechadesde");
-                OnfechadesdeChanged();
-            }
-        }
-        private Nullable<global::System.DateTime> _fechadesde;
-        partial void OnfechadesdeChanging(Nullable<global::System.DateTime> value);
-        partial void OnfechadesdeChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
-        [DataMemberAttribute()]
-        public Nullable<global::System.DateTime> fechahasta
-        {
-            get
-            {
-                return _fechahasta;
-            }
-            set
-            {
-                OnfechahastaChanging(value);
-                ReportPropertyChanging("fechahasta");
-                _fechahasta = StructuralObject.SetValidValue(value);
-                ReportPropertyChanged("fechahasta");
-                OnfechahastaChanged();
-            }
-        }
-        private Nullable<global::System.DateTime> _fechahasta;
-        partial void OnfechahastaChanging(Nullable<global::System.DateTime> value);
-        partial void OnfechahastaChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
-        [DataMemberAttribute()]
-        public Nullable<global::System.Int32> zona
-        {
-            get
-            {
-                return _zona;
-            }
-            set
-            {
-                OnzonaChanging(value);
-                ReportPropertyChanging("zona");
-                _zona = StructuralObject.SetValidValue(value);
-                ReportPropertyChanged("zona");
-                OnzonaChanged();
-            }
-        }
-        private Nullable<global::System.Int32> _zona;
-        partial void OnzonaChanging(Nullable<global::System.Int32> value);
-        partial void OnzonaChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
-        [DataMemberAttribute()]
-        public global::System.String zonaDescripcion
-        {
-            get
-            {
-                return _zonaDescripcion;
-            }
-            set
-            {
-                OnzonaDescripcionChanging(value);
-                ReportPropertyChanging("zonaDescripcion");
-                _zonaDescripcion = StructuralObject.SetValidValue(value, true);
-                ReportPropertyChanged("zonaDescripcion");
-                OnzonaDescripcionChanged();
-            }
-        }
-        private global::System.String _zonaDescripcion;
-        partial void OnzonaDescripcionChanging(global::System.String value);
-        partial void OnzonaDescripcionChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
-        [DataMemberAttribute()]
-        public Nullable<global::System.Decimal> precio
-        {
-            get
-            {
-                return _precio;
-            }
-            set
-            {
-                OnprecioChanging(value);
-                ReportPropertyChanging("precio");
-                _precio = StructuralObject.SetValidValue(value);
-                ReportPropertyChanged("precio");
-                OnprecioChanged();
-            }
-        }
-        private Nullable<global::System.Decimal> _precio;
-        partial void OnprecioChanging(Nullable<global::System.Decimal> value);
-        partial void OnprecioChanged();
-
-        #endregion
-
-    
     }
 
     #endregion

@@ -3,7 +3,9 @@
 <script src="~/assets/ag-grid/ag-grid-enterprise.min.js"></script>
 <script src="~/assets/ag-grid/ag-grid-servermanager.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-
+<script src="~/assets/typeahead/typeahead.bundle.js"></script>
+<script src="~/assets/ag-grid/ag-grid-typeahead.js"></script>
+<link rel="stylesheet" href="~/assets/ag-grid/ag-grid-typeahead.css" />
 <div id="myGrid" style="height: 600px;width:100%;" class="ag-theme-balham"></div>
 
 
@@ -11,18 +13,81 @@
     var agServerSideManagement = new AGGridManager();
     var columnDefs;
 
+    const states = [
+        { label: "HAWAII", value: "HI" },
+        { label: "ALASKA", value: "AK" }
+    ];
+
+    const islands = [
+        { label: "LINEAI", value: 1 },
+        { label: "MOLUKAI", value: 2 }
+    ];
+
+    function newSource(list, valueField = "value", displayField = "label") {
+        return new Bloodhound({
+            datumTokenizer: Bloodhound.tokenizers.obj.whitespace(displayField),
+            queryTokenizer: Bloodhound.tokenizers.whitespace,
+            identify: (obj) => (obj[valueField]),
+            local: list
+        });
+    }
+
+    function newStore(name, list, valueField = "value", displayField = "label", limit = 10) {
+        return {
+            name, limit,
+            display: displayField,
+            source: newSource(list, valueField, displayField)
+        };
+    }
+
+    function typeaheadFormatter(store) {
+        return function (params) {
+            var { value } = params;
+
+            if (!value) return "";
+
+            if (typeof value !== 'object') value = store.source.get([value])[0];
+
+            if (!value) return "";
+
+            return value[store.display || "label"];
+        }
+    }
+
+    const statesStore = newStore('states', states);
+    const islandsStore = newStore('islands', islands);
+
     @if(Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.AGGridConfigurationModel.Mode.Ranges)
     {
         <text>
         columnDefs = [
-            { headerName: "id", field: "id" },
-            { headerName: "fechadesde", field: "fechadesde" },
-            { headerName: "fechahasta", field: "fechahasta" },
-            { headerName: "zona", field: "zona", cellEditor: "agRichSelectCellEditor", cellEditorParams: { values: ['bari', 'jorgito', 'jorge', 4, 5] } },
-            { headerName: "zonaDescripcion", field: "zonaDescripcion" },
-            { headerName: "precio", field: "precio" }
+            { headerName: "id", field: "id", hide: true },
+            {
+                headerName: "State", field: "state",
+                cellEditor: TypeaheadEditor,
+                cellEditorParams: {
+                    placeholder: 'State',
+                    store: statesStore
+                },
+                valueFormatter: typeaheadFormatter(statesStore)
+            },
+            {
+                headerName: "Island", field: "island",
+                cellEditor: TypeaheadEditor,
+                cellEditorParams: {
+                    placeholder: 'Island',
+                    store: islandsStore
+                },
+                valueFormatter: typeaheadFormatter(islandsStore)
+            },
+            { headerName: "Zone", field: "zone", cellEditor: "agRichSelectCellEditor", cellEditorParams: { values: ['bari', 'jorgito', 'jorge', 4, 5] } },
+            { headerName: "Zip Codes", field: "zipCodes" },
+            { headerName: "Fee", field: "fee" },
+            { headerName: "Discount", field: "discount" },
+            { headerName: "Min", field: "feeMin" },
+            { headerName: "Max", field: "feeMax" }
         ];
-        </text>       
+        </text>
     }
     // let the grid know which columns has to use.
     var gridOptions = {
@@ -48,8 +113,8 @@
         undoRedoCellEditingLimit: 20
     };
 
-    var _endPoint = '@Url.Action("getTestData", "AG")';
-    
+    var _endPoint = '@Url.Action("getFeeData", "AG")';
+
 
     document.addEventListener('DOMContentLoaded', function () {
         var gridDiv = document.querySelector('#myGrid');

@@ -4,13 +4,13 @@
   <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2008/10/edmx">
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
-      <Diagram DiagramId="9436dfefc0a14255812b8852795ce3e1" Name="Diagram1" >
+      <Diagram DiagramId="9436dfefc0a14255812b8852795ce3e1" Name="Master" >
         <EntityTypeShape EntityType="QuotingToolModel.Test" Width="1.5" PointX="0.75" PointY="0.75" />
-        <EntityTypeShape EntityType="QuotingToolModel.QuotingV2_Fees" Width="1.5" PointX="5.625" PointY="3" />
-        <EntityTypeShape EntityType="QuotingToolModel.QuotingV2_FeeTypes" Width="1.5" PointX="3.375" PointY="0.75" />
-        <EntityTypeShape EntityType="QuotingToolModel.QuotingV2_ServiceTypeFees" Width="1.5" PointX="10.625" PointY="2.25" />
-        <EntityTypeShape EntityType="QuotingToolModel.QuotingV2_ServiceTypes" Width="1.5" PointX="8.375" PointY="2.75" />
-        <EntityTypeShape EntityType="QuotingToolModel.QuotingV2_UOMs" Width="1.5" PointX="3.375" PointY="5" />
+        <EntityTypeShape EntityType="QuotingToolModel.Fees" Width="1.5" PointX="5.625" PointY="3" />
+        <EntityTypeShape EntityType="QuotingToolModel.FeeType" Width="1.5" PointX="3.375" PointY="0.75" />
+        <EntityTypeShape EntityType="QuotingToolModel.ServiceTypeFee" Width="1.5" PointX="10.625" PointY="2.25" />
+        <EntityTypeShape EntityType="QuotingToolModel.ServiceType" Width="1.5" PointX="8.375" PointY="2.75" />
+        <EntityTypeShape EntityType="QuotingToolModel.UOM" Width="1.5" PointX="3.375" PointY="5" />
         <AssociationConnector Association="QuotingToolModel.QuotingV2_Fees_Parent_FK" />
         <AssociationConnector Association="QuotingToolModel.QuotingV2_Fees_RangeUom_FK" />
         <AssociationConnector Association="QuotingToolModel.QuotingV2_Fees_Types_FK" />
@@ -18,6 +18,9 @@
         <AssociationConnector Association="QuotingToolModel.QuotingV2_FeeTypes_Parent_FK" />
         <AssociationConnector Association="QuotingToolModel.QuotingV2_ServiceTypeCharges_FeeType_FK" />
         <AssociationConnector Association="QuotingToolModel.QuotingV2_ServiceTypeCharges_ServiceType_FK" />
+      </Diagram>
+      <Diagram DiagramId="4fe137b38ebb4a16a83f564f96d93132" Name="Parameters" >
+        <EntityTypeShape EntityType="QuotingToolModel.States" Width="1.5" PointX="0.75" PointY="0.75" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>
