@@ -1,4 +1,8 @@
-﻿.ag-theme-balham .ag-popup-child:not(.ag-tooltip-custom) {
+﻿.ag-theme-balham .ag-popup-editor {
+    border: 1px solid #0091ea;
+}
+
+.ag-theme-balham .ag-popup-child:not(.ag-tooltip-custom) {
     box-shadow: none;
 }
 
@@ -11,8 +15,8 @@
 }
 
 .tt-container {
-    margin-top: -1px;
-    margin-left: -1px;
+    /*margin-top: -1px;
+    margin-left: -1px;*/
     width: 100%;
 }
 
@@ -25,16 +29,16 @@
 .tt-hint {
     color: #999;
     width: 100%;
-    height: 27px;
+    height: 25px;
     border: none;
-    padding-left: 12px;
+    padding-left: 11px;
 }
 
 .tt-input {
     width: 100%;
-    height: 27px;
+    height: 25px;
     border: none;
-    padding-left: 12px;
+    padding-left: 11px;
 }
 
 .tt-input:focus {

@@ -2,25 +2,40 @@
     constructor() {
     }
 
+    handleTab = (event) => {
+        const value = $(this.input).typeahead('val');
+        if (value === "") this.setValue(null);
+        /* Emulate tab - not for now
+        event.stopPropagation();
+        event.preventDefault();
+        var evt = new KeyboardEvent("keydown", { 'keyCode': 9, 'which': 9, 'key': 'Tab', 'shiftKey': event.shiftKey });
+        this.params.onKeyDown(evt);
+        */
+    }
+
     handleKeyDown = (event) => {
         if (!event) event = window.event;
-        if (event.keyCode === 40)
-            $(this.input).typeahead('open');
+
+        // Arrow Down
+        if (event.keyCode === 40) $(this.input).typeahead('open');
+        // TAB or ENTER
+        else if (event.keyCode === 13 || event.keyCode === 9) this.handleTab(event);
     }
 
     handleChange = (event, datum) => {
         this.setValue(datum);
-
     }
 
     setValue(newValue) {
         const { store } = this.params;
 
-        if (typeof newValue !== 'object')
+        if (typeof newValue !== 'object') {
             newValue = store.source.get([newValue])[0];
+        }
 
         this.value = newValue;
-        $(this.input).typeahead('val', newValue[store.display || "label"]);
+
+        $(this.input).typeahead('val', newValue ? newValue[store.display || "label"] : "");
      }
 
     init(params) {
@@ -28,7 +43,7 @@
 
         this.container = document.createElement('div');
         this.container.className = "tt-container";
-        this.container.style.minWidth = params.column.actualWidth + 'px'
+        this.container.style.minWidth = (params.column.actualWidth-2) + 'px'
 
         this.input = document.createElement('input');
         this.input.type = "text";
