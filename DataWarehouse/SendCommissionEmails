@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[SendCommissionEmails]    Script Date: 3/29/2021 4:49:52 PM ******/
+/****** Object:  StoredProcedure [dbo].[SendCommissionEmails]    Script Date: 6/16/2021 9:53:55 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -963,6 +963,7 @@ BEGIN
 				, @query_result_no_padding = 1;
 			--END
 
+			/*
 			-------------------------------
 			-----Alex Gonzalez EMAIL-----
 			-------------------------------
@@ -1033,7 +1034,7 @@ BEGIN
 				, @query_no_truncate = 0
 				, @query_result_no_padding = 1;
 			--END
-
+			*/
 			-------------------------------
 			-----JIM WYANT EMAIL-----
 			-------------------------------
@@ -1516,14 +1517,14 @@ BEGIN
 
 			EXEC msdb.dbo.sp_send_dbmail      
 					@profile_name = 'APTEST01SQLMail'     
-				  , @recipients = 'rclick@ajclogistics.com;rpage@ajclogistics.com;dwire@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com' -- update email receipient      /*add rclick@ajclogistics.com; back in*/
+				  , @recipients = 'rclick@ajclogistics.com;dwire@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com' -- update email receipient      /*add rclick@ajclogistics.com; back in*/
 				  , @subject = @subj      
 				  , @body= @tableHTML      
 				  , @body_format = 'HTML'  
-			--    , @query = @query      
+			      , @query = @query      
 				  , @execute_query_database = 'AJCDW'    
-			--    , @attach_query_result_as_file = 1  
-			--    , @query_attachment_filename='lpantescocomm.csv'  --update with sales person name convention for file      
+			      , @attach_query_result_as_file = 1  
+			      , @query_attachment_filename ='rclickcomm.csv'  --update with sales person name convention for file      
 				  , @query_result_header = 1      
 				  , @query_result_width = 32767      
 				  , @query_result_separator = ','      
@@ -1534,7 +1535,7 @@ BEGIN
 	  
 			--END  
 
-
+			/*
 			-------------------------------
 			-----ANDRES IZQUIERDO EMAIL-----
 			-------------------------------
@@ -1595,7 +1596,7 @@ BEGIN
 				  , @append_query_error = 1      
 				  , @query_no_truncate = 0      
 				  , @query_result_no_padding = 1; 
-				  
+			*/	  
 			-------------------------------
 			-----KELLAN CHRISMAN EMAIL-----
 			-------------------------------
@@ -1896,7 +1897,6 @@ BEGIN
 				, @query_no_truncate = 0
 				, @query_result_no_padding = 1;
 
-
 			-------------------------------
 			-----MIKE MARONI EMAIL-----
 			-------------------------------
@@ -2104,6 +2104,78 @@ BEGIN
 				  , @query_result_no_padding = 1;  
 
 					*/
+			
+			-------------------------------
+			-----PATRICK WILKINS EMAIL-----
+			-------------------------------
+			--GO
+			--BEGIN
+			--DECLARE @msg VARCHAR(250);
+			--DECLARE @subj VARCHAR(250);
+			--DECLARE @query varchar(2048);
+			--DECLARE @column1name varchar(255);
+			--DECLARE @tableHTML NVARCHAR(MAX) ;
+			--DECLARE @PERIOD_NAME VARCHAR(50)
+
+			SET @PERIOD_NAME = (SELECT DISTINCT PERIOD_NAME
+			FROM tblOracleCalendar
+			WHERE cast(DATEADD(dd,-25,getdate()) as date) between START_DATE and END_DATE)
+
+			SET @tableHTML =
+				N'<H3 align=''left''>Please see your attached commission report for '+ @PERIOD_NAME + ' and summary details in table below:' + 
+				N'<table align=''left'' border="1" bgcolor="#ffffe6">' +  
+				N'<tr bgcolor="#cceeff"><th>Sales Person</th><th>Total GP</th><th>Commission</th></tr>' +
+			N'<tfoot>' +
+				CAST ( ( SELECT td = ISNULL(c.SalesPName,'TOTAL'),       '',  
+								td = format(sum(c.GP), 'c', 'en-us'), '',  
+								td = format(sum(c.PWComm), 'c', 'en-us')  --set to sales rep column for the correct sales person
+							from tblCommCalc c
+							JOIN tblOracleCalendar on PERIOD_NAME = ACCTPERIODNAME
+							WHERE cast(DATEADD(dd,-25,getdate()) as date) between START_DATE and END_DATE
+								AND SalesPName like '%PATRICK%'  --use correct sales person name
+								AND GP <> 0
+					group by c.SalesPName --with ROLLUP
+			 FOR XML PATH('tr'), TYPE) AS NVARCHAR(MAX)) + N'</table>'
+ 
+			SET @subj = 'Patrick Wilkins Commission Report for '+ @PERIOD_NAME;   -- update with correct sales person name
+
+			-- Create the column name with the instrucation in a variable
+			SET @Column1Name = '[sep=,' + CHAR(13) + CHAR(10) + 'SalesPName]'
+
+			SET @query='
+			DECLARE @today as date
+			SET @today = DATEADD(dd,-25,getdate())
+			set nocount on;
+			select SalesPName ' + @column1name + ', RefNo, CSAStation as LD_No, GP, PWComm, ACCTYR, ACCTMONTH, ACCTPERIODNAME --update with correct sales person commission column
+			, REPLACE(InvLOB,'','','''') as InvLOB
+			, REPLACE(InvCustName,'','','''') as Customer
+			, ShipType, Dispatcher
+			from tblCommCalc
+			JOIN tblOracleCalendar on PERIOD_NAME = ACCTPERIODNAME
+			WHERE
+			@today between START_DATE and END_DATE
+			AND SalesPName like ''%PATRICK%''  --use correct sales person name
+			AND GP <> 0;'
+
+			EXEC msdb.dbo.sp_send_dbmail
+				@profile_name = 'APTEST01SQLMail'
+				, @recipients = 'pwilkins@ajclogistics.com;rtierney@ajclogistics.com;igayle@ajclogistics.com;bstallings@ajclogistics.com' -- update email receipient /add tclendenen@ajclogistics.com; back in*/
+				, @subject = @subj
+				, @body= @tableHTML
+				, @body_format = 'HTML'
+				, @query = @query
+				, @execute_query_database = 'AJCDW'  
+				, @attach_query_result_as_file = 1
+				, @query_attachment_filename='pwilkinscomm.csv'  --update with sales person name convention for file
+				, @query_result_header = 1
+				, @query_result_width = 32767
+				, @query_result_separator = ','
+				, @exclude_query_output = 0
+				, @append_query_error = 1
+				, @query_no_truncate = 0
+				, @query_result_no_padding = 1;
+			--END
+
 			-------------------------------
 			-----CRYSTAL LUBIN-----
 			-------------------------------
