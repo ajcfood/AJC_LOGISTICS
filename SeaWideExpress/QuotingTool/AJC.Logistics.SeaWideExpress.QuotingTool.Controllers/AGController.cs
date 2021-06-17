@@ -50,11 +50,11 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                 object entities = null;
                 var repo = db.Fees.Select(fee => new { 
                     id = fee.FeeID, 
-                    state = fee.State,
+                    state = fee.StateID,
                     island = fee.IslandID, 
                     city = fee.CityID,
                     zipCodes = fee.ZipCodes,
-                    fee = fee.Fee,
+                    fee = fee.Value,
                     discount = fee.Discount,
                     feeMin = fee.FeeMin,
                     feeMax = fee.FeeMax,
@@ -75,5 +75,60 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
             }
         }
 
+        /// <summary>
+        /// Get Country entities for List of Values
+        /// </summary>
+        /// <returns></returns>
+        [System.Web.Mvc.HttpGet]
+        public JsonResult getCountries()
+        {
+            using (QuotingToolRepository db = new QuotingToolRepository())
+            {
+                var dataSet = db.Countries.Select(country => new {value = country.CountryID, label = country.Name.Trim().ToUpper()}).ToList();
+                return Json(dataSet, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        /// <summary>
+        /// Get State entities for List of Values
+        /// </summary>
+        /// <returns></returns>
+        [System.Web.Mvc.HttpGet]
+        public JsonResult getStates()
+        {
+            using (QuotingToolRepository db = new QuotingToolRepository())
+            {
+                var dataSet = db.States.Select(state => new { value = state.StateID, label = state.Name.Trim().ToUpper() }).ToList();
+                return Json(dataSet, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        /// <summary>
+        /// Get Island entities for List of Values
+        /// </summary>
+        /// <returns></returns>
+        [System.Web.Mvc.HttpGet]
+        public JsonResult getIslands()
+        {
+            using (QuotingToolRepository db = new QuotingToolRepository())
+            {
+                var dataSet = db.Islands.Select(island => new { value = island.IslandID, label = island.Name.Trim().ToUpper() }).ToList();
+                return Json(dataSet, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        /// <summary>
+        /// Get City entities for List of Values
+        /// </summary>
+        /// <returns></returns>
+        [System.Web.Mvc.HttpGet]
+        public JsonResult getCities()
+        {
+            using (QuotingToolRepository db = new QuotingToolRepository())
+            {
+                var dataSet = db.Cities.Select(city => new { value = city.CityID, label = city.Name.Trim().ToUpper() }).ToList();
+                return Json(dataSet, JsonRequestBehavior.AllowGet);
+            }
+        }
     }
 }

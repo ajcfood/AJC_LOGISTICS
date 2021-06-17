@@ -26,6 +26,16 @@ using System.Xml.Serialization;
 [assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_FeeTypes_Parent_FK", "QuotingV2_FeeTypes", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.FeeType), "QuotingV2_FeeTypes1", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.FeeType), true)]
 [assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_ServiceTypeCharges_FeeType_FK", "QuotingV2_FeeTypes", System.Data.Metadata.Edm.RelationshipMultiplicity.One, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.FeeType), "QuotingV2_ServiceTypeFees", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.ServiceTypeFee), true)]
 [assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_ServiceTypeCharges_ServiceType_FK", "QuotingV2_ServiceTypes", System.Data.Metadata.Edm.RelationshipMultiplicity.One, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.ServiceType), "QuotingV2_ServiceTypeFees", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.ServiceTypeFee), true)]
+[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_Cities_State_FK", "QuotingV2_States", System.Data.Metadata.Edm.RelationshipMultiplicity.One, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.State), "QuotingV2_Cities", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.City), true)]
+[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_Fees_City_FK", "QuotingV2_Cities", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.City), "Fees", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.Fees), true)]
+[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_Zones_City_FK", "QuotingV2_Cities", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.City), "QuotingV2_Zones", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.Zone), true)]
+[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_Fees_Country_FK", "QuotingV2_Countries", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.Country), "Fees", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.Fees), true)]
+[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_States_Country_FK", "QuotingV2_Countries", System.Data.Metadata.Edm.RelationshipMultiplicity.One, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.Country), "QuotingV2_States", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.State), true)]
+[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_ZipCodes_Country_FK", "QuotingV2_Countries", System.Data.Metadata.Edm.RelationshipMultiplicity.One, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.Country), "QuotingV2_ZipCodes", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.ZipCodes), true)]
+[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_Fees_Island_FK", "QuotingV2_Islands", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.Island), "Fees", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.Fees), true)]
+[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_Fees_State_FK", "QuotingV2_States", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.State), "Fees", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.Fees), true)]
+[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_Zones_Island_FK", "QuotingV2_Islands", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.Island), "QuotingV2_Zones", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.Zone), true)]
+[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_Zones_State_FK", "QuotingV2_States", System.Data.Metadata.Edm.RelationshipMultiplicity.One, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.State), "QuotingV2_Zones", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.Zone), true)]
 
 #endregion
 
@@ -176,18 +186,114 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         /// <summary>
         /// No Metadata Documentation available.
         /// </summary>
-        public ObjectSet<States> States
+        public ObjectSet<C__RefactorLog> C__RefactorLog
+        {
+            get
+            {
+                if ((_C__RefactorLog == null))
+                {
+                    _C__RefactorLog = base.CreateObjectSet<C__RefactorLog>("C__RefactorLog");
+                }
+                return _C__RefactorLog;
+            }
+        }
+        private ObjectSet<C__RefactorLog> _C__RefactorLog;
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        public ObjectSet<City> Cities
+        {
+            get
+            {
+                if ((_Cities == null))
+                {
+                    _Cities = base.CreateObjectSet<City>("Cities");
+                }
+                return _Cities;
+            }
+        }
+        private ObjectSet<City> _Cities;
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        public ObjectSet<Country> Countries
+        {
+            get
+            {
+                if ((_Countries == null))
+                {
+                    _Countries = base.CreateObjectSet<Country>("Countries");
+                }
+                return _Countries;
+            }
+        }
+        private ObjectSet<Country> _Countries;
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        public ObjectSet<Island> Islands
+        {
+            get
+            {
+                if ((_Islands == null))
+                {
+                    _Islands = base.CreateObjectSet<Island>("Islands");
+                }
+                return _Islands;
+            }
+        }
+        private ObjectSet<Island> _Islands;
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        public ObjectSet<State> States
         {
             get
             {
                 if ((_States == null))
                 {
-                    _States = base.CreateObjectSet<States>("States");
+                    _States = base.CreateObjectSet<State>("States");
                 }
                 return _States;
             }
         }
-        private ObjectSet<States> _States;
+        private ObjectSet<State> _States;
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        public ObjectSet<ZipCodes> ZipCodes
+        {
+            get
+            {
+                if ((_ZipCodes == null))
+                {
+                    _ZipCodes = base.CreateObjectSet<ZipCodes>("ZipCodes");
+                }
+                return _ZipCodes;
+            }
+        }
+        private ObjectSet<ZipCodes> _ZipCodes;
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        public ObjectSet<Zone> Zones
+        {
+            get
+            {
+                if ((_Zones == null))
+                {
+                    _Zones = base.CreateObjectSet<Zone>("Zones");
+                }
+                return _Zones;
+            }
+        }
+        private ObjectSet<Zone> _Zones;
 
         #endregion
 
@@ -242,11 +348,59 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         }
     
         /// <summary>
+        /// Deprecated Method for adding a new object to the C__RefactorLog EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
+        /// </summary>
+        public void AddToC__RefactorLog(C__RefactorLog c__RefactorLog)
+        {
+            base.AddObject("C__RefactorLog", c__RefactorLog);
+        }
+    
+        /// <summary>
+        /// Deprecated Method for adding a new object to the Cities EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
+        /// </summary>
+        public void AddToCities(City city)
+        {
+            base.AddObject("Cities", city);
+        }
+    
+        /// <summary>
+        /// Deprecated Method for adding a new object to the Countries EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
+        /// </summary>
+        public void AddToCountries(Country country)
+        {
+            base.AddObject("Countries", country);
+        }
+    
+        /// <summary>
+        /// Deprecated Method for adding a new object to the Islands EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
+        /// </summary>
+        public void AddToIslands(Island island)
+        {
+            base.AddObject("Islands", island);
+        }
+    
+        /// <summary>
         /// Deprecated Method for adding a new object to the States EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
         /// </summary>
-        public void AddToStates(States states)
+        public void AddToStates(State state)
         {
-            base.AddObject("States", states);
+            base.AddObject("States", state);
+        }
+    
+        /// <summary>
+        /// Deprecated Method for adding a new object to the ZipCodes EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
+        /// </summary>
+        public void AddToZipCodes(ZipCodes zipCodes)
+        {
+            base.AddObject("ZipCodes", zipCodes);
+        }
+    
+        /// <summary>
+        /// Deprecated Method for adding a new object to the Zones EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
+        /// </summary>
+        public void AddToZones(Zone zone)
+        {
+            base.AddObject("Zones", zone);
         }
 
         #endregion
@@ -256,6 +410,663 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
     #endregion
 
     #region Entities
+    
+    /// <summary>
+    /// No Metadata Documentation available.
+    /// </summary>
+    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="C__RefactorLog")]
+    [Serializable()]
+    [DataContractAttribute(IsReference=true)]
+    public partial class C__RefactorLog : EntityObject
+    {
+        #region Factory Method
+    
+        /// <summary>
+        /// Create a new C__RefactorLog object.
+        /// </summary>
+        /// <param name="operationKey">Initial value of the OperationKey property.</param>
+        public static C__RefactorLog CreateC__RefactorLog(global::System.Guid operationKey)
+        {
+            C__RefactorLog c__RefactorLog = new C__RefactorLog();
+            c__RefactorLog.OperationKey = operationKey;
+            return c__RefactorLog;
+        }
+
+        #endregion
+
+        #region Primitive Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=true, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.Guid OperationKey
+        {
+            get
+            {
+                return _OperationKey;
+            }
+            set
+            {
+                if (_OperationKey != value)
+                {
+                    OnOperationKeyChanging(value);
+                    ReportPropertyChanging("OperationKey");
+                    _OperationKey = StructuralObject.SetValidValue(value);
+                    ReportPropertyChanged("OperationKey");
+                    OnOperationKeyChanged();
+                }
+            }
+        }
+        private global::System.Guid _OperationKey;
+        partial void OnOperationKeyChanging(global::System.Guid value);
+        partial void OnOperationKeyChanged();
+
+        #endregion
+
+    
+    }
+    
+    /// <summary>
+    /// No Metadata Documentation available.
+    /// </summary>
+    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="City")]
+    [Serializable()]
+    [DataContractAttribute(IsReference=true)]
+    public partial class City : EntityObject
+    {
+        #region Factory Method
+    
+        /// <summary>
+        /// Create a new City object.
+        /// </summary>
+        /// <param name="cityID">Initial value of the CityID property.</param>
+        /// <param name="stateID">Initial value of the StateID property.</param>
+        /// <param name="name">Initial value of the Name property.</param>
+        /// <param name="dateAdded">Initial value of the DateAdded property.</param>
+        /// <param name="addedBy">Initial value of the AddedBy property.</param>
+        public static City CreateCity(global::System.Int32 cityID, global::System.Int32 stateID, global::System.String name, global::System.DateTime dateAdded, global::System.String addedBy)
+        {
+            City city = new City();
+            city.CityID = cityID;
+            city.StateID = stateID;
+            city.Name = name;
+            city.DateAdded = dateAdded;
+            city.AddedBy = addedBy;
+            return city;
+        }
+
+        #endregion
+
+        #region Primitive Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=true, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.Int32 CityID
+        {
+            get
+            {
+                return _CityID;
+            }
+            set
+            {
+                if (_CityID != value)
+                {
+                    OnCityIDChanging(value);
+                    ReportPropertyChanging("CityID");
+                    _CityID = StructuralObject.SetValidValue(value);
+                    ReportPropertyChanged("CityID");
+                    OnCityIDChanged();
+                }
+            }
+        }
+        private global::System.Int32 _CityID;
+        partial void OnCityIDChanging(global::System.Int32 value);
+        partial void OnCityIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.Int32 StateID
+        {
+            get
+            {
+                return _StateID;
+            }
+            set
+            {
+                OnStateIDChanging(value);
+                ReportPropertyChanging("StateID");
+                _StateID = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("StateID");
+                OnStateIDChanged();
+            }
+        }
+        private global::System.Int32 _StateID;
+        partial void OnStateIDChanging(global::System.Int32 value);
+        partial void OnStateIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String Name
+        {
+            get
+            {
+                return _Name;
+            }
+            set
+            {
+                OnNameChanging(value);
+                ReportPropertyChanging("Name");
+                _Name = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("Name");
+                OnNameChanged();
+            }
+        }
+        private global::System.String _Name;
+        partial void OnNameChanging(global::System.String value);
+        partial void OnNameChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.DateTime DateAdded
+        {
+            get
+            {
+                return _DateAdded;
+            }
+            set
+            {
+                OnDateAddedChanging(value);
+                ReportPropertyChanging("DateAdded");
+                _DateAdded = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("DateAdded");
+                OnDateAddedChanged();
+            }
+        }
+        private global::System.DateTime _DateAdded;
+        partial void OnDateAddedChanging(global::System.DateTime value);
+        partial void OnDateAddedChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String AddedBy
+        {
+            get
+            {
+                return _AddedBy;
+            }
+            set
+            {
+                OnAddedByChanging(value);
+                ReportPropertyChanging("AddedBy");
+                _AddedBy = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("AddedBy");
+                OnAddedByChanged();
+            }
+        }
+        private global::System.String _AddedBy;
+        partial void OnAddedByChanging(global::System.String value);
+        partial void OnAddedByChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.DateTime> DateUpdated
+        {
+            get
+            {
+                return _DateUpdated;
+            }
+            set
+            {
+                OnDateUpdatedChanging(value);
+                ReportPropertyChanging("DateUpdated");
+                _DateUpdated = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("DateUpdated");
+                OnDateUpdatedChanged();
+            }
+        }
+        private Nullable<global::System.DateTime> _DateUpdated;
+        partial void OnDateUpdatedChanging(Nullable<global::System.DateTime> value);
+        partial void OnDateUpdatedChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public global::System.String UpdatedBy
+        {
+            get
+            {
+                return _UpdatedBy;
+            }
+            set
+            {
+                OnUpdatedByChanging(value);
+                ReportPropertyChanging("UpdatedBy");
+                _UpdatedBy = StructuralObject.SetValidValue(value, true);
+                ReportPropertyChanged("UpdatedBy");
+                OnUpdatedByChanged();
+            }
+        }
+        private global::System.String _UpdatedBy;
+        partial void OnUpdatedByChanging(global::System.String value);
+        partial void OnUpdatedByChanged();
+
+        #endregion
+
+    
+        #region Navigation Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Cities_State_FK", "QuotingV2_States")]
+        public State QuotingV2_States
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<State>("QuotingToolModel.QuotingV2_Cities_State_FK", "QuotingV2_States").Value;
+            }
+            set
+            {
+                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<State>("QuotingToolModel.QuotingV2_Cities_State_FK", "QuotingV2_States").Value = value;
+            }
+        }
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [BrowsableAttribute(false)]
+        [DataMemberAttribute()]
+        public EntityReference<State> QuotingV2_StatesReference
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<State>("QuotingToolModel.QuotingV2_Cities_State_FK", "QuotingV2_States");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<State>("QuotingToolModel.QuotingV2_Cities_State_FK", "QuotingV2_States", value);
+                }
+            }
+        }
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Fees_City_FK", "Fees")]
+        public EntityCollection<Fees> QuotingV2_Fees
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<Fees>("QuotingToolModel.QuotingV2_Fees_City_FK", "Fees");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<Fees>("QuotingToolModel.QuotingV2_Fees_City_FK", "Fees", value);
+                }
+            }
+        }
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Zones_City_FK", "QuotingV2_Zones")]
+        public EntityCollection<Zone> QuotingV2_Zones
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<Zone>("QuotingToolModel.QuotingV2_Zones_City_FK", "QuotingV2_Zones");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<Zone>("QuotingToolModel.QuotingV2_Zones_City_FK", "QuotingV2_Zones", value);
+                }
+            }
+        }
+
+        #endregion
+
+    }
+    
+    /// <summary>
+    /// No Metadata Documentation available.
+    /// </summary>
+    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="Country")]
+    [Serializable()]
+    [DataContractAttribute(IsReference=true)]
+    public partial class Country : EntityObject
+    {
+        #region Factory Method
+    
+        /// <summary>
+        /// Create a new Country object.
+        /// </summary>
+        /// <param name="countryID">Initial value of the CountryID property.</param>
+        /// <param name="shortCode">Initial value of the ShortCode property.</param>
+        /// <param name="longCode">Initial value of the LongCode property.</param>
+        /// <param name="name">Initial value of the Name property.</param>
+        /// <param name="dateAdded">Initial value of the DateAdded property.</param>
+        /// <param name="addedBy">Initial value of the AddedBy property.</param>
+        public static Country CreateCountry(global::System.Int32 countryID, global::System.String shortCode, global::System.String longCode, global::System.String name, global::System.DateTime dateAdded, global::System.String addedBy)
+        {
+            Country country = new Country();
+            country.CountryID = countryID;
+            country.ShortCode = shortCode;
+            country.LongCode = longCode;
+            country.Name = name;
+            country.DateAdded = dateAdded;
+            country.AddedBy = addedBy;
+            return country;
+        }
+
+        #endregion
+
+        #region Primitive Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=true, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.Int32 CountryID
+        {
+            get
+            {
+                return _CountryID;
+            }
+            set
+            {
+                if (_CountryID != value)
+                {
+                    OnCountryIDChanging(value);
+                    ReportPropertyChanging("CountryID");
+                    _CountryID = StructuralObject.SetValidValue(value);
+                    ReportPropertyChanged("CountryID");
+                    OnCountryIDChanged();
+                }
+            }
+        }
+        private global::System.Int32 _CountryID;
+        partial void OnCountryIDChanging(global::System.Int32 value);
+        partial void OnCountryIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String ShortCode
+        {
+            get
+            {
+                return _ShortCode;
+            }
+            set
+            {
+                OnShortCodeChanging(value);
+                ReportPropertyChanging("ShortCode");
+                _ShortCode = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("ShortCode");
+                OnShortCodeChanged();
+            }
+        }
+        private global::System.String _ShortCode;
+        partial void OnShortCodeChanging(global::System.String value);
+        partial void OnShortCodeChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String LongCode
+        {
+            get
+            {
+                return _LongCode;
+            }
+            set
+            {
+                OnLongCodeChanging(value);
+                ReportPropertyChanging("LongCode");
+                _LongCode = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("LongCode");
+                OnLongCodeChanged();
+            }
+        }
+        private global::System.String _LongCode;
+        partial void OnLongCodeChanging(global::System.String value);
+        partial void OnLongCodeChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String Name
+        {
+            get
+            {
+                return _Name;
+            }
+            set
+            {
+                OnNameChanging(value);
+                ReportPropertyChanging("Name");
+                _Name = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("Name");
+                OnNameChanged();
+            }
+        }
+        private global::System.String _Name;
+        partial void OnNameChanging(global::System.String value);
+        partial void OnNameChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.DateTime DateAdded
+        {
+            get
+            {
+                return _DateAdded;
+            }
+            set
+            {
+                OnDateAddedChanging(value);
+                ReportPropertyChanging("DateAdded");
+                _DateAdded = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("DateAdded");
+                OnDateAddedChanged();
+            }
+        }
+        private global::System.DateTime _DateAdded;
+        partial void OnDateAddedChanging(global::System.DateTime value);
+        partial void OnDateAddedChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String AddedBy
+        {
+            get
+            {
+                return _AddedBy;
+            }
+            set
+            {
+                OnAddedByChanging(value);
+                ReportPropertyChanging("AddedBy");
+                _AddedBy = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("AddedBy");
+                OnAddedByChanged();
+            }
+        }
+        private global::System.String _AddedBy;
+        partial void OnAddedByChanging(global::System.String value);
+        partial void OnAddedByChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.DateTime> DateUpdated
+        {
+            get
+            {
+                return _DateUpdated;
+            }
+            set
+            {
+                OnDateUpdatedChanging(value);
+                ReportPropertyChanging("DateUpdated");
+                _DateUpdated = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("DateUpdated");
+                OnDateUpdatedChanged();
+            }
+        }
+        private Nullable<global::System.DateTime> _DateUpdated;
+        partial void OnDateUpdatedChanging(Nullable<global::System.DateTime> value);
+        partial void OnDateUpdatedChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public global::System.String UpdatedBy
+        {
+            get
+            {
+                return _UpdatedBy;
+            }
+            set
+            {
+                OnUpdatedByChanging(value);
+                ReportPropertyChanging("UpdatedBy");
+                _UpdatedBy = StructuralObject.SetValidValue(value, true);
+                ReportPropertyChanged("UpdatedBy");
+                OnUpdatedByChanged();
+            }
+        }
+        private global::System.String _UpdatedBy;
+        partial void OnUpdatedByChanging(global::System.String value);
+        partial void OnUpdatedByChanged();
+
+        #endregion
+
+    
+        #region Navigation Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Fees_Country_FK", "Fees")]
+        public EntityCollection<Fees> QuotingV2_Fees
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<Fees>("QuotingToolModel.QuotingV2_Fees_Country_FK", "Fees");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<Fees>("QuotingToolModel.QuotingV2_Fees_Country_FK", "Fees", value);
+                }
+            }
+        }
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_States_Country_FK", "QuotingV2_States")]
+        public EntityCollection<State> QuotingV2_States
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<State>("QuotingToolModel.QuotingV2_States_Country_FK", "QuotingV2_States");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<State>("QuotingToolModel.QuotingV2_States_Country_FK", "QuotingV2_States", value);
+                }
+            }
+        }
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_ZipCodes_Country_FK", "QuotingV2_ZipCodes")]
+        public EntityCollection<ZipCodes> QuotingV2_ZipCodes
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<ZipCodes>("QuotingToolModel.QuotingV2_ZipCodes_Country_FK", "QuotingV2_ZipCodes");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<ZipCodes>("QuotingToolModel.QuotingV2_ZipCodes_Country_FK", "QuotingV2_ZipCodes", value);
+                }
+            }
+        }
+
+        #endregion
+
+    }
     
     /// <summary>
     /// No Metadata Documentation available.
@@ -338,30 +1149,6 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         private global::System.Int32 _FeeTypeID;
         partial void OnFeeTypeIDChanging(global::System.Int32 value);
         partial void OnFeeTypeIDChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
-        [DataMemberAttribute()]
-        public global::System.String State
-        {
-            get
-            {
-                return _State;
-            }
-            set
-            {
-                OnStateChanging(value);
-                ReportPropertyChanging("State");
-                _State = StructuralObject.SetValidValue(value, true);
-                ReportPropertyChanged("State");
-                OnStateChanged();
-            }
-        }
-        private global::System.String _State;
-        partial void OnStateChanging(global::System.String value);
-        partial void OnStateChanged();
     
         /// <summary>
         /// No Metadata Documentation available.
@@ -482,30 +1269,6 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         private Nullable<global::System.Int32> _CustomerID;
         partial void OnCustomerIDChanging(Nullable<global::System.Int32> value);
         partial void OnCustomerIDChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
-        [DataMemberAttribute()]
-        public Nullable<global::System.Decimal> Fee
-        {
-            get
-            {
-                return _Fee;
-            }
-            set
-            {
-                OnFeeChanging(value);
-                ReportPropertyChanging("Fee");
-                _Fee = StructuralObject.SetValidValue(value);
-                ReportPropertyChanged("Fee");
-                OnFeeChanged();
-            }
-        }
-        private Nullable<global::System.Decimal> _Fee;
-        partial void OnFeeChanging(Nullable<global::System.Decimal> value);
-        partial void OnFeeChanged();
     
         /// <summary>
         /// No Metadata Documentation available.
@@ -866,6 +1629,78 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         private global::System.String _UpdatedBy;
         partial void OnUpdatedByChanging(global::System.String value);
         partial void OnUpdatedByChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.Int32> CountryID
+        {
+            get
+            {
+                return _CountryID;
+            }
+            set
+            {
+                OnCountryIDChanging(value);
+                ReportPropertyChanging("CountryID");
+                _CountryID = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("CountryID");
+                OnCountryIDChanged();
+            }
+        }
+        private Nullable<global::System.Int32> _CountryID;
+        partial void OnCountryIDChanging(Nullable<global::System.Int32> value);
+        partial void OnCountryIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.Int32> StateID
+        {
+            get
+            {
+                return _StateID;
+            }
+            set
+            {
+                OnStateIDChanging(value);
+                ReportPropertyChanging("StateID");
+                _StateID = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("StateID");
+                OnStateIDChanged();
+            }
+        }
+        private Nullable<global::System.Int32> _StateID;
+        partial void OnStateIDChanging(Nullable<global::System.Int32> value);
+        partial void OnStateIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.Decimal> Value
+        {
+            get
+            {
+                return _Value;
+            }
+            set
+            {
+                OnValueChanging(value);
+                ReportPropertyChanging("Value");
+                _Value = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("Value");
+                OnValueChanged();
+            }
+        }
+        private Nullable<global::System.Decimal> _Value;
+        partial void OnValueChanging(Nullable<global::System.Decimal> value);
+        partial void OnValueChanged();
 
         #endregion
 
@@ -1042,6 +1877,158 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
                 if ((value != null))
                 {
                     ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<UOM>("QuotingToolModel.QuotingV2_Fees_Uom_FK", "QuotingV2_UOMs", value);
+                }
+            }
+        }
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Fees_City_FK", "QuotingV2_Cities")]
+        public City QuotingV2_Cities
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<City>("QuotingToolModel.QuotingV2_Fees_City_FK", "QuotingV2_Cities").Value;
+            }
+            set
+            {
+                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<City>("QuotingToolModel.QuotingV2_Fees_City_FK", "QuotingV2_Cities").Value = value;
+            }
+        }
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [BrowsableAttribute(false)]
+        [DataMemberAttribute()]
+        public EntityReference<City> QuotingV2_CitiesReference
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<City>("QuotingToolModel.QuotingV2_Fees_City_FK", "QuotingV2_Cities");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<City>("QuotingToolModel.QuotingV2_Fees_City_FK", "QuotingV2_Cities", value);
+                }
+            }
+        }
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Fees_Country_FK", "QuotingV2_Countries")]
+        public Country QuotingV2_Countries
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Country>("QuotingToolModel.QuotingV2_Fees_Country_FK", "QuotingV2_Countries").Value;
+            }
+            set
+            {
+                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Country>("QuotingToolModel.QuotingV2_Fees_Country_FK", "QuotingV2_Countries").Value = value;
+            }
+        }
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [BrowsableAttribute(false)]
+        [DataMemberAttribute()]
+        public EntityReference<Country> QuotingV2_CountriesReference
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Country>("QuotingToolModel.QuotingV2_Fees_Country_FK", "QuotingV2_Countries");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<Country>("QuotingToolModel.QuotingV2_Fees_Country_FK", "QuotingV2_Countries", value);
+                }
+            }
+        }
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Fees_Island_FK", "QuotingV2_Islands")]
+        public Island QuotingV2_Islands
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Island>("QuotingToolModel.QuotingV2_Fees_Island_FK", "QuotingV2_Islands").Value;
+            }
+            set
+            {
+                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Island>("QuotingToolModel.QuotingV2_Fees_Island_FK", "QuotingV2_Islands").Value = value;
+            }
+        }
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [BrowsableAttribute(false)]
+        [DataMemberAttribute()]
+        public EntityReference<Island> QuotingV2_IslandsReference
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Island>("QuotingToolModel.QuotingV2_Fees_Island_FK", "QuotingV2_Islands");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<Island>("QuotingToolModel.QuotingV2_Fees_Island_FK", "QuotingV2_Islands", value);
+                }
+            }
+        }
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Fees_State_FK", "QuotingV2_States")]
+        public State QuotingV2_States
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<State>("QuotingToolModel.QuotingV2_Fees_State_FK", "QuotingV2_States").Value;
+            }
+            set
+            {
+                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<State>("QuotingToolModel.QuotingV2_Fees_State_FK", "QuotingV2_States").Value = value;
+            }
+        }
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [BrowsableAttribute(false)]
+        [DataMemberAttribute()]
+        public EntityReference<State> QuotingV2_StatesReference
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<State>("QuotingToolModel.QuotingV2_Fees_State_FK", "QuotingV2_States");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<State>("QuotingToolModel.QuotingV2_Fees_State_FK", "QuotingV2_States", value);
                 }
             }
         }
@@ -1381,6 +2368,263 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
                 if ((value != null))
                 {
                     ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<ServiceTypeFee>("QuotingToolModel.QuotingV2_ServiceTypeCharges_FeeType_FK", "QuotingV2_ServiceTypeFees", value);
+                }
+            }
+        }
+
+        #endregion
+
+    }
+    
+    /// <summary>
+    /// No Metadata Documentation available.
+    /// </summary>
+    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="Island")]
+    [Serializable()]
+    [DataContractAttribute(IsReference=true)]
+    public partial class Island : EntityObject
+    {
+        #region Factory Method
+    
+        /// <summary>
+        /// Create a new Island object.
+        /// </summary>
+        /// <param name="islandID">Initial value of the IslandID property.</param>
+        /// <param name="stateID">Initial value of the StateID property.</param>
+        /// <param name="name">Initial value of the Name property.</param>
+        /// <param name="dateAdded">Initial value of the DateAdded property.</param>
+        /// <param name="addedBy">Initial value of the AddedBy property.</param>
+        public static Island CreateIsland(global::System.Int32 islandID, global::System.String stateID, global::System.String name, global::System.DateTime dateAdded, global::System.String addedBy)
+        {
+            Island island = new Island();
+            island.IslandID = islandID;
+            island.StateID = stateID;
+            island.Name = name;
+            island.DateAdded = dateAdded;
+            island.AddedBy = addedBy;
+            return island;
+        }
+
+        #endregion
+
+        #region Primitive Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=true, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.Int32 IslandID
+        {
+            get
+            {
+                return _IslandID;
+            }
+            set
+            {
+                if (_IslandID != value)
+                {
+                    OnIslandIDChanging(value);
+                    ReportPropertyChanging("IslandID");
+                    _IslandID = StructuralObject.SetValidValue(value);
+                    ReportPropertyChanged("IslandID");
+                    OnIslandIDChanged();
+                }
+            }
+        }
+        private global::System.Int32 _IslandID;
+        partial void OnIslandIDChanging(global::System.Int32 value);
+        partial void OnIslandIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String StateID
+        {
+            get
+            {
+                return _StateID;
+            }
+            set
+            {
+                OnStateIDChanging(value);
+                ReportPropertyChanging("StateID");
+                _StateID = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("StateID");
+                OnStateIDChanged();
+            }
+        }
+        private global::System.String _StateID;
+        partial void OnStateIDChanging(global::System.String value);
+        partial void OnStateIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String Name
+        {
+            get
+            {
+                return _Name;
+            }
+            set
+            {
+                OnNameChanging(value);
+                ReportPropertyChanging("Name");
+                _Name = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("Name");
+                OnNameChanged();
+            }
+        }
+        private global::System.String _Name;
+        partial void OnNameChanging(global::System.String value);
+        partial void OnNameChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.DateTime DateAdded
+        {
+            get
+            {
+                return _DateAdded;
+            }
+            set
+            {
+                OnDateAddedChanging(value);
+                ReportPropertyChanging("DateAdded");
+                _DateAdded = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("DateAdded");
+                OnDateAddedChanged();
+            }
+        }
+        private global::System.DateTime _DateAdded;
+        partial void OnDateAddedChanging(global::System.DateTime value);
+        partial void OnDateAddedChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String AddedBy
+        {
+            get
+            {
+                return _AddedBy;
+            }
+            set
+            {
+                OnAddedByChanging(value);
+                ReportPropertyChanging("AddedBy");
+                _AddedBy = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("AddedBy");
+                OnAddedByChanged();
+            }
+        }
+        private global::System.String _AddedBy;
+        partial void OnAddedByChanging(global::System.String value);
+        partial void OnAddedByChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.DateTime> DateUpdated
+        {
+            get
+            {
+                return _DateUpdated;
+            }
+            set
+            {
+                OnDateUpdatedChanging(value);
+                ReportPropertyChanging("DateUpdated");
+                _DateUpdated = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("DateUpdated");
+                OnDateUpdatedChanged();
+            }
+        }
+        private Nullable<global::System.DateTime> _DateUpdated;
+        partial void OnDateUpdatedChanging(Nullable<global::System.DateTime> value);
+        partial void OnDateUpdatedChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public global::System.String UpdatedBy
+        {
+            get
+            {
+                return _UpdatedBy;
+            }
+            set
+            {
+                OnUpdatedByChanging(value);
+                ReportPropertyChanging("UpdatedBy");
+                _UpdatedBy = StructuralObject.SetValidValue(value, true);
+                ReportPropertyChanged("UpdatedBy");
+                OnUpdatedByChanged();
+            }
+        }
+        private global::System.String _UpdatedBy;
+        partial void OnUpdatedByChanging(global::System.String value);
+        partial void OnUpdatedByChanged();
+
+        #endregion
+
+    
+        #region Navigation Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Fees_Island_FK", "Fees")]
+        public EntityCollection<Fees> QuotingV2_Fees
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<Fees>("QuotingToolModel.QuotingV2_Fees_Island_FK", "Fees");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<Fees>("QuotingToolModel.QuotingV2_Fees_Island_FK", "Fees", value);
+                }
+            }
+        }
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Zones_Island_FK", "QuotingV2_Zones")]
+        public EntityCollection<Zone> QuotingV2_Zones
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<Zone>("QuotingToolModel.QuotingV2_Zones_Island_FK", "QuotingV2_Zones");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<Zone>("QuotingToolModel.QuotingV2_Zones_Island_FK", "QuotingV2_Zones", value);
                 }
             }
         }
@@ -1864,22 +3108,30 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
     /// <summary>
     /// No Metadata Documentation available.
     /// </summary>
-    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="States")]
+    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="State")]
     [Serializable()]
     [DataContractAttribute(IsReference=true)]
-    public partial class States : EntityObject
+    public partial class State : EntityObject
     {
         #region Factory Method
     
         /// <summary>
-        /// Create a new States object.
+        /// Create a new State object.
         /// </summary>
-        /// <param name="pK_StateID">Initial value of the PK_StateID property.</param>
-        public static States CreateStates(global::System.String pK_StateID)
+        /// <param name="stateID">Initial value of the StateID property.</param>
+        /// <param name="name">Initial value of the Name property.</param>
+        /// <param name="countryID">Initial value of the CountryID property.</param>
+        /// <param name="dateAdded">Initial value of the DateAdded property.</param>
+        /// <param name="addedBy">Initial value of the AddedBy property.</param>
+        public static State CreateState(global::System.Int32 stateID, global::System.String name, global::System.Int32 countryID, global::System.DateTime dateAdded, global::System.String addedBy)
         {
-            States states = new States();
-            states.PK_StateID = pK_StateID;
-            return states;
+            State state = new State();
+            state.StateID = stateID;
+            state.Name = name;
+            state.CountryID = countryID;
+            state.DateAdded = dateAdded;
+            state.AddedBy = addedBy;
+            return state;
         }
 
         #endregion
@@ -1891,151 +3143,307 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         /// </summary>
         [EdmScalarPropertyAttribute(EntityKeyProperty=true, IsNullable=false)]
         [DataMemberAttribute()]
-        public global::System.String PK_StateID
+        public global::System.Int32 StateID
         {
             get
             {
-                return _PK_StateID;
+                return _StateID;
             }
             set
             {
-                if (_PK_StateID != value)
+                if (_StateID != value)
                 {
-                    OnPK_StateIDChanging(value);
-                    ReportPropertyChanging("PK_StateID");
-                    _PK_StateID = StructuralObject.SetValidValue(value, false);
-                    ReportPropertyChanged("PK_StateID");
-                    OnPK_StateIDChanged();
+                    OnStateIDChanging(value);
+                    ReportPropertyChanging("StateID");
+                    _StateID = StructuralObject.SetValidValue(value);
+                    ReportPropertyChanged("StateID");
+                    OnStateIDChanged();
                 }
             }
         }
-        private global::System.String _PK_StateID;
-        partial void OnPK_StateIDChanging(global::System.String value);
-        partial void OnPK_StateIDChanged();
+        private global::System.Int32 _StateID;
+        partial void OnStateIDChanging(global::System.Int32 value);
+        partial void OnStateIDChanged();
     
         /// <summary>
         /// No Metadata Documentation available.
         /// </summary>
         [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
         [DataMemberAttribute()]
-        public global::System.String State
+        public global::System.String Code
         {
             get
             {
-                return _State;
+                return _Code;
             }
             set
             {
-                OnStateChanging(value);
-                ReportPropertyChanging("State");
-                _State = StructuralObject.SetValidValue(value, true);
-                ReportPropertyChanged("State");
-                OnStateChanged();
+                OnCodeChanging(value);
+                ReportPropertyChanging("Code");
+                _Code = StructuralObject.SetValidValue(value, true);
+                ReportPropertyChanged("Code");
+                OnCodeChanged();
             }
         }
-        private global::System.String _State;
-        partial void OnStateChanging(global::System.String value);
-        partial void OnStateChanged();
+        private global::System.String _Code;
+        partial void OnCodeChanging(global::System.String value);
+        partial void OnCodeChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String Name
+        {
+            get
+            {
+                return _Name;
+            }
+            set
+            {
+                OnNameChanging(value);
+                ReportPropertyChanging("Name");
+                _Name = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("Name");
+                OnNameChanged();
+            }
+        }
+        private global::System.String _Name;
+        partial void OnNameChanging(global::System.String value);
+        partial void OnNameChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.Int32 CountryID
+        {
+            get
+            {
+                return _CountryID;
+            }
+            set
+            {
+                OnCountryIDChanging(value);
+                ReportPropertyChanging("CountryID");
+                _CountryID = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("CountryID");
+                OnCountryIDChanged();
+            }
+        }
+        private global::System.Int32 _CountryID;
+        partial void OnCountryIDChanging(global::System.Int32 value);
+        partial void OnCountryIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.DateTime DateAdded
+        {
+            get
+            {
+                return _DateAdded;
+            }
+            set
+            {
+                OnDateAddedChanging(value);
+                ReportPropertyChanging("DateAdded");
+                _DateAdded = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("DateAdded");
+                OnDateAddedChanged();
+            }
+        }
+        private global::System.DateTime _DateAdded;
+        partial void OnDateAddedChanging(global::System.DateTime value);
+        partial void OnDateAddedChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String AddedBy
+        {
+            get
+            {
+                return _AddedBy;
+            }
+            set
+            {
+                OnAddedByChanging(value);
+                ReportPropertyChanging("AddedBy");
+                _AddedBy = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("AddedBy");
+                OnAddedByChanged();
+            }
+        }
+        private global::System.String _AddedBy;
+        partial void OnAddedByChanging(global::System.String value);
+        partial void OnAddedByChanged();
     
         /// <summary>
         /// No Metadata Documentation available.
         /// </summary>
         [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
         [DataMemberAttribute()]
-        public Nullable<global::System.Int32> Hours
+        public Nullable<global::System.DateTime> DateUpdated
         {
             get
             {
-                return _Hours;
+                return _DateUpdated;
             }
             set
             {
-                OnHoursChanging(value);
-                ReportPropertyChanging("Hours");
-                _Hours = StructuralObject.SetValidValue(value);
-                ReportPropertyChanged("Hours");
-                OnHoursChanged();
+                OnDateUpdatedChanging(value);
+                ReportPropertyChanging("DateUpdated");
+                _DateUpdated = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("DateUpdated");
+                OnDateUpdatedChanged();
             }
         }
-        private Nullable<global::System.Int32> _Hours;
-        partial void OnHoursChanging(Nullable<global::System.Int32> value);
-        partial void OnHoursChanged();
+        private Nullable<global::System.DateTime> _DateUpdated;
+        partial void OnDateUpdatedChanging(Nullable<global::System.DateTime> value);
+        partial void OnDateUpdatedChanged();
     
         /// <summary>
         /// No Metadata Documentation available.
         /// </summary>
         [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
         [DataMemberAttribute()]
-        public global::System.String FK_CountryId
+        public global::System.String UpdatedBy
         {
             get
             {
-                return _FK_CountryId;
+                return _UpdatedBy;
             }
             set
             {
-                OnFK_CountryIdChanging(value);
-                ReportPropertyChanging("FK_CountryId");
-                _FK_CountryId = StructuralObject.SetValidValue(value, true);
-                ReportPropertyChanged("FK_CountryId");
-                OnFK_CountryIdChanged();
+                OnUpdatedByChanging(value);
+                ReportPropertyChanging("UpdatedBy");
+                _UpdatedBy = StructuralObject.SetValidValue(value, true);
+                ReportPropertyChanged("UpdatedBy");
+                OnUpdatedByChanged();
             }
         }
-        private global::System.String _FK_CountryId;
-        partial void OnFK_CountryIdChanging(global::System.String value);
-        partial void OnFK_CountryIdChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
-        [DataMemberAttribute()]
-        public global::System.String IsDomBookShip
-        {
-            get
-            {
-                return _IsDomBookShip;
-            }
-            set
-            {
-                OnIsDomBookShipChanging(value);
-                ReportPropertyChanging("IsDomBookShip");
-                _IsDomBookShip = StructuralObject.SetValidValue(value, true);
-                ReportPropertyChanged("IsDomBookShip");
-                OnIsDomBookShipChanged();
-            }
-        }
-        private global::System.String _IsDomBookShip;
-        partial void OnIsDomBookShipChanging(global::System.String value);
-        partial void OnIsDomBookShipChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
-        [DataMemberAttribute()]
-        public global::System.String FK_RegionCode
-        {
-            get
-            {
-                return _FK_RegionCode;
-            }
-            set
-            {
-                OnFK_RegionCodeChanging(value);
-                ReportPropertyChanging("FK_RegionCode");
-                _FK_RegionCode = StructuralObject.SetValidValue(value, true);
-                ReportPropertyChanged("FK_RegionCode");
-                OnFK_RegionCodeChanged();
-            }
-        }
-        private global::System.String _FK_RegionCode;
-        partial void OnFK_RegionCodeChanging(global::System.String value);
-        partial void OnFK_RegionCodeChanged();
+        private global::System.String _UpdatedBy;
+        partial void OnUpdatedByChanging(global::System.String value);
+        partial void OnUpdatedByChanged();
 
         #endregion
 
     
+        #region Navigation Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Cities_State_FK", "QuotingV2_Cities")]
+        public EntityCollection<City> QuotingV2_Cities
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<City>("QuotingToolModel.QuotingV2_Cities_State_FK", "QuotingV2_Cities");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<City>("QuotingToolModel.QuotingV2_Cities_State_FK", "QuotingV2_Cities", value);
+                }
+            }
+        }
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_States_Country_FK", "QuotingV2_Countries")]
+        public Country QuotingV2_Countries
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Country>("QuotingToolModel.QuotingV2_States_Country_FK", "QuotingV2_Countries").Value;
+            }
+            set
+            {
+                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Country>("QuotingToolModel.QuotingV2_States_Country_FK", "QuotingV2_Countries").Value = value;
+            }
+        }
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [BrowsableAttribute(false)]
+        [DataMemberAttribute()]
+        public EntityReference<Country> QuotingV2_CountriesReference
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Country>("QuotingToolModel.QuotingV2_States_Country_FK", "QuotingV2_Countries");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<Country>("QuotingToolModel.QuotingV2_States_Country_FK", "QuotingV2_Countries", value);
+                }
+            }
+        }
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Fees_State_FK", "Fees")]
+        public EntityCollection<Fees> QuotingV2_Fees
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<Fees>("QuotingToolModel.QuotingV2_Fees_State_FK", "Fees");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<Fees>("QuotingToolModel.QuotingV2_Fees_State_FK", "Fees", value);
+                }
+            }
+        }
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Zones_State_FK", "QuotingV2_Zones")]
+        public EntityCollection<Zone> QuotingV2_Zones
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<Zone>("QuotingToolModel.QuotingV2_Zones_State_FK", "QuotingV2_Zones");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<Zone>("QuotingToolModel.QuotingV2_Zones_State_FK", "QuotingV2_Zones", value);
+                }
+            }
+        }
+
+        #endregion
+
     }
     
     /// <summary>
@@ -2462,6 +3870,635 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
                 if ((value != null))
                 {
                     ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<Fees>("QuotingToolModel.QuotingV2_Fees_Uom_FK", "QuotingV2_Fees", value);
+                }
+            }
+        }
+
+        #endregion
+
+    }
+    
+    /// <summary>
+    /// No Metadata Documentation available.
+    /// </summary>
+    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="ZipCodes")]
+    [Serializable()]
+    [DataContractAttribute(IsReference=true)]
+    public partial class ZipCodes : EntityObject
+    {
+        #region Factory Method
+    
+        /// <summary>
+        /// Create a new ZipCodes object.
+        /// </summary>
+        /// <param name="countryID">Initial value of the CountryID property.</param>
+        /// <param name="zipCode">Initial value of the ZipCode property.</param>
+        /// <param name="dateAdded">Initial value of the DateAdded property.</param>
+        /// <param name="addedBy">Initial value of the AddedBy property.</param>
+        public static ZipCodes CreateZipCodes(global::System.Int32 countryID, global::System.Int32 zipCode, global::System.DateTime dateAdded, global::System.String addedBy)
+        {
+            ZipCodes zipCodes = new ZipCodes();
+            zipCodes.CountryID = countryID;
+            zipCodes.ZipCode = zipCode;
+            zipCodes.DateAdded = dateAdded;
+            zipCodes.AddedBy = addedBy;
+            return zipCodes;
+        }
+
+        #endregion
+
+        #region Primitive Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=true, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.Int32 CountryID
+        {
+            get
+            {
+                return _CountryID;
+            }
+            set
+            {
+                if (_CountryID != value)
+                {
+                    OnCountryIDChanging(value);
+                    ReportPropertyChanging("CountryID");
+                    _CountryID = StructuralObject.SetValidValue(value);
+                    ReportPropertyChanged("CountryID");
+                    OnCountryIDChanged();
+                }
+            }
+        }
+        private global::System.Int32 _CountryID;
+        partial void OnCountryIDChanging(global::System.Int32 value);
+        partial void OnCountryIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=true, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.Int32 ZipCode
+        {
+            get
+            {
+                return _ZipCode;
+            }
+            set
+            {
+                if (_ZipCode != value)
+                {
+                    OnZipCodeChanging(value);
+                    ReportPropertyChanging("ZipCode");
+                    _ZipCode = StructuralObject.SetValidValue(value);
+                    ReportPropertyChanged("ZipCode");
+                    OnZipCodeChanged();
+                }
+            }
+        }
+        private global::System.Int32 _ZipCode;
+        partial void OnZipCodeChanging(global::System.Int32 value);
+        partial void OnZipCodeChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.DateTime DateAdded
+        {
+            get
+            {
+                return _DateAdded;
+            }
+            set
+            {
+                OnDateAddedChanging(value);
+                ReportPropertyChanging("DateAdded");
+                _DateAdded = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("DateAdded");
+                OnDateAddedChanged();
+            }
+        }
+        private global::System.DateTime _DateAdded;
+        partial void OnDateAddedChanging(global::System.DateTime value);
+        partial void OnDateAddedChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String AddedBy
+        {
+            get
+            {
+                return _AddedBy;
+            }
+            set
+            {
+                OnAddedByChanging(value);
+                ReportPropertyChanging("AddedBy");
+                _AddedBy = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("AddedBy");
+                OnAddedByChanged();
+            }
+        }
+        private global::System.String _AddedBy;
+        partial void OnAddedByChanging(global::System.String value);
+        partial void OnAddedByChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.DateTime> DateUpdated
+        {
+            get
+            {
+                return _DateUpdated;
+            }
+            set
+            {
+                OnDateUpdatedChanging(value);
+                ReportPropertyChanging("DateUpdated");
+                _DateUpdated = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("DateUpdated");
+                OnDateUpdatedChanged();
+            }
+        }
+        private Nullable<global::System.DateTime> _DateUpdated;
+        partial void OnDateUpdatedChanging(Nullable<global::System.DateTime> value);
+        partial void OnDateUpdatedChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public global::System.String UpdatedBy
+        {
+            get
+            {
+                return _UpdatedBy;
+            }
+            set
+            {
+                OnUpdatedByChanging(value);
+                ReportPropertyChanging("UpdatedBy");
+                _UpdatedBy = StructuralObject.SetValidValue(value, true);
+                ReportPropertyChanged("UpdatedBy");
+                OnUpdatedByChanged();
+            }
+        }
+        private global::System.String _UpdatedBy;
+        partial void OnUpdatedByChanging(global::System.String value);
+        partial void OnUpdatedByChanged();
+
+        #endregion
+
+    
+        #region Navigation Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_ZipCodes_Country_FK", "QuotingV2_Countries")]
+        public Country QuotingV2_Countries
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Country>("QuotingToolModel.QuotingV2_ZipCodes_Country_FK", "QuotingV2_Countries").Value;
+            }
+            set
+            {
+                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Country>("QuotingToolModel.QuotingV2_ZipCodes_Country_FK", "QuotingV2_Countries").Value = value;
+            }
+        }
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [BrowsableAttribute(false)]
+        [DataMemberAttribute()]
+        public EntityReference<Country> QuotingV2_CountriesReference
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Country>("QuotingToolModel.QuotingV2_ZipCodes_Country_FK", "QuotingV2_Countries");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<Country>("QuotingToolModel.QuotingV2_ZipCodes_Country_FK", "QuotingV2_Countries", value);
+                }
+            }
+        }
+
+        #endregion
+
+    }
+    
+    /// <summary>
+    /// No Metadata Documentation available.
+    /// </summary>
+    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="Zone")]
+    [Serializable()]
+    [DataContractAttribute(IsReference=true)]
+    public partial class Zone : EntityObject
+    {
+        #region Factory Method
+    
+        /// <summary>
+        /// Create a new Zone object.
+        /// </summary>
+        /// <param name="zoneID">Initial value of the ZoneID property.</param>
+        /// <param name="stateID">Initial value of the StateID property.</param>
+        /// <param name="code">Initial value of the Code property.</param>
+        /// <param name="name">Initial value of the Name property.</param>
+        /// <param name="dateAdded">Initial value of the DateAdded property.</param>
+        /// <param name="addedBy">Initial value of the AddedBy property.</param>
+        public static Zone CreateZone(global::System.Int32 zoneID, global::System.Int32 stateID, global::System.String code, global::System.String name, global::System.DateTime dateAdded, global::System.String addedBy)
+        {
+            Zone zone = new Zone();
+            zone.ZoneID = zoneID;
+            zone.StateID = stateID;
+            zone.Code = code;
+            zone.Name = name;
+            zone.DateAdded = dateAdded;
+            zone.AddedBy = addedBy;
+            return zone;
+        }
+
+        #endregion
+
+        #region Primitive Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=true, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.Int32 ZoneID
+        {
+            get
+            {
+                return _ZoneID;
+            }
+            set
+            {
+                if (_ZoneID != value)
+                {
+                    OnZoneIDChanging(value);
+                    ReportPropertyChanging("ZoneID");
+                    _ZoneID = StructuralObject.SetValidValue(value);
+                    ReportPropertyChanged("ZoneID");
+                    OnZoneIDChanged();
+                }
+            }
+        }
+        private global::System.Int32 _ZoneID;
+        partial void OnZoneIDChanging(global::System.Int32 value);
+        partial void OnZoneIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.Int32 StateID
+        {
+            get
+            {
+                return _StateID;
+            }
+            set
+            {
+                OnStateIDChanging(value);
+                ReportPropertyChanging("StateID");
+                _StateID = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("StateID");
+                OnStateIDChanged();
+            }
+        }
+        private global::System.Int32 _StateID;
+        partial void OnStateIDChanging(global::System.Int32 value);
+        partial void OnStateIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.Int32> IslandID
+        {
+            get
+            {
+                return _IslandID;
+            }
+            set
+            {
+                OnIslandIDChanging(value);
+                ReportPropertyChanging("IslandID");
+                _IslandID = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("IslandID");
+                OnIslandIDChanged();
+            }
+        }
+        private Nullable<global::System.Int32> _IslandID;
+        partial void OnIslandIDChanging(Nullable<global::System.Int32> value);
+        partial void OnIslandIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.Int32> CityID
+        {
+            get
+            {
+                return _CityID;
+            }
+            set
+            {
+                OnCityIDChanging(value);
+                ReportPropertyChanging("CityID");
+                _CityID = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("CityID");
+                OnCityIDChanged();
+            }
+        }
+        private Nullable<global::System.Int32> _CityID;
+        partial void OnCityIDChanging(Nullable<global::System.Int32> value);
+        partial void OnCityIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String Code
+        {
+            get
+            {
+                return _Code;
+            }
+            set
+            {
+                OnCodeChanging(value);
+                ReportPropertyChanging("Code");
+                _Code = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("Code");
+                OnCodeChanged();
+            }
+        }
+        private global::System.String _Code;
+        partial void OnCodeChanging(global::System.String value);
+        partial void OnCodeChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String Name
+        {
+            get
+            {
+                return _Name;
+            }
+            set
+            {
+                OnNameChanging(value);
+                ReportPropertyChanging("Name");
+                _Name = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("Name");
+                OnNameChanged();
+            }
+        }
+        private global::System.String _Name;
+        partial void OnNameChanging(global::System.String value);
+        partial void OnNameChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.DateTime DateAdded
+        {
+            get
+            {
+                return _DateAdded;
+            }
+            set
+            {
+                OnDateAddedChanging(value);
+                ReportPropertyChanging("DateAdded");
+                _DateAdded = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("DateAdded");
+                OnDateAddedChanged();
+            }
+        }
+        private global::System.DateTime _DateAdded;
+        partial void OnDateAddedChanging(global::System.DateTime value);
+        partial void OnDateAddedChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String AddedBy
+        {
+            get
+            {
+                return _AddedBy;
+            }
+            set
+            {
+                OnAddedByChanging(value);
+                ReportPropertyChanging("AddedBy");
+                _AddedBy = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("AddedBy");
+                OnAddedByChanged();
+            }
+        }
+        private global::System.String _AddedBy;
+        partial void OnAddedByChanging(global::System.String value);
+        partial void OnAddedByChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.DateTime> DateUpdated
+        {
+            get
+            {
+                return _DateUpdated;
+            }
+            set
+            {
+                OnDateUpdatedChanging(value);
+                ReportPropertyChanging("DateUpdated");
+                _DateUpdated = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("DateUpdated");
+                OnDateUpdatedChanged();
+            }
+        }
+        private Nullable<global::System.DateTime> _DateUpdated;
+        partial void OnDateUpdatedChanging(Nullable<global::System.DateTime> value);
+        partial void OnDateUpdatedChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public global::System.String UpdatedBy
+        {
+            get
+            {
+                return _UpdatedBy;
+            }
+            set
+            {
+                OnUpdatedByChanging(value);
+                ReportPropertyChanging("UpdatedBy");
+                _UpdatedBy = StructuralObject.SetValidValue(value, true);
+                ReportPropertyChanged("UpdatedBy");
+                OnUpdatedByChanged();
+            }
+        }
+        private global::System.String _UpdatedBy;
+        partial void OnUpdatedByChanging(global::System.String value);
+        partial void OnUpdatedByChanged();
+
+        #endregion
+
+    
+        #region Navigation Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Zones_City_FK", "QuotingV2_Cities")]
+        public City QuotingV2_Cities
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<City>("QuotingToolModel.QuotingV2_Zones_City_FK", "QuotingV2_Cities").Value;
+            }
+            set
+            {
+                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<City>("QuotingToolModel.QuotingV2_Zones_City_FK", "QuotingV2_Cities").Value = value;
+            }
+        }
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [BrowsableAttribute(false)]
+        [DataMemberAttribute()]
+        public EntityReference<City> QuotingV2_CitiesReference
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<City>("QuotingToolModel.QuotingV2_Zones_City_FK", "QuotingV2_Cities");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<City>("QuotingToolModel.QuotingV2_Zones_City_FK", "QuotingV2_Cities", value);
+                }
+            }
+        }
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Zones_Island_FK", "QuotingV2_Islands")]
+        public Island QuotingV2_Islands
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Island>("QuotingToolModel.QuotingV2_Zones_Island_FK", "QuotingV2_Islands").Value;
+            }
+            set
+            {
+                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Island>("QuotingToolModel.QuotingV2_Zones_Island_FK", "QuotingV2_Islands").Value = value;
+            }
+        }
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [BrowsableAttribute(false)]
+        [DataMemberAttribute()]
+        public EntityReference<Island> QuotingV2_IslandsReference
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Island>("QuotingToolModel.QuotingV2_Zones_Island_FK", "QuotingV2_Islands");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<Island>("QuotingToolModel.QuotingV2_Zones_Island_FK", "QuotingV2_Islands", value);
+                }
+            }
+        }
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Zones_State_FK", "QuotingV2_States")]
+        public State QuotingV2_States
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<State>("QuotingToolModel.QuotingV2_Zones_State_FK", "QuotingV2_States").Value;
+            }
+            set
+            {
+                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<State>("QuotingToolModel.QuotingV2_Zones_State_FK", "QuotingV2_States").Value = value;
+            }
+        }
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [BrowsableAttribute(false)]
+        [DataMemberAttribute()]
+        public EntityReference<State> QuotingV2_StatesReference
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<State>("QuotingToolModel.QuotingV2_Zones_State_FK", "QuotingV2_States");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<State>("QuotingToolModel.QuotingV2_Zones_State_FK", "QuotingV2_States", value);
                 }
             }
         }

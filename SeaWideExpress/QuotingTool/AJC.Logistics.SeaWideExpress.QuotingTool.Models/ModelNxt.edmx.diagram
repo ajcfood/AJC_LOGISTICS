@@ -4,7 +4,7 @@
   <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2008/10/edmx">
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
-      <Diagram DiagramId="9436dfefc0a14255812b8852795ce3e1" Name="Master" >
+      <Diagram DiagramId="9436dfefc0a14255812b8852795ce3e1" Name="Master" ZoomLevel="89" >
         <EntityTypeShape EntityType="QuotingToolModel.Test" Width="1.5" PointX="0.75" PointY="0.75" />
         <EntityTypeShape EntityType="QuotingToolModel.Fees" Width="1.5" PointX="5.625" PointY="3" />
         <EntityTypeShape EntityType="QuotingToolModel.FeeType" Width="1.5" PointX="3.375" PointY="0.75" />
@@ -20,7 +20,19 @@
         <AssociationConnector Association="QuotingToolModel.QuotingV2_ServiceTypeCharges_ServiceType_FK" />
       </Diagram>
       <Diagram DiagramId="4fe137b38ebb4a16a83f564f96d93132" Name="Parameters" >
-        <EntityTypeShape EntityType="QuotingToolModel.States" Width="1.5" PointX="0.75" PointY="0.75" />
+        <EntityTypeShape EntityType="QuotingToolModel.C__RefactorLog" Width="1.5" PointX="0.75" PointY="7.75" />
+        <EntityTypeShape EntityType="QuotingToolModel.City" Width="1.5" PointX="5.25" PointY="1.375" />
+        <EntityTypeShape EntityType="QuotingToolModel.Country" Width="1.5" PointX="0.75" PointY="2.75" />
+        <EntityTypeShape EntityType="QuotingToolModel.Island" Width="1.5" PointX="5.25" PointY="5.5" />
+        <EntityTypeShape EntityType="QuotingToolModel.State" Width="1.5" PointX="3" PointY="1.25" />
+        <EntityTypeShape EntityType="QuotingToolModel.ZipCodes" Width="1.5" PointX="3" PointY="4.875" />
+        <EntityTypeShape EntityType="QuotingToolModel.Zone" Width="1.5" PointX="7.5" PointY="1.125" />
+        <AssociationConnector Association="QuotingToolModel.QuotingV2_Cities_State_FK" />
+        <AssociationConnector Association="QuotingToolModel.QuotingV2_Zones_City_FK" />
+        <AssociationConnector Association="QuotingToolModel.QuotingV2_States_Country_FK" />
+        <AssociationConnector Association="QuotingToolModel.QuotingV2_ZipCodes_Country_FK" />
+        <AssociationConnector Association="QuotingToolModel.QuotingV2_Zones_Island_FK" />
+        <AssociationConnector Association="QuotingToolModel.QuotingV2_Zones_State_FK" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

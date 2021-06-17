@@ -4,7 +4,8 @@ CREATE TABLE [QuotingV2_Fees]
 	[FeeID]			[int] IDENTITY(1,1) NOT NULL,
 	[FeeTypeID]		[int]				NOT NULL,
 
-	[State]			[varchar](2)	NULL,
+	[CountryID]		[int]			NULL,
+	[StateID]		[int]			NULL,
 	[IslandID]		[int]			NULL,
 	[ZoneID]		[int]			NULL,
 	[CityID]		[int]			NULL,
@@ -12,7 +13,7 @@ CREATE TABLE [QuotingV2_Fees]
 	[CustomerID]	[int]			NULL,
 
 	-- Fee by "unit of meassure" and Discount
-	[Fee]			[decimal](5, 2) NULL,
+	[Value]			[decimal](5, 2) NULL,
 	[ByUomID]		[int]			NULL,
 	[Discount]		[decimal](3, 3) NULL,
 
@@ -35,7 +36,7 @@ CREATE TABLE [QuotingV2_Fees]
 	[DateAdded]		[datetime]		NOT NULL,
 	[AddedBy]		[varchar](100)	NOT NULL,
 	[DateUpdated]	[datetime]		NULL,
-	[UpdatedBy]		[varchar](100)	NULL
+	[UpdatedBy]		[varchar](100)	NULL,
 
 	-- Constraints
 	CONSTRAINT [QuotingV2_Fees_PK] PRIMARY KEY ([FeeID]),
@@ -51,6 +52,22 @@ CREATE TABLE [QuotingV2_Fees]
 	CONSTRAINT [QuotingV2_Fees_RangeUom_FK] 
 		FOREIGN KEY ([RangeByUomID]) 
 		REFERENCES [QuotingV2_UOMs]([UomID]),
+
+	CONSTRAINT [QuotingV2_Fees_Country_FK]
+		FOREIGN KEY ([CountryID]) 
+		REFERENCES [QuotingV2_Countries]([CountryID]),
+
+	CONSTRAINT [QuotingV2_Fees_State_FK] 
+		FOREIGN KEY ([StateID]) 
+		REFERENCES [QuotingV2_States]([StateID]),
+
+	CONSTRAINT [QuotingV2_Fees_Island_FK] 
+		FOREIGN KEY ([IslandID]) 
+		REFERENCES [QuotingV2_Islands]([IslandID]),
+
+	CONSTRAINT [QuotingV2_Fees_City_FK] 
+		FOREIGN KEY ([CityID]) 
+		REFERENCES [QuotingV2_Cities]([CityID]),
 
 	CONSTRAINT [QuotingV2_Fees_Parent_FK] 
 		FOREIGN KEY ([ParentFeeID]) 

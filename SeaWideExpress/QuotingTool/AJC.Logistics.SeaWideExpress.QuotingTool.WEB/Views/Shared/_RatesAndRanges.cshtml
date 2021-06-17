@@ -13,15 +13,37 @@
     var agServerSideManagement = new AGGridManager();
     var columnDefs;
 
-    const states = [
+    function fetchLOV(endpointName) {
+        let requestedRows = [];
+        $.ajax({
+            url: endpointName,
+            dataType: "json",
+            type: "GET",
+            async: false,
+            cache: false,
+            success: function (rows) {
+                requestedRows = rows;
+            },
+            error: function (xhr) {
+                alert(JSON.stringify(xhr));
+            }
+        });
+        return requestedRows;
+    }
+
+    const states = fetchLOV('@Url.Action("getStates", "AG")');
+    /*[
         { label: "HAWAII", value: "HI" },
         { label: "ALASKA", value: "AK" }
-    ];
+    ];*/
 
-    const islands = [
+    const islands = fetchLOV('@Url.Action("getIslands", "AG")');
+    /*[
         { label: "LINEAI", value: 1 },
         { label: "MOLUKAI", value: 2 }
-    ];
+    ];*/
+
+    const cities = fetchLOV('@Url.Action("getCities", "AG")');
 
     function newSource(list, valueField = "value", displayField = "label") {
         return new Bloodhound({
@@ -54,8 +76,9 @@
         }
     }
 
-    const statesStore = newStore('states', states);
+    const statesStore  = newStore('states', states);
     const islandsStore = newStore('islands', islands);
+    const citiesStore  = newStore('cities', cities);
 
     @if(Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.AGGridConfigurationModel.Mode.Ranges)
     {
@@ -81,6 +104,15 @@
                 valueFormatter: typeaheadFormatter(islandsStore)
             },
             { headerName: "Zone", field: "zone", cellEditor: "agRichSelectCellEditor", cellEditorParams: { values: ['bari', 'jorgito', 'jorge', 4, 5] } },
+            {
+                headerName: "City", field: "city",
+                cellEditor: TypeaheadEditor,
+                cellEditorParams: {
+                    placeholder: 'City',
+                    store: citiesStore
+                },
+                valueFormatter: typeaheadFormatter(citiesStore)
+            },
             { headerName: "Zip Codes", field: "zipCodes" },
             { headerName: "Fee", field: "fee" },
             { headerName: "Discount", field: "discount" },
