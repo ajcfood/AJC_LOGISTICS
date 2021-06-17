@@ -44,6 +44,7 @@
     ];*/
 
     const cities = fetchLOV('@Url.Action("getCities", "AG")');
+    const uoms   = fetchLOV('@Url.Action("getUoms"  , "AG")');
 
     function newSource(list, valueField = "value", displayField = "label") {
         return new Bloodhound({
@@ -76,9 +77,10 @@
         }
     }
 
-    const statesStore  = newStore('states', states);
+    const statesStore  = newStore('states' , states);
     const islandsStore = newStore('islands', islands);
-    const citiesStore  = newStore('cities', cities);
+    const citiesStore  = newStore('cities' , cities);
+    const uomsStore    = newStore('uoms'   , uoms);
 
     @if(Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.AGGridConfigurationModel.Mode.Ranges)
     {
@@ -115,6 +117,15 @@
             },
             { headerName: "Zip Codes", field: "zipCodes" },
             { headerName: "Fee", field: "fee" },
+            {
+                headerName: "Per", field: "uom",
+                cellEditor: TypeaheadEditor,
+                cellEditorParams: {
+                    placeholder: 'Unit of Measure',
+                    store: uomsStore
+                },
+                valueFormatter: typeaheadFormatter(uomsStore)
+            },
             { headerName: "Discount", field: "discount" },
             { headerName: "Min", field: "feeMin" },
             { headerName: "Max", field: "feeMax" }
