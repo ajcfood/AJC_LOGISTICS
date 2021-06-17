@@ -3,6 +3,7 @@
 	[CityID]	[int]			NOT NULL IDENTITY(1,1), 
 
 	[StateID]	[int]			NOT NULL, 
+	[IslandID]	[int]			NULL,
     [Name]		[varchar](50)	NOT NULL,
 
 	-- Audit Fields
@@ -18,5 +19,9 @@
 	CONSTRAINT [QuotingV2_Cities_State_FK] 
 		FOREIGN KEY ([StateID]) 
 		REFERENCES [QuotingV2_States]([StateID]),
+
+	CONSTRAINT [QuotingV2_Cities_Island_FK] 
+		FOREIGN KEY ([IslandID]) 
+		REFERENCES [QuotingV2_Islands]([IslandID]),
 
 )

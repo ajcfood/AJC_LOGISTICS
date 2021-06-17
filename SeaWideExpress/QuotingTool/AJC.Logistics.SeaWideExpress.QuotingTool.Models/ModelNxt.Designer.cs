@@ -36,6 +36,7 @@ using System.Xml.Serialization;
 [assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_Fees_State_FK", "QuotingV2_States", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.State), "Fees", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.Fees), true)]
 [assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_Zones_Island_FK", "QuotingV2_Islands", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.Island), "QuotingV2_Zones", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.Zone), true)]
 [assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_Zones_State_FK", "QuotingV2_States", System.Data.Metadata.Edm.RelationshipMultiplicity.One, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.State), "QuotingV2_Zones", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.Zone), true)]
+[assembly: EdmRelationshipAttribute("QuotingToolModel", "QuotingV2_Cities_Island_FK", "Island", System.Data.Metadata.Edm.RelationshipMultiplicity.ZeroOrOne, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.Island), "City", System.Data.Metadata.Edm.RelationshipMultiplicity.Many, typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Models.City), true)]
 
 #endregion
 
@@ -671,6 +672,30 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         private global::System.String _UpdatedBy;
         partial void OnUpdatedByChanging(global::System.String value);
         partial void OnUpdatedByChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.Int32> IslandID
+        {
+            get
+            {
+                return _IslandID;
+            }
+            set
+            {
+                OnIslandIDChanging(value);
+                ReportPropertyChanging("IslandID");
+                _IslandID = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("IslandID");
+                OnIslandIDChanged();
+            }
+        }
+        private Nullable<global::System.Int32> _IslandID;
+        partial void OnIslandIDChanging(Nullable<global::System.Int32> value);
+        partial void OnIslandIDChanged();
 
         #endregion
 
@@ -755,6 +780,44 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
                 if ((value != null))
                 {
                     ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<Zone>("QuotingToolModel.QuotingV2_Zones_City_FK", "QuotingV2_Zones", value);
+                }
+            }
+        }
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Cities_Island_FK", "Island")]
+        public Island QuotingV2_Islands
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Island>("QuotingToolModel.QuotingV2_Cities_Island_FK", "Island").Value;
+            }
+            set
+            {
+                ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Island>("QuotingToolModel.QuotingV2_Cities_Island_FK", "Island").Value = value;
+            }
+        }
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [BrowsableAttribute(false)]
+        [DataMemberAttribute()]
+        public EntityReference<Island> QuotingV2_IslandsReference
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedReference<Island>("QuotingToolModel.QuotingV2_Cities_Island_FK", "Island");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedReference<Island>("QuotingToolModel.QuotingV2_Cities_Island_FK", "Island", value);
                 }
             }
         }
@@ -2625,6 +2688,28 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
                 if ((value != null))
                 {
                     ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<Zone>("QuotingToolModel.QuotingV2_Zones_Island_FK", "QuotingV2_Zones", value);
+                }
+            }
+        }
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [DataMemberAttribute()]
+        [EdmRelationshipNavigationPropertyAttribute("QuotingToolModel", "QuotingV2_Cities_Island_FK", "City")]
+        public EntityCollection<City> QuotingV2_Cities
+        {
+            get
+            {
+                return ((IEntityWithRelationships)this).RelationshipManager.GetRelatedCollection<City>("QuotingToolModel.QuotingV2_Cities_Island_FK", "City");
+            }
+            set
+            {
+                if ((value != null))
+                {
+                    ((IEntityWithRelationships)this).RelationshipManager.InitializeRelatedCollection<City>("QuotingToolModel.QuotingV2_Cities_Island_FK", "City", value);
                 }
             }
         }

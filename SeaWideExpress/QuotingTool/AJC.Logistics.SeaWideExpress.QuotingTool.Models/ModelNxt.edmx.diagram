@@ -33,6 +33,7 @@
         <AssociationConnector Association="QuotingToolModel.QuotingV2_ZipCodes_Country_FK" />
         <AssociationConnector Association="QuotingToolModel.QuotingV2_Zones_Island_FK" />
         <AssociationConnector Association="QuotingToolModel.QuotingV2_Zones_State_FK" />
+        <AssociationConnector Association="QuotingToolModel.QuotingV2_Cities_Island_FK" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

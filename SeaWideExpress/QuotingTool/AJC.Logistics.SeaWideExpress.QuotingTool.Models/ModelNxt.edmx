@@ -17,6 +17,7 @@
           </Key>
           <Property Name="CityID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="StateID" Type="int" Nullable="false" />
+          <Property Name="IslandID" Type="int" />
           <Property Name="Name" Type="varchar" MaxLength="50" Nullable="false" />
           <Property Name="DateAdded" Type="datetime" Nullable="false" />
           <Property Name="AddedBy" Type="varchar" MaxLength="100" Nullable="false" />
@@ -176,6 +177,18 @@
           <Property Name="zonaDescripcion" Type="varchar" MaxLength="50" />
           <Property Name="precio" Type="decimal" Precision="18" Scale="3" />
         </EntityType>
+        <Association Name="QuotingV2_Cities_Island_FK">
+          <End Role="QuotingV2_Islands" Type="Self.QuotingV2_Islands" Multiplicity="0..1" />
+          <End Role="QuotingV2_Cities" Type="Self.QuotingV2_Cities" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_Islands">
+              <PropertyRef Name="IslandID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Cities">
+              <PropertyRef Name="IslandID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="QuotingV2_Cities_State_FK">
           <End Role="QuotingV2_States" Type="Self.QuotingV2_States" Multiplicity="1" />
           <End Role="QuotingV2_Cities" Type="Self.QuotingV2_Cities" Multiplicity="*" />
@@ -394,6 +407,10 @@
           <EntitySet Name="QuotingV2_ZipCodes" EntityType="Self.QuotingV2_ZipCodes" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="QuotingV2_Zones" EntityType="Self.QuotingV2_Zones" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Test" EntityType="Self.Test" Schema="dbo" store:Type="Tables" />
+          <AssociationSet Name="QuotingV2_Cities_Island_FK" Association="Self.QuotingV2_Cities_Island_FK">
+            <End Role="QuotingV2_Islands" EntitySet="QuotingV2_Islands" />
+            <End Role="QuotingV2_Cities" EntitySet="QuotingV2_Cities" />
+          </AssociationSet>
           <AssociationSet Name="QuotingV2_Cities_State_FK" Association="Self.QuotingV2_Cities_State_FK">
             <End Role="QuotingV2_States" EntitySet="QuotingV2_States" />
             <End Role="QuotingV2_Cities" EntitySet="QuotingV2_Cities" />
@@ -548,6 +565,10 @@
           <AssociationSet Name="QuotingV2_Zones_State_FK" Association="QuotingToolModel.QuotingV2_Zones_State_FK">
             <End Role="QuotingV2_States" EntitySet="States" />
             <End Role="QuotingV2_Zones" EntitySet="Zones" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Cities_Island_FK" Association="QuotingToolModel.QuotingV2_Cities_Island_FK">
+            <End Role="Island" EntitySet="Islands" />
+            <End Role="City" EntitySet="Cities" />
           </AssociationSet>
           </EntityContainer>
         <EntityType Name="Test">
@@ -760,6 +781,8 @@
           <NavigationProperty Name="QuotingV2_States" Relationship="QuotingToolModel.QuotingV2_Cities_State_FK" FromRole="QuotingV2_Cities" ToRole="QuotingV2_States" />
           <NavigationProperty Name="QuotingV2_Fees" Relationship="QuotingToolModel.QuotingV2_Fees_City_FK" FromRole="QuotingV2_Cities" ToRole="Fees" />
           <NavigationProperty Name="QuotingV2_Zones" Relationship="QuotingToolModel.QuotingV2_Zones_City_FK" FromRole="QuotingV2_Cities" ToRole="QuotingV2_Zones" />
+          <Property Name="IslandID" Type="Int32" />
+          <NavigationProperty Name="QuotingV2_Islands" Relationship="QuotingToolModel.QuotingV2_Cities_Island_FK" FromRole="City" ToRole="Island" />
         </EntityType>
         <EntityType Name="Country">
           <Key>
@@ -790,6 +813,7 @@
           <Property Name="UpdatedBy" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
           <NavigationProperty Name="QuotingV2_Fees" Relationship="QuotingToolModel.QuotingV2_Fees_Island_FK" FromRole="QuotingV2_Islands" ToRole="Fees" />
           <NavigationProperty Name="QuotingV2_Zones" Relationship="QuotingToolModel.QuotingV2_Zones_Island_FK" FromRole="QuotingV2_Islands" ToRole="QuotingV2_Zones" />
+          <NavigationProperty Name="QuotingV2_Cities" Relationship="QuotingToolModel.QuotingV2_Cities_Island_FK" FromRole="Island" ToRole="City" />
         </EntityType>
         <EntityType Name="State">
           <Key>
@@ -959,6 +983,18 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="QuotingV2_Cities_Island_FK">
+          <End Type="QuotingToolModel.Island" Role="Island" Multiplicity="0..1" />
+          <End Type="QuotingToolModel.City" Role="City" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Island">
+              <PropertyRef Name="IslandID" />
+            </Principal>
+            <Dependent Role="City">
+              <PropertyRef Name="IslandID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -1069,6 +1105,7 @@
           <EntitySetMapping Name="Cities">
             <EntityTypeMapping TypeName="QuotingToolModel.City">
               <MappingFragment StoreEntitySet="QuotingV2_Cities">
+                <ScalarProperty Name="IslandID" ColumnName="IslandID" />
                 <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
                 <ScalarProperty Name="DateUpdated" ColumnName="DateUpdated" />
                 <ScalarProperty Name="AddedBy" ColumnName="AddedBy" />

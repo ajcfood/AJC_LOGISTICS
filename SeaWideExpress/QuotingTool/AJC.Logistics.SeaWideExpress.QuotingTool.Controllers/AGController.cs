@@ -127,7 +127,7 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
         {
             using (QuotingToolRepository db = new QuotingToolRepository())
             {
-                var dataSet = db.Cities.Select(city => new { value = city.CityID, label = city.Name.Trim().ToUpper() }).ToList();
+                var dataSet = db.Cities.Select(city => new { value = city.CityID, label = city.Name.Trim() }).ToList();
                 return Json(dataSet, JsonRequestBehavior.AllowGet);
             }
         }
