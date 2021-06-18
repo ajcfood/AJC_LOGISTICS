@@ -6,116 +6,139 @@
 <script src="~/assets/typeahead/typeahead.bundle.js"></script>
 <script src="~/assets/ag-grid/ag-grid-typeahead.js"></script>
 <link rel="stylesheet" href="~/assets/ag-grid/ag-grid-typeahead.css" />
-<div id="myGrid" style="height: 600px;width:100%;" class="ag-theme-balham"></div>
-
+<div id="myGrid@(Model.GridMode)" style="height: 100%; width:100%;" class="ag-theme-balham"></div>
 
 <script>
-    var agServerSideManagement = new AGGridManager();
-    var columnDefs;
+    function initGrid() {
+        var agServerSideManagement = new AGGridManager();
+        const columnDefs = [];
 
-    function fetchLOV(endpointName) {
-        let requestedRows = [];
-        $.ajax({
-            url: endpointName,
-            dataType: "json",
-            type: "GET",
-            async: false,
-            cache: false,
-            success: function (rows) {
-                requestedRows = rows;
-            },
-            error: function (xhr) {
-                alert(JSON.stringify(xhr));
-            }
-        });
-        return requestedRows;
-    }
-
-    const states = fetchLOV('@Url.Action("getStates", "AG")');
-    /*[
-        { label: "HAWAII", value: "HI" },
-        { label: "ALASKA", value: "AK" }
-    ];*/
-
-    const islands = fetchLOV('@Url.Action("getIslands", "AG")');
-    /*[
-        { label: "LINEAI", value: 1 },
-        { label: "MOLUKAI", value: 2 }
-    ];*/
-
-    const cities = fetchLOV('@Url.Action("getCities", "AG")');
-    const uoms   = fetchLOV('@Url.Action("getUoms"  , "AG")');
-
-    function newSource(list, valueField = "value", displayField = "label") {
-        return new Bloodhound({
-            datumTokenizer: Bloodhound.tokenizers.obj.whitespace(displayField),
-            queryTokenizer: Bloodhound.tokenizers.whitespace,
-            identify: (obj) => (obj[valueField]),
-            local: list
-        });
-    }
-
-    function newStore(name, list, valueField = "value", displayField = "label", limit = 10) {
-        return {
-            name, limit,
-            display: displayField,
-            source: newSource(list, valueField, displayField)
-        };
-    }
-
-    function typeaheadFormatter(store) {
-        return function (params) {
-            var { value } = params;
-
-            if (!value) return "";
-
-            if (typeof value !== 'object') value = store.source.get([value])[0];
-
-            if (!value) return "";
-
-            return value[store.display || "label"];
+        function fetchLOV(endpointName) {
+            let requestedRows = [];
+            $.ajax({
+                url: endpointName,
+                dataType: "json",
+                type: "GET",
+                async: false,
+                cache: false,
+                success: function (rows) {
+                    requestedRows = rows;
+                },
+                error: function (xhr) {
+                    alert(JSON.stringify(xhr));
+                }
+            });
+            return requestedRows;
         }
-    }
 
-    const statesStore  = newStore('states' , states);
-    const islandsStore = newStore('islands', islands);
-    const citiesStore  = newStore('cities' , cities);
-    const uomsStore    = newStore('uoms'   , uoms);
+        const states = fetchLOV('@Url.Action("getStates", "AG")');
+        /*[
+            { label: "HAWAII", value: "HI" },
+            { label: "ALASKA", value: "AK" }
+        ];*/
 
-    @if(Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.AGGridConfigurationModel.Mode.Ranges)
-    {
-        <text>
-        columnDefs = [
-            { headerName: "id", field: "id", hide: true },
-            {
-                headerName: "State", field: "state",
-                cellEditor: TypeaheadEditor,
-                cellEditorParams: {
-                    placeholder: 'State',
-                    store: statesStore
+        const islands = fetchLOV('@Url.Action("getIslands", "AG")');
+        /*[
+            { label: "LINEAI", value: 1 },
+            { label: "MOLUKAI", value: 2 }
+        ];*/
+
+        const cities = fetchLOV('@Url.Action("getCities", "AG")');
+        const uoms   = fetchLOV('@Url.Action("getUoms"  , "AG")');
+
+        function newSource(list, valueField = "value", displayField = "label") {
+            return new Bloodhound({
+                datumTokenizer: Bloodhound.tokenizers.obj.whitespace(displayField),
+                queryTokenizer: Bloodhound.tokenizers.whitespace,
+                identify: (obj) => (obj[valueField]),
+                local: list
+            });
+        }
+
+        function newStore(name, list, valueField = "value", displayField = "label", limit = 10) {
+            return {
+                name, limit,
+                display: displayField,
+                source: newSource(list, valueField, displayField)
+            };
+        }
+
+        function typeaheadFormatter(store) {
+            return function (params) {
+                var { value } = params;
+
+                if (!value) return "";
+
+                if (typeof value !== 'object') value = store.source.get([value])[0];
+
+                if (!value) return "";
+
+                return value[store.display || "label"];
+            }
+        }
+
+        const statesStore  = newStore('states' , states);
+        const islandsStore = newStore('islands', islands);
+        const citiesStore  = newStore('cities' , cities);
+        const uomsStore    = newStore('uoms'   , uoms);
+
+        columnDefs.push(
+            { headerName: "id", field: "id", hide: true }
+        );
+
+        @if (Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.AGGridConfigurationModel.Mode.Rates)
+        {
+            <text>
+            columnDefs.push(
+                {
+                    headerName: "State", field: "state",
+                    cellEditor: TypeaheadEditor,
+                    cellEditorParams: {
+                        placeholder: 'State',
+                        store: statesStore
+                    },
+                    valueFormatter: typeaheadFormatter(statesStore),
+                    hide: true
                 },
-                valueFormatter: typeaheadFormatter(statesStore)
-            },
-            {
-                headerName: "Island", field: "island",
-                cellEditor: TypeaheadEditor,
-                cellEditorParams: {
-                    placeholder: 'Island',
-                    store: islandsStore
+                {
+                    headerName: "Island", field: "island",
+                    cellEditor: TypeaheadEditor,
+                    cellEditorParams: {
+                        placeholder: 'Island',
+                        store: islandsStore
+                    },
+                    valueFormatter: typeaheadFormatter(islandsStore)
                 },
-                valueFormatter: typeaheadFormatter(islandsStore)
-            },
-            { headerName: "Zone", field: "zone", cellEditor: "agRichSelectCellEditor", cellEditorParams: { values: ['bari', 'jorgito', 'jorge', 4, 5] } },
-            {
-                headerName: "City", field: "city",
-                cellEditor: TypeaheadEditor,
-                cellEditorParams: {
-                    placeholder: 'City',
-                    store: citiesStore
+                {
+                    headerName: "Zone", field: "zone",
+                    cellEditor: "agRichSelectCellEditor",
+                    cellEditorParams: { values: ['bari', 'jorgito', 'jorge', 4, 5] }
                 },
-                valueFormatter: typeaheadFormatter(citiesStore)
-            },
-            { headerName: "Zip Codes", field: "zipCodes" },
+                {
+                    headerName: "City", field: "city",
+                    cellEditor: TypeaheadEditor,
+                    cellEditorParams: {
+                        placeholder: 'City',
+                        store: citiesStore
+                    },
+                    valueFormatter: typeaheadFormatter(citiesStore)
+                },
+                { headerName: "Zip Codes", field: "zipCodes" }
+            );
+            </text>
+        }
+
+        @if (Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.AGGridConfigurationModel.Mode.Ranges)
+        {
+            <text>
+            columnDefs.push(
+                { headerName: "From" , field: "rangeFrom" },
+                { headerName: "Until", field: "rangeTo" }
+            );
+            </text>
+        }
+
+        columnDefs.push(
             { headerName: "Fee", field: "fee" },
             {
                 headerName: "Per", field: "uom",
@@ -129,61 +152,62 @@
             { headerName: "Discount", field: "discount" },
             { headerName: "Min", field: "feeMin" },
             { headerName: "Max", field: "feeMax" }
-        ];
-        </text>
+        );
+
+        // let the grid know which columns has to use.
+        var FeeDataModel = {};@*@Html.Raw(JsonConvert.SerializeObject(new AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeeDataModel()));*@
+        var gridOptions = {
+            columnDefs: columnDefs,
+            defaultColDef: {
+                sortable: true,
+                filter: true,
+                editable: true,
+                flex: 1,
+                minWidth: 100,
+                onCellValueChanged: (params) => {
+                    let newFeeDataModel = params.data;
+                    FeeDataModel.id = newFeeDataModel.id;
+                    FeeDataModel.state = newFeeDataModel.state;
+                    FeeDataModel.island = newFeeDataModel.island.value;
+                    FeeDataModel.city = newFeeDataModel.city
+                    FeeDataModel.zipCodes = newFeeDataModel.zipCodes;
+                    FeeDataModel.fee = newFeeDataModel.fee;
+                    FeeDataModel.uom = newFeeDataModel.uom;
+                    FeeDataModel.discount = newFeeDataModel.discount;
+                    FeeDataModel.feeMin = newFeeDataModel.feeMin;
+                    FeeDataModel.feeMax = newFeeDataModel.feeMax;
+                    FeeDataModel.validFrom = newFeeDataModel.validFrom;
+                    FeeDataModel.validTo = newFeeDataModel.validTo;
+                    agServerSideManagement.updateEntity(FeeDataModel, '@Url.Action("updateFeeData", "AG")');
+                }
+            },
+            // use the server-side row model instead of the default 'client-side'.
+            rowModelType: 'serverSide',
+            serverSideStoreType: 'partial',
+            // items to take by request.
+            cacheBlockSize: 4,
+            // enables pagination in the grid
+            pagination: true,
+            // sets rows qunatity to show per page (default is 100)
+            paginationPageSize: 4,
+            undoRedoCellEditing: true,
+            undoRedoCellEditingLimit: 20
+        };
+
+        var _endPoint = '@Url.Action("getFeeData", "AG")';
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var gridDiv = document.querySelector('#myGrid@(Model.GridMode)');
+            agGrid.Grid(gridDiv, gridOptions);
+            // setup the server with a first call.
+            var server = agServerSideManagement.createServer(_endPoint);
+            // create datasource with a reference to the server.
+            var datasource = agServerSideManagement.createServerSideDatasource(server);
+            // set serverside datasource.
+            gridOptions.api.setServerSideDatasource(datasource);
+        });
     }
-    // let the grid know which columns has to use.
-    var FeeDataModel = {};@*@Html.Raw(JsonConvert.SerializeObject(new AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeeDataModel()));*@
-    var gridOptions = {
-        columnDefs: columnDefs,
-        defaultColDef: {
-            sortable: true,
-            filter: true,
-            editable: true,
-            flex: 1,
-            minWidth: 100,
-            onCellValueChanged: (params) => {
-                let newFeeDataModel = params.data;
-                FeeDataModel.id = newFeeDataModel.id;
-                FeeDataModel.state = newFeeDataModel.state;
-                FeeDataModel.island = newFeeDataModel.island.value;
-                FeeDataModel.city = newFeeDataModel.city
-                FeeDataModel.zipCodes = newFeeDataModel.zipCodes;
-                FeeDataModel.fee = newFeeDataModel.fee;
-                FeeDataModel.uom = newFeeDataModel.uom;
-                FeeDataModel.discount = newFeeDataModel.discount;
-                FeeDataModel.feeMin = newFeeDataModel.feeMin;
-                FeeDataModel.feeMax = newFeeDataModel.feeMax;
-                FeeDataModel.validFrom = newFeeDataModel.validFrom;
-                FeeDataModel.validTo = newFeeDataModel.validTo;
-                agServerSideManagement.updateEntity(FeeDataModel, '@Url.Action("updateFeeData", "AG")');
-            }
-        },
-        // use the server-side row model instead of the default 'client-side'.
-        rowModelType: 'serverSide',
-        serverSideStoreType: 'partial',
-        // items to take by request.
-        cacheBlockSize: 4,
-        // enables pagination in the grid
-        pagination: true,
-        // sets rows qunatity to show per page (default is 100)
-        paginationPageSize: 4,
-        undoRedoCellEditing: true,
-        undoRedoCellEditingLimit: 20
-    };
 
-    var _endPoint = '@Url.Action("getFeeData", "AG")';
+    initGrid();
 
-    document.addEventListener('DOMContentLoaded', function () {
-        var gridDiv = document.querySelector('#myGrid');
-        agGrid.Grid(gridDiv, gridOptions);
-        // setup the server with a first call.
-        var server = agServerSideManagement.createServer(_endPoint);
-        // create datasource with a reference to the server.
-        var datasource = agServerSideManagement.createServerSideDatasource(server);
-        // set serverside datasource.
-        gridOptions.api.setServerSideDatasource(datasource);
-    });
-
-    
 </script>

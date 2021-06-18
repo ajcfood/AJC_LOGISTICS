@@ -169,6 +169,7 @@
     <Content Include="assets\bootstrap\css\bootstrap.rtl.min.css" />
     <Content Include="assets\bootstrap\headers.css" />
     <Content Include="assets\bootstrap\js\bootstrap.bundle.min.js" />
+    <Content Include="assets\styles\index.css" />
     <Content Include="assets\typeahead\bloodhound.js" />
     <Content Include="assets\typeahead\bloodhound.min.js" />
     <Content Include="assets\typeahead\typeahead.bundle.js" />

@@ -11,6 +11,12 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Business
             Rates,
             Ranges
         }
+
+        public AGGridConfigurationModel(Mode GridMode)
+        {
+            this.GridMode = GridMode;
+        }
+
         public Mode GridMode{ get; set; }
     }
 }

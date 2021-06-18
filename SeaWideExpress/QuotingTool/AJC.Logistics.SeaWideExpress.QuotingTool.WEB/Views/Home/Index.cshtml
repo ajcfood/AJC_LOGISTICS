@@ -1,4 +1,48 @@
 ﻿@using AJC.Logistics.SeaWideExpress.QuotingTool.Models
-@model AJC.Logistics.SeaWideExpress.QuotingTool.Business.AGGridConfigurationModel
+@model AJC.Logistics.SeaWideExpress.QuotingTool.Business.RatesAndRangesModel
 
-@Html.Partial("~/Views/Shared/_RatesAndRanges.cshtml", Model);
+<link rel="stylesheet" href="~/assets/styles/index.css" />
+
+<br />
+<div style="margin-bottom: 10px">
+    <span><b>Fee Type</b></span>&nbsp;
+    @Html.DropDownListFor(m => m.FeeType, new SelectList(Model.FeeTypes, "FeeTypeID", "Name"), "--Select--")
+    &nbsp;
+    @Html.DropDownListFor(m => m.FeeSubType, new SelectList(Model.FeeSubTypes, "FeeTypeID", "Name"), "--Select--", new { data_url = Url.Action("GetFeeSubTypes") })
+    &nbsp;&nbsp;
+    <span><b>Show Customers</b></span>&nbsp;
+    <label class="switch">
+        <input type="checkbox">
+        <span class="slider round"></span>
+    </label>
+    &nbsp;&nbsp;
+    <span><b>Period</b></span>&nbsp;<select><option>2020</option><option>2021</option></select>
+</div>
+
+<div style="width:100%; height:300px">
+    @Html.Partial("~/Views/Shared/_RatesAndRanges.cshtml", Model.RatesModel)
+</div>
+
+<div style="margin: 10px 0">
+    <span><b>Ranges by</b></span>&nbsp;<select><option>Unit</option></select>
+</div>
+
+<div style="width:100%; height:200px">
+    @Html.Partial("~/Views/Shared/_RatesAndRanges.cshtml", Model.RangesModel)
+</div>
+
+<script>
+    $(function () {
+        $("#FeeType").change(function () {
+            var feeTypeID = $(this).val();
+            var url  = $("#FeeSubType").data("url") + '?u=' + feeTypeID;
+            var $feeSubType = $("#FeeSubType");
+            $.getJSON(url, function (data) {
+                $feeSubType.empty();
+                $.each(data, function (i, item) {
+                    $feeSubType.append($("<option>").text(item.Text).val(item.Value));
+                });
+            });
+        });
+    });
+</script>
