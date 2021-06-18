@@ -1,5 +1,5 @@
 ﻿@model AJC.Logistics.SeaWideExpress.QuotingTool.Business.AGGridConfigurationModel
-
+@using Newtonsoft.Json;
 <script src="~/assets/ag-grid/ag-grid-enterprise.min.js"></script>
 <script src="~/assets/ag-grid/ag-grid-servermanager.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
@@ -133,6 +133,7 @@
         </text>
     }
     // let the grid know which columns has to use.
+    var FeeDataModel = {};@*@Html.Raw(JsonConvert.SerializeObject(new AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeeDataModel()));*@
     var gridOptions = {
         columnDefs: columnDefs,
         defaultColDef: {
@@ -141,7 +142,22 @@
             editable: true,
             flex: 1,
             minWidth: 100,
-            onCellValueChanged: (params) => { agServerSideManagement.saveChanges('@Model.GridMode', params); }
+            onCellValueChanged: (params) => {
+                let newFeeDataModel = params.data;
+                FeeDataModel.id = newFeeDataModel.id;
+                FeeDataModel.state = newFeeDataModel.state;
+                FeeDataModel.island = newFeeDataModel.island.value;
+                FeeDataModel.city = newFeeDataModel.city
+                FeeDataModel.zipCodes = newFeeDataModel.zipCodes;
+                FeeDataModel.fee = newFeeDataModel.fee;
+                FeeDataModel.uom = newFeeDataModel.uom;
+                FeeDataModel.discount = newFeeDataModel.discount;
+                FeeDataModel.feeMin = newFeeDataModel.feeMin;
+                FeeDataModel.feeMax = newFeeDataModel.feeMax;
+                FeeDataModel.validFrom = newFeeDataModel.validFrom;
+                FeeDataModel.validTo = newFeeDataModel.validTo;
+                agServerSideManagement.updateEntity(FeeDataModel, '@Url.Action("updateFeeData", "AG")');
+            }
         },
         // use the server-side row model instead of the default 'client-side'.
         rowModelType: 'serverSide',
@@ -158,7 +174,6 @@
 
     var _endPoint = '@Url.Action("getFeeData", "AG")';
 
-
     document.addEventListener('DOMContentLoaded', function () {
         var gridDiv = document.querySelector('#myGrid');
         agGrid.Grid(gridDiv, gridOptions);
@@ -169,4 +184,6 @@
         // set serverside datasource.
         gridOptions.api.setServerSideDatasource(datasource);
     });
+
+    
 </script>

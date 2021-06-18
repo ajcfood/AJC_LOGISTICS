@@ -38,8 +38,6 @@
                 // get data for request from our fake server
                 var response = server.getData(params.request);
 
-                // simulating real server call with a 500ms delay
-                //setTimeout(function () {
                 if (response.success) {
                     // supply rows for requested block to grid
                     params.success({
@@ -49,15 +47,28 @@
                 } else {
                     params.fail();
                 }
-                //}, 500);
             },
         };
     };
 
-    this.saveChanges = function (gridMode, model) {
-        console.log(gridMode);
-        console.log(model);
-    };
+    this.updateEntity = function (entity, endpoint) {
+        $.ajax({
+            url: endpoint,
+            dataType: "json",
+            type: "POST",
+            async: false,
+            cache: false,
+            data: JSON.stringify(entity),
+            contentType: "application/json; charset=utf-8",
+            success: function (data) {
+                alert(data.message);
+            },
+            error: function (xhr) {
+                console.log("Error - Data Sended: " + JSON.stringify(xhr.responseJSON.DataReceived));
+                alert(xhr.responseJSON.error);
+            }
+        });
+    }
 }
 
 

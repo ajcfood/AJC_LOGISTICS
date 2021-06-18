@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31205.134
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AJC.Logistics.SeaWideExpress.QuotingTool.Business.Web", "AJC.Logistics.SeaWideExpress.QuotingTool.Web\AJC.Logistics.SeaWideExpress.QuotingTool.Business.Web.csproj", "{FD08796D-D02D-4BDD-BEEB-B5C8E2B84DB6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AJC.Logistics.SeaWideExpress.QuotingTool.Web", "AJC.Logistics.SeaWideExpress.QuotingTool.Web\AJC.Logistics.SeaWideExpress.QuotingTool.Web.csproj", "{FD08796D-D02D-4BDD-BEEB-B5C8E2B84DB6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AJC.Logistics.SeaWideExpress.QuotingTool.Controllers", "AJC.Logistics.SeaWideExpress.QuotingTool.Controllers\AJC.Logistics.SeaWideExpress.QuotingTool.Controllers.csproj", "{20322415-BAEF-47D3-B7A2-0989FB3242CA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AJC.Logistics.SeaWideExpress.QuotingTool.Business.Models", "AJC.Logistics.SeaWideExpress.QuotingTool.Models\AJC.Logistics.SeaWideExpress.QuotingTool.Business.Models.csproj", "{4AA12CB5-8611-48F0-8AF5-235080EA48B2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AJC.Logistics.SeaWideExpress.QuotingTool.Models", "AJC.Logistics.SeaWideExpress.QuotingTool.Models\AJC.Logistics.SeaWideExpress.QuotingTool.Models.csproj", "{4AA12CB5-8611-48F0-8AF5-235080EA48B2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AJC.Logistics.SeaWideExpress.QuotingTool.Helpers", "AJC.Logistics.SeaWideExpress.QuotingTool.Helpers\AJC.Logistics.SeaWideExpress.QuotingTool.Helpers.csproj", "{05107D42-2BBF-4BA2-AD27-36DEECA273E1}"
 EndProject
