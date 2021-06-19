@@ -85,12 +85,12 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
 
 
         /// <summary>
-        /// Update entire FeeData Entity
+        /// Update or creates an entire FeeData Entity
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
         [System.Web.Mvc.HttpPost]
-        public JsonResult updateFeeData([FromBody] Business.FeeDataModel request)
+        public JsonResult updateFeeRepository([FromBody] Business.FeeDataModel request)
         {
             var respuesta = new { message = "OK", error = "", DataReceived = request, OldData = "" };
             Fees oldData = null;
@@ -98,7 +98,7 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
             {
                 try
                 {
-                    var FeeData = request.FeeID > -1 ? db.Fees.Where(i => i.FeeID == request.FeeID).Single() : new Fees();
+                    var FeeData = request.FeeID > 0 ? db.Fees.Where(i => i.FeeID == request.FeeID).Single() : new Fees();
                     oldData = FeeData;
                     if (request.FeeID > -1)
                     {
@@ -111,6 +111,8 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                         FeeData.AddedBy = "Admin"; // Replace with the right identity,
                     }
 
+                    FeeData.FeeID = request.FeeID;
+                    FeeData.FeeTypeID = request.FeeTypeID;
                     FeeData.ByUomID = request.ByUomID;
                     FeeData.CityID = request.CityID;
                     FeeData.StateID = request.StateID;
@@ -122,7 +124,8 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                     FeeData.FeeMax = request.FeeMax;
                     FeeData.ValidFrom = request.ValidFrom;
                     FeeData.ValidUntil = request.ValidUntil;
-                    if (request.FeeID == -1)
+
+                    if (request.FeeID < 0 && Helpers.NewEntityCreationHelper.CheckMandatoryFields(FeeData, typeof(Fees)))
                         db.Fees.AddObject(FeeData);
 
                     if (db.SaveChanges() > 0)

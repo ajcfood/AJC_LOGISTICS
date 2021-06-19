@@ -7,7 +7,7 @@
 <script src="~/assets/ag-grid/ag-grid-typeahead.js"></script>
 <link rel="stylesheet" href="~/assets/ag-grid/ag-grid-typeahead.css" />
 <div id="myGrid@(Model.GridMode)" style="height: 100%; width:100%;" class="ag-theme-balham"></div>
-
+<a id="btnCrear" style="display:none;">Crear</a>
 <script>
     function initGrid() {
         var agServerSideManagement = new AGGridManager();
@@ -202,7 +202,28 @@
             var datasource = agServerSideManagement.createServerSideDatasource(server);
             // set serverside datasource.
             gridOptions.api.setServerSideDatasource(datasource);
+
+            var boton = document.querySelector('#btnCrear').addEventListener('click', function (event) { Crear() });;
         });
+
+        function Crear(){
+            alert("seba");
+            let FeeData = {};
+            FeeData.FeeID = -1;
+            @*FeeData.FeeTypeID = 2;
+            FeeData.ByUomID = request.ByUomID;
+            FeeData.CityID = request.CityID;
+            FeeData.StateID = request.StateID;
+            FeeData.Discount = request.Discount;
+            FeeData.IslandID = request.IslandID;
+            FeeData.Value = request.FeeID;
+            FeeData.ZipCodes = request.ZipCodes;
+            FeeData.FeeMin = request.FeeMin;
+            FeeData.FeeMax = request.FeeMax;
+            FeeData.ValidFrom = request.ValidFrom;
+            FeeData.ValidUntil = request.ValidUntil;*@
+            agServerSideManagement.updateEntity(FeeData, '@Url.Action("updateFeeRepository", "AG")');
+        }
     }
 
     initGrid();

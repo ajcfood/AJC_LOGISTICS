@@ -16,11 +16,12 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
             }
             theModel.RatesModel  = new Business.AGGridConfigurationModel(Business.AGGridConfigurationModel.Mode.Rates);
             theModel.RangesModel = new Business.AGGridConfigurationModel(Business.AGGridConfigurationModel.Mode.Ranges);
+
             return View(theModel);
         }
 
-        [HttpPost]
-        public ActionResult GetFeeSubTypes(int feeTypeID)
+        [HttpGet]
+        public JsonResult GetFeeSubTypes(int? feeTypeID)
         {
             using (QuotingToolRepository db = new QuotingToolRepository())
             {
