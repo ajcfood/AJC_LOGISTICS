@@ -83,7 +83,7 @@
         const uomsStore    = newStore('uoms'   , uoms);
 
         columnDefs.push(
-            { headerName: "id", field: "id", hide: true }
+            { headerName: "id", field: "FeeID", hide: true }
         );
 
         @if (Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.AGGridConfigurationModel.Mode.Rates)
@@ -91,7 +91,7 @@
             <text>
             columnDefs.push(
                 {
-                    headerName: "State", field: "state",
+                    headerName: "State", field: "StateID",
                     cellEditor: TypeaheadEditor,
                     cellEditorParams: {
                         placeholder: 'State',
@@ -101,7 +101,7 @@
                     hide: true
                 },
                 {
-                    headerName: "Island", field: "island",
+                    headerName: "Island", field: "IslandID",
                     cellEditor: TypeaheadEditor,
                     cellEditorParams: {
                         placeholder: 'Island',
@@ -110,12 +110,12 @@
                     valueFormatter: typeaheadFormatter(islandsStore)
                 },
                 {
-                    headerName: "Zone", field: "zone",
+                    headerName: "Zone", field: "ZoneID",
                     cellEditor: "agRichSelectCellEditor",
                     cellEditorParams: { values: ['bari', 'jorgito', 'jorge', 4, 5] }
                 },
                 {
-                    headerName: "City", field: "city",
+                    headerName: "City", field: "CityID",
                     cellEditor: TypeaheadEditor,
                     cellEditorParams: {
                         placeholder: 'City',
@@ -123,7 +123,7 @@
                     },
                     valueFormatter: typeaheadFormatter(citiesStore)
                 },
-                { headerName: "Zip Codes", field: "zipCodes" }
+                { headerName: "Zip Codes", field: "ZipCodes" }
             );
             </text>
         }
@@ -132,16 +132,16 @@
         {
             <text>
             columnDefs.push(
-                { headerName: "From" , field: "rangeFrom" },
-                { headerName: "Until", field: "rangeTo" }
+                { headerName: "From" , field: "RangeFrom" },
+                { headerName: "Until", field: "RangeTo" }
             );
             </text>
         }
 
         columnDefs.push(
-            { headerName: "Fee", field: "fee" },
+            { headerName: "Fee", field: "Value" },
             {
-                headerName: "Per", field: "uom",
+                headerName: "Per", field: "ByUomID",
                 cellEditor: TypeaheadEditor,
                 cellEditorParams: {
                     placeholder: 'Unit of Measure',
@@ -149,9 +149,9 @@
                 },
                 valueFormatter: typeaheadFormatter(uomsStore)
             },
-            { headerName: "Discount", field: "discount" },
-            { headerName: "Min", field: "feeMin" },
-            { headerName: "Max", field: "feeMax" }
+            { headerName: "Discount", field: "Discount" },
+            { headerName: "Min", field: "FeeMin" },
+            { headerName: "Max", field: "FeeMax" }
         );
 
         // let the grid know which columns has to use.
@@ -165,21 +165,18 @@
                 flex: 1,
                 minWidth: 100,
                 onCellValueChanged: (params) => {
-                    let newFeeDataModel = params.data;
-                    FeeDataModel.id = newFeeDataModel.id;
-                    FeeDataModel.state = newFeeDataModel.state;
-                    FeeDataModel.island = newFeeDataModel.island.value;
-                    FeeDataModel.city = newFeeDataModel.city
-                    FeeDataModel.zipCodes = newFeeDataModel.zipCodes;
-                    FeeDataModel.fee = newFeeDataModel.fee;
-                    FeeDataModel.uom = newFeeDataModel.uom;
-                    FeeDataModel.discount = newFeeDataModel.discount;
-                    FeeDataModel.feeMin = newFeeDataModel.feeMin;
-                    FeeDataModel.feeMax = newFeeDataModel.feeMax;
-                    FeeDataModel.validFrom = newFeeDataModel.validFrom;
-                    FeeDataModel.validTo = newFeeDataModel.validTo;
-                    agServerSideManagement.updateEntity(FeeDataModel, '@Url.Action("updateFeeData", "AG")');
-                }
+                let CellValueDataChangedModel = {
+                    newValue : params.newValue,
+                    oldValue : params.oldValue,
+                    field : params.colDef.field,
+                    idEntity : params.data.FeeID
+                };
+
+                if ("TypeaheadEditor" == params.colDef.cellEditor?.name)
+                    CellValueDataChangedModel.newValue = CellValueDataChangedModel.newValue.value;
+
+                agServerSideManagement.updateEntity(CellValueDataChangedModel, '@Url.Action("updateSingleFieldFeeData", "AG")');
+            }
             },
             // use the server-side row model instead of the default 'client-side'.
             rowModelType: 'serverSide',

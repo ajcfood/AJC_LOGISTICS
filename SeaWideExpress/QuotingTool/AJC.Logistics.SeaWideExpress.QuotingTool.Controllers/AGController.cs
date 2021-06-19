@@ -4,6 +4,7 @@ using System.Web.Http;
 using AJC.Logistics.SeaWideExpress.QuotingTool.Models;
 using System;
 using Newtonsoft.Json;
+using System.Reflection;
 
 namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
 {
@@ -51,21 +52,24 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
             using (QuotingToolRepository db = new QuotingToolRepository())
             {
                 object entities = null;
-                var repo = db.Fees.Select(fee => new Business.FeeDataModel {
-                    id = fee.FeeID,
-                    state = fee.StateID,
-                    island = fee.IslandID,
-                    city = fee.CityID,
-                    zipCodes = fee.ZipCodes,
-                    fee = fee.Value,
-                    uom = fee.ByUomID,
-                    discount = fee.Discount,
-                    feeMin = fee.FeeMin,
-                    feeMax = fee.FeeMax,
-                    validFrom = fee.ValidFrom,
-                    validTo = fee.ValidUntil
+                var repo = db.Fees.Select(fee => new Business.FeeDataModel
+                {
+                    FeeID = fee.FeeID,
+                    StateID = fee.StateID,
+                    IslandID = fee.IslandID,
+                    CityID = fee.CityID,
+                    ZoneID = fee.ZoneID,
+                    ZipCodes = fee.ZipCodes,
+                    Value = fee.Value,
+                    ByUomID = fee.ByUomID,
+                    Discount = fee.Discount,
+                    FeeMin = fee.FeeMin,
+                    FeeMax = fee.FeeMax,
+                    ValidFrom = fee.ValidFrom,
+                    ValidUntil = fee.ValidUntil,
+                    RangeFrom = fee.RangeFrom,
+                    RangeTo = fee.RangeTo
                 }).ToList();
-
                 if (request.endRow == 0)
                 {
                     entities = repo;
@@ -79,23 +83,24 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
             }
         }
 
-        
+
         /// <summary>
-        /// Update FeeData
+        /// Update entire FeeData Entity
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
         [System.Web.Mvc.HttpPost]
-        public JsonResult updateFeeData([FromBody] Business.FeeDataModel request) {
+        public JsonResult updateFeeData([FromBody] Business.FeeDataModel request)
+        {
             var respuesta = new { message = "OK", error = "", DataReceived = request, OldData = "" };
             Fees oldData = null;
             using (QuotingToolRepository db = new QuotingToolRepository())
             {
                 try
                 {
-                    var FeeData = request.id > -1 ? db.Fees.Where(i => i.FeeID == request.id).Single() : new Fees();
+                    var FeeData = request.FeeID > -1 ? db.Fees.Where(i => i.FeeID == request.FeeID).Single() : new Fees();
                     oldData = FeeData;
-                    if (request.id > -1)
+                    if (request.FeeID > -1)
                     {
                         FeeData.DateUpdated = System.DateTime.Now;
                         FeeData.UpdatedBy = "Admin"; // Replace with the right identity,
@@ -106,24 +111,25 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                         FeeData.AddedBy = "Admin"; // Replace with the right identity,
                     }
 
-                    FeeData.ByUomID = request.uom;
-                    FeeData.CityID = request.city;
-                    FeeData.StateID = request.state;
-                    FeeData.Discount = request.discount;
-                    FeeData.IslandID = request.island;
-                    FeeData.Value = request.fee;
-                    FeeData.ZipCodes = request.zipCodes;
-                    FeeData.FeeMin = request.feeMin;
-                    FeeData.FeeMax = request.feeMax;
-                    FeeData.ValidFrom = request.validFrom;
-                    FeeData.ValidUntil = request.validTo;
-                    if (request.id == -1)
+                    FeeData.ByUomID = request.ByUomID;
+                    FeeData.CityID = request.CityID;
+                    FeeData.StateID = request.StateID;
+                    FeeData.Discount = request.Discount;
+                    FeeData.IslandID = request.IslandID;
+                    FeeData.Value = request.FeeID;
+                    FeeData.ZipCodes = request.ZipCodes;
+                    FeeData.FeeMin = request.FeeMin;
+                    FeeData.FeeMax = request.FeeMax;
+                    FeeData.ValidFrom = request.ValidFrom;
+                    FeeData.ValidUntil = request.ValidUntil;
+                    if (request.FeeID == -1)
                         db.Fees.AddObject(FeeData);
-                    
-                    if(db.SaveChanges() > 0)
+
+                    if (db.SaveChanges() > 0)
                         respuesta = new { message = "OK", error = "", DataReceived = request, OldData = JsonConvert.SerializeObject(oldData) };
                 }
-                catch (Exception ex) {
+                catch (Exception ex)
+                {
                     Response.StatusCode = 500;
                     respuesta = new { message = "ERROR", error = ex.Message, DataReceived = request, OldData = JsonConvert.SerializeObject(oldData) };
                 }
@@ -131,6 +137,62 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
 
             return Json(respuesta, JsonRequestBehavior.AllowGet);
         }
+
+
+
+        /// <summary>
+        /// Update just one FeeData's field
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [System.Web.Mvc.HttpPost]
+        public JsonResult updateSingleFieldFeeData([FromBody] Business.AGCellValueDataChangedModel request)
+        {
+            var respuesta = new { message = "OK", error = "", DataReceived = request, OldData = "" };
+            Fees oldData = null;
+            using (QuotingToolRepository db = new QuotingToolRepository())
+            {
+                try
+                {
+                    var FeeData = request.idEntity > -1 ? db.Fees.Where(i => i.FeeID == request.idEntity).Single() : new Fees();
+                    oldData = FeeData;
+                    if (request.idEntity > -1)
+                    {
+                        FeeData.DateUpdated = System.DateTime.Now;
+                        FeeData.UpdatedBy = "System"; // Replace with the right identity,
+                    }
+                    else
+                    {
+                        FeeData.DateAdded = System.DateTime.Now;
+                        FeeData.AddedBy = "System"; // Replace with the right identity,
+                    }
+
+                    var properties = typeof(Fees).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                    foreach (var property in properties)
+                    {
+                        if (request.field == property.Name)
+                        {
+                            property.SetValue(FeeData, Helpers.TypesHelper.ChangeType(request.newValue, property.PropertyType), null);
+                            break;
+                        }
+                    }
+
+                    if (request.idEntity == -1)
+                        db.Fees.AddObject(FeeData);
+
+                    if (db.SaveChanges() > 0)
+                        respuesta = new { message = "OK", error = "", DataReceived = request, OldData = JsonConvert.SerializeObject(oldData) };
+                }
+                catch (Exception ex)
+                {
+                    Response.StatusCode = 500;
+                    respuesta = new { message = "ERROR", error = ex.Message + System.Environment.NewLine + ex.InnerException?.Message, DataReceived = request, OldData = JsonConvert.SerializeObject(oldData) };
+                }
+            }
+
+            return Json(respuesta, JsonRequestBehavior.AllowGet);
+        }
+
         #endregion
 
         #region Get Simple Data

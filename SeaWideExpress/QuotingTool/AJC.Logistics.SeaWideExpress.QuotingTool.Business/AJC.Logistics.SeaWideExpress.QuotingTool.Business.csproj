@@ -68,6 +68,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AGCellValueDataChangedModel.cs" />
     <Compile Include="RatesAndRangesModel.cs" />
     <Compile Include="AGGridConfigurationModel.cs" />
     <Compile Include="AGGridRequestModel.cs" />

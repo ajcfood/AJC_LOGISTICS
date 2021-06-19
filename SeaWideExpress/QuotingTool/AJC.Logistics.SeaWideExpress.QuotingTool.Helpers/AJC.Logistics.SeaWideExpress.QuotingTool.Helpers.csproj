@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RandomHelper.cs" />
+    <Compile Include="TypesHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AJC.Logistics.SeaWideExpress.QuotingTool.Models\AJC.Logistics.SeaWideExpress.QuotingTool.Models.csproj">
