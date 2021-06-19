@@ -1,4 +1,35 @@
 ﻿class TypeaheadEditor {
+    static newSource(list, valueField = "value", displayField = "label") {
+        return new Bloodhound({
+            datumTokenizer: Bloodhound.tokenizers.obj.whitespace(displayField),
+            queryTokenizer: Bloodhound.tokenizers.whitespace,
+            identify: (obj) => (obj[valueField]),
+            local: list
+        });
+    }
+
+    static  newStore(name, list, valueField = "value", displayField = "label", limit = 10) {
+        return {
+            name, limit,
+            display: displayField,
+            source: this.newSource(list, valueField, displayField)
+        };
+    }
+
+    static getFormatter(store) {
+        return function (params) {
+            var { value } = params;
+
+            if (!value) return "";
+
+            if (typeof value !== 'object') value = store.source.get([value])[0];
+
+            if (!value) return "";
+
+            return value[store.display || "label"];
+        }
+    }
+
     constructor() {
     }
 

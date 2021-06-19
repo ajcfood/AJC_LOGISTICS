@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Web.Mvc;
 using System.Web.Http;
+using System.Data.Objects.SqlClient;
 using AJC.Logistics.SeaWideExpress.QuotingTool.Models;
 using System;
 using Newtonsoft.Json;
@@ -52,9 +53,10 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
             using (QuotingToolRepository db = new QuotingToolRepository())
             {
                 object entities = null;
-                var repo = db.Fees.Select(fee => new Business.FeeDataModel
+                var query = db.Fees.Select(fee => new Business.FeeDataModel
                 {
                     FeeID = fee.FeeID,
+                    FeeTypeID = fee.FeeTypeID,
                     StateID = fee.StateID,
                     IslandID = fee.IslandID,
                     CityID = fee.CityID,
@@ -69,7 +71,29 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                     ValidUntil = fee.ValidUntil,
                     RangeFrom = fee.RangeFrom,
                     RangeTo = fee.RangeTo
-                }).ToList();
+                });
+
+                if (request.whereClause != null && request.whereClause.Length>0)
+                {
+                    foreach(Business.AGRequestModel.WherePredicate predicate in request.whereClause)
+                    {
+                        int intValue;
+
+                        switch (predicate.Field)
+                        {
+                            case "StateID":
+                                intValue = Int32.Parse(predicate.Value);
+                                query = query.Where(fee => fee.StateID == intValue);
+                                break;
+
+                            case "FeeTypeID":
+                                intValue = Int32.Parse(predicate.Value);
+                                query = query.Where(fee => fee.FeeTypeID == intValue);
+                                break;
+                        } 
+                    }
+                }
+                var repo = query.ToList();
                 if (request.endRow == 0)
                 {
                     entities = repo;

@@ -63,12 +63,17 @@
             });
         });
 
+        let lastId = -1;
         $("#btnAdd").click(function () {
-            alert("Add");
+            const grid = agGridManager.getGrid('myGridRates');
+            if (!grid) alert('matanga!!!');
+            grid.api.applyServerSideTransaction({
+                add: [{ FeeID: lastId-- }]
+            });
         });
 
         $("#btnRemove").click(function () {
-            alert("Add");
+            alert("Remove");
         });
     });
 </script>

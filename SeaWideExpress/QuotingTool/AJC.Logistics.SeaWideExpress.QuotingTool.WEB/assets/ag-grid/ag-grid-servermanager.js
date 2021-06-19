@@ -1,4 +1,34 @@
 ﻿function AGGridManager() {
+    this.instances = {};
+
+    this.initGrid = function (id, options) {
+        var container = document.querySelector('#' + id);
+
+        agGrid.Grid(container, options);
+
+        const grid = { api: options.api, options };
+
+        if (options.endpoint) {
+
+            // setup the server with a first call.
+            grid.server = this.createServer(options.endpoint);
+
+            // create datasource with a reference to the server.
+            grid.datasource = this.createServerSideDatasource(grid.server);
+
+            // set serverside datasource.
+            grid.api.setServerSideDatasource(grid.datasource);
+        }
+
+        this.instances[id] = grid;
+
+        return grid;
+    }
+
+    this.getGrid = function (id) {
+        return this.instances[id];
+    }
+
     this.createServer = function (entityTypeEndPoint) {
         return {
             getData: function (request) {
@@ -30,12 +60,30 @@
         };
     };
 
+    this.fetchLOV = function(endpointName) {
+        let requestedRows = [];
+        $.ajax({
+            url: endpointName,
+            dataType: "json",
+            type: "GET",
+            async: false,
+            cache: false,
+            success: function (rows) {
+                requestedRows = rows;
+            },
+            error: function (xhr) {
+                alert(JSON.stringify(xhr));
+            }
+        });
+        return requestedRows;
+    }
+
     this.createServerSideDatasource = function (server) {
         return {
             getRows: function (params) {
                 console.log('[Datasource] - rows requested by grid: ', params.request);
 
-                // get data for request from our fake server
+                // get data for request
                 var response = server.getData(params.request);
 
                 if (response.success) {
@@ -71,4 +119,5 @@
     }
 }
 
-
+let agGridManager;
+if (!agGridManager) agGridManager = new AGGridManager();

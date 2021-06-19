@@ -6,7 +6,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <_PublishTargetUrl>C:\inetpub\wwwroot\QuotingTool</_PublishTargetUrl>
-    <History>True|2021-06-18T19:50:20.3024385Z;True|2021-06-18T15:26:24.8601134-04:00;False|2021-06-18T15:24:26.1273652-04:00;False|2021-06-18T15:20:28.0742790-04:00;False|2021-06-18T15:17:08.5529458-04:00;True|2021-06-11T16:02:31.6999804-04:00;True|2021-06-09T20:14:47.5118606-04:00;</History>
+    <History>True|2021-06-19T21:48:11.6090955Z;True|2021-06-18T15:50:20.3024385-04:00;True|2021-06-18T15:26:24.8601134-04:00;False|2021-06-18T15:24:26.1273652-04:00;False|2021-06-18T15:20:28.0742790-04:00;False|2021-06-18T15:17:08.5529458-04:00;True|2021-06-11T16:02:31.6999804-04:00;True|2021-06-09T20:14:47.5118606-04:00;</History>
   </PropertyGroup>
   <ItemGroup>
     <File Include="aDocuments/DDL.sql">
@@ -52,7 +52,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>06/05/2021 10:28:50</publishTime>
     </File>
     <File Include="assets/styles/index.css">
-      <publishTime>06/18/2021 15:44:42</publishTime>
+      <publishTime>06/19/2021 17:05:53</publishTime>
     </File>
     <File Include="assets/typeahead/bloodhound.js">
       <publishTime>06/14/2021 11:58:22</publishTime>
@@ -73,46 +73,46 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>06/14/2021 11:58:22</publishTime>
     </File>
     <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Business.dll">
-      <publishTime>06/18/2021 15:19:51</publishTime>
+      <publishTime>06/19/2021 17:45:49</publishTime>
     </File>
     <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Business.dll.config">
       <publishTime>06/02/2021 19:33:40</publishTime>
     </File>
     <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Business.pdb">
-      <publishTime>06/18/2021 15:19:51</publishTime>
+      <publishTime>06/19/2021 17:45:49</publishTime>
     </File>
     <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Controllers.dll">
-      <publishTime>06/18/2021 15:19:53</publishTime>
+      <publishTime>06/19/2021 17:45:50</publishTime>
     </File>
     <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Controllers.dll.config">
       <publishTime>06/11/2021 15:04:00</publishTime>
     </File>
     <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Controllers.pdb">
-      <publishTime>06/18/2021 15:19:53</publishTime>
+      <publishTime>06/19/2021 17:45:50</publishTime>
     </File>
     <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Helpers.dll">
-      <publishTime>06/18/2021 15:19:50</publishTime>
+      <publishTime>06/19/2021 17:45:48</publishTime>
     </File>
     <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Helpers.dll.config">
       <publishTime>06/02/2021 19:23:46</publishTime>
     </File>
     <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Helpers.pdb">
-      <publishTime>06/18/2021 15:19:50</publishTime>
+      <publishTime>06/19/2021 17:45:48</publishTime>
     </File>
     <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Models.dll">
-      <publishTime>06/18/2021 15:19:49</publishTime>
+      <publishTime>06/19/2021 17:45:47</publishTime>
     </File>
     <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Models.dll.config">
       <publishTime>06/11/2021 14:56:44</publishTime>
     </File>
     <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Models.pdb">
-      <publishTime>06/18/2021 15:19:49</publishTime>
+      <publishTime>06/19/2021 17:45:47</publishTime>
     </File>
     <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Web.dll">
-      <publishTime>06/18/2021 15:26:23</publishTime>
+      <publishTime>06/19/2021 17:45:53</publishTime>
     </File>
     <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Web.pdb">
-      <publishTime>06/18/2021 15:26:23</publishTime>
+      <publishTime>06/19/2021 17:45:53</publishTime>
     </File>
     <File Include="bin/Antlr3.Runtime.dll">
       <publishTime>01/27/2017 09:56:08</publishTime>
@@ -412,13 +412,13 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>06/11/2021 14:57:13</publishTime>
     </File>
     <File Include="Views/Home/Index.cshtml">
-      <publishTime>06/18/2021 15:48:41</publishTime>
+      <publishTime>06/19/2021 17:44:47</publishTime>
     </File>
     <File Include="Views/Shared/Layout.cshtml">
-      <publishTime>06/07/2021 19:32:16</publishTime>
+      <publishTime>06/19/2021 17:30:41</publishTime>
     </File>
     <File Include="Views/Shared/_RatesAndRanges.cshtml">
-      <publishTime>06/18/2021 14:58:03</publishTime>
+      <publishTime>06/19/2021 16:54:16</publishTime>
     </File>
     <File Include="Views/Web.config">
       <publishTime>01/27/2017 09:53:04</publishTime>
@@ -427,7 +427,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>06/13/2018 19:35:00</publishTime>
     </File>
     <File Include="Web.config">
-      <publishTime>06/18/2021 15:26:23</publishTime>
+      <publishTime>06/19/2021 17:48:10</publishTime>
     </File>
   </ItemGroup>
 </Project>
