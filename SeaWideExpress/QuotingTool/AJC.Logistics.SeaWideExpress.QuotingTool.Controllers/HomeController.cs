@@ -12,6 +12,8 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
 
             using (QuotingToolRepository db = new QuotingToolRepository())
             {
+                theModel.States   = db.States.ToList();
+                theModel.State    = theModel.States.First().StateID.ToString();
                 theModel.FeeTypes = db.FeeTypes.Where(feeType => feeType.ParentFeeTypeID == null).ToList();
             }
             theModel.RatesModel  = new Business.AGGridConfigurationModel(Business.AGGridConfigurationModel.Mode.Rates);

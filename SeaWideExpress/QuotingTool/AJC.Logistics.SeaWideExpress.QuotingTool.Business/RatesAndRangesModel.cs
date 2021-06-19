@@ -10,8 +10,10 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Business
 {
     public class RatesAndRangesModel
     {
+        public String State { get; set; }
         public String FeeType { get; set; }
         public String FeeSubType { get; set; }
+        public IEnumerable<State> States { get; set; }
         public IEnumerable<FeeType> FeeTypes { get; set; }
         public IEnumerable<FeeType> FeeSubTypes { get; set; }
         public AGGridConfigurationModel RatesModel{ get; set; }

@@ -5,14 +5,20 @@
 
 <br />
 
-<h3 style="text-align:center;">Rates and Ranges Manager</h3>
+<h3 style="text-align:center;">Fees by Type</h3>
 
-<nav class="navbar navbar-light bg-light">
+<nav class="navbar navbar-light" style="background-color: rgb(245, 247, 247); padding: 6px 10px; border: 1px solid rgb(189, 195, 199); border-bottom: none; ">
     <div>
+        <span><b>State</b></span>&nbsp;
+        @Html.DropDownListFor(m => m.State, new SelectList(Model.States, "StateID", "Name"), "--Select--", 
+            new {style = "width: 100px"@*, @class = "form-select" *@})
+        &nbsp;&nbsp;
         <span><b>Fee Type</b></span>&nbsp;
-        @Html.DropDownListFor(m => m.FeeType, new SelectList(Model.FeeTypes, "FeeTypeID", "Name"), "--Select--"@*, new { @class = "form-select" }*@)
+        @Html.DropDownListFor(m => m.FeeType, new SelectList(Model.FeeTypes, "FeeTypeID", "Name"), "--Select--", 
+            new { style = "width: 100px"@*, @class = "form-select" *@})
         &nbsp;
-        @Html.DropDownListFor(m => m.FeeSubType, new SelectList(Model.FeeSubTypes, "FeeTypeID", "Name"), "--Select--", new { data_url = Url.Action("GetFeeSubTypes")@*, @class = "form-select"*@ })
+        @Html.DropDownListFor(m => m.FeeSubType, new SelectList(Model.FeeSubTypes, "FeeTypeID", "Name"), "--Select--",
+            new {style = "width: 150px", data_url = Url.Action("GetFeeSubTypes")@*, @class = "form-select"*@})
         &nbsp;&nbsp;
         <span><b>Show Customers</b></span>&nbsp;
         <label class="switch">
