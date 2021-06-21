@@ -65,3 +65,11 @@ input:checked + .slider:before {
     padding-top: 2px;
     padding-bottom: 2px;
 }
+
+.ag-theme-balham .ag-row-selected {
+    background-color: rgb(183, 228, 255, 0.5);
+}
+
+.ag-theme-balham .ag-row-focus {
+    background-color: rgb(183, 228, 255);
+}

@@ -56,6 +56,7 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                 var query = db.Fees.Select(fee => new Business.FeeDataModel
                 {
                     FeeID = fee.FeeID,
+                    ParentFeeID = fee.ParentFeeID,
                     FeeTypeID = fee.FeeTypeID,
                     StateID = fee.StateID,
                     IslandID = fee.IslandID,
@@ -77,10 +78,16 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                 {
                     foreach(Business.AGRequestModel.WherePredicate predicate in request.whereClause)
                     {
-                        int intValue;
+                        int  intTemp;
+                        int? intValue = null;
 
                         switch (predicate.Field)
                         {
+                            case "ParentFeeID":
+                                if (Int32.TryParse(predicate.Value, out intTemp)) intValue = intTemp;
+                                query = query.Where(fee => fee.ParentFeeID == intValue);
+                                break;
+
                             case "StateID":
                                 intValue = Int32.Parse(predicate.Value);
                                 query = query.Where(fee => fee.StateID == intValue);

@@ -29,26 +29,38 @@
         <span><b>Period</b></span>&nbsp;<select><option>2020</option><option>2021</option></select>
     </div>   
     <div class="form-inline">
-        <button class="btn btn-outline-danger my-2 my-sm-0" id="btnRemove">Remove</button>
-        <button class="btn btn-outline-success my-2 my-sm-0" id="btnAdd">Add</button>
+        <button class="btn btn-outline-danger my-2 my-sm-0" id="btnRemoveFee">Remove</button>
+        <button class="btn btn-outline-success my-2 my-sm-0" id="btnAddFee">Add</button>
     </div>
 </nav>
-
 
 <div style="width:100%; height:300px">
     @Html.Partial("~/Views/Shared/_RatesAndRanges.cshtml", Model.RatesModel)
 </div>
 
-<div style="margin: 10px 0">
-    <span><b>Ranges by</b></span>&nbsp;<select><option>Unit</option></select>
-</div>
+<nav class="navbar navbar-light" style="background-color: rgb(245, 247, 247); padding: 6px 10px 10px 10px; border: 1px solid rgb(189, 195, 199); border-top: none; ">
+    <div style="margin: 10px 0">
+        <span><b>Ranges by</b></span>&nbsp;<select><option>Unit</option></select>
+    </div>
+    <div class="form-inline">
+        <button class="btn btn-outline-danger my-2 my-sm-0" id="btnRemoveRange">Remove</button>
+        <button class="btn btn-outline-success my-2 my-sm-0" id="btnAddRange">Add</button>
+    </div>
 
-<div style="width:100%; height:200px">
-    @Html.Partial("~/Views/Shared/_RatesAndRanges.cshtml", Model.RangesModel)
-</div>
+    <div style="width:100%; height:150px">
+        @Html.Partial("~/Views/Shared/_RatesAndRanges.cshtml", Model.RangesModel)
+    </div>
+</nav>
 
 <script>
     $(function () {
+        function handleFeeTypeChanged() {
+            const feeSubType = $("#FeeSubType").val();
+            const disabled = !feeSubType || feeSubType === "--Select--";
+            $("#btnAddFee").prop('disabled', disabled);
+            $("#btnRemoveFee").prop('disabled', disabled);
+        }
+
         $("#FeeType").change(function () {
             var feeTypeID = $(this).val();
             var url = $("#FeeSubType").data("url") + '?feeTypeID=' + feeTypeID;
@@ -59,12 +71,18 @@
                     $.each(data, function (i, item) {
                         $feeSubType.append($("<option>").text(item.Text).val(item.Value));
                     });
-                } else { $feeSubType.append($("<option>").text("--Select--"));}
+                } else {
+                    $feeSubType.append($("<option>").text("--Select--"));
+                }
+                handleFeeTypeChanged();
             });
         });
 
+        $("#FeeSubType").change(handleFeeTypeChanged);
+
+
         let lastId = -1;
-        $("#btnAdd").click(function () {
+        $("#btnAddFee").click(function () {
             const grid = agGridManager.getGrid('myGridRates');
             if (!grid) alert('matanga!!!');
             grid.api.applyServerSideTransaction({
@@ -72,8 +90,11 @@
             });
         });
 
-        $("#btnRemove").click(function () {
-            alert("Remove");
+        $("#btnRemoveFee").click(function () {
+            const grid = agGridManager.getGrid('myGridRates');
+            if (!grid) alert('matanga!!!');
+            const selectedRows = grid.api.getSelectedRows();
+            grid.api.applyServerSideTransaction({remove: selectedRows});
         });
     });
 </script>

@@ -5,6 +5,7 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Business
     public class FeeDataModel
     {
 		public int FeeID { get; set; }
+		public int? ParentFeeID { get; set; }
 		public int FeeTypeID { get; set; }
 		public int? StateID { get; set; }
 		public int? IslandID { get; set; }

@@ -16,6 +16,9 @@
             // create datasource with a reference to the server.
             grid.datasource = this.createServerSideDatasource(grid.server);
 
+            // Initializes the where conditions
+            if (options.where) grid.datasource.setWhere(options.where);
+
             // set serverside datasource.
             grid.api.setServerSideDatasource(grid.datasource);
         }
@@ -79,12 +82,21 @@
     }
 
     this.createServerSideDatasource = function (server) {
-        return {
+        const me = {};
+        Object.assign(me, {
+            where: null,
+            setWhere: function (where) {
+                if (!where) me.where = null;
+                else me.where = Object.keys(where).map((Field) => ({Field, Value: where[Field]}));
+            },
             getRows: function (params) {
                 console.log('[Datasource] - rows requested by grid: ', params.request);
 
+                const request = Object.assign({}, params.request);
+                if (me.where) request.whereClause = me.where;
+
                 // get data for request
-                var response = server.getData(params.request);
+                var response = server.getData(request);
 
                 if (response.success) {
                     // supply rows for requested block to grid
@@ -96,7 +108,9 @@
                     params.fail();
                 }
             },
-        };
+        });
+
+        return me;
     };
 
     this.updateEntity = function (entity, endpoint) {

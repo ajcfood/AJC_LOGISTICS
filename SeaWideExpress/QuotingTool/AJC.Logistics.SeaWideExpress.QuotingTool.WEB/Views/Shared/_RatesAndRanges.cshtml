@@ -131,8 +131,14 @@
             undoRedoCellEditing: true,
             undoRedoCellEditingLimit: 20,
             rowSelection: 'multiple',
-            endpoint: '@Url.Action("getFeeData", "AG")'
-        };
+            suppressRowClickSelection: true,
+            endpoint: '@Url.Action("getFeeData", "AG")',
+            @if (Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.AGGridConfigurationModel.Mode.Ranges) {
+                <text>
+                where: { "ParentFeeID": null }
+                </text>
+            }
+            };
 
         document.addEventListener('DOMContentLoaded', function () {
             const grid = agGridManager.initGrid('myGrid@(Model.GridMode)', gridOptions);
