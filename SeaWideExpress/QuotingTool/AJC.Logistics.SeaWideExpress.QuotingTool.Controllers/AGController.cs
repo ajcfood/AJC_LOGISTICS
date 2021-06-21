@@ -145,17 +145,20 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                         FeeData.AddedBy = "SYSTEM"; // Replace with the right identity,
                     }
 
-                    FeeData.FeeID = request.FeeID;
-                    FeeData.FeeTypeID = request.FeeTypeID;
-                    FeeData.ByUomID = request.ByUomID;
-                    FeeData.CityID = request.CityID;
-                    FeeData.StateID = request.StateID;
+                    FeeData.FeeID       = request.FeeID;
+                    FeeData.ParentFeeID = request.ParentFeeID;
+                    FeeData.FeeTypeID   = request.FeeTypeID;
+                    FeeData.ByUomID  = request.ByUomID;
+                    FeeData.CityID   = request.CityID;
+                    FeeData.StateID  = request.StateID;
                     FeeData.Discount = request.Discount;
                     FeeData.IslandID = request.IslandID;
-                    FeeData.Value = request.FeeID;
+                    FeeData.Value    = request.FeeID;
                     FeeData.ZipCodes = request.ZipCodes;
                     FeeData.FeeMin = request.FeeMin;
                     FeeData.FeeMax = request.FeeMax;
+                    FeeData.RangeFrom = request.RangeFrom;
+                    FeeData.RangeTo = request.RangeTo;
                     FeeData.ValidFrom = request.ValidFrom;
                     FeeData.ValidUntil = request.ValidUntil;
 

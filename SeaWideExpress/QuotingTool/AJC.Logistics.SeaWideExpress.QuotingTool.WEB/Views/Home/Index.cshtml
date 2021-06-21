@@ -30,7 +30,7 @@
     </div>   
     <div class="form-inline">
         <button class="btn btn-outline-danger my-2 my-sm-0" id="btnRemoveFee">Remove</button>
-        <button class="btn btn-outline-success my-2 my-sm-0" id="btnAddFee">Add</button>
+        <button class="btn btn-outline-success my-2 my-sm-0" id="btnAddFee" disabled>Add</button>
     </div>
 </nav>
 
@@ -54,7 +54,7 @@
 
 <script>
     $(function () {
-        const filters = {ParentFeeID: null};
+        const filters = {ParentFeeID: null, StateID: @(Model.State)};
 
         function handleFilterChanged(field, value) {
             if (!value || value === "--All--")
@@ -62,9 +62,9 @@
             else
                 filters[field] = value;
 
-            const disabled = !filters.FeeSubTypeID || !filters.StateID;
+            const disabled = !filters.FeeTypeID || !filters.StateID;
             $("#btnAddFee").prop('disabled', disabled);
-            $("#btnRemoveFee").prop('disabled', disabled);
+            //$("#btnRemoveFee").prop('disabled', disabled);
 
             const grid = agGridManager.getGrid('myGridRates');
             if (grid) {
@@ -99,7 +99,7 @@
         }
 
         function handleFeeSubTypeChanged() {
-            handleFilterChanged("FeeSubTypeID", $("#FeeSubType").val());
+            handleFilterChanged("FeeTypeID", $("#FeeSubType").val());
         }
 
         function handlePeriodChanged() {
@@ -112,43 +112,57 @@
         $("#Period").change(handlePeriodChanged);
 
         let lastId = -1;
+        function handleRemoveFees(id) {
+            return function () {
+                const grid = agGridManager.getGrid(id);
+                if (!grid) alert('matanga!!!');
+                const selectedRows = grid.api.getSelectedRows();
+                let selectedIds = selectedRows.map((item) => (item.FeeID)).filter((id) => (id >= 0));
+                if (selectedIds.length) agGridManager.updateEntity(selectedIds, '@Url.Action("removeFeeData", "AG")');
+                grid.api.applyServerSideTransaction({ remove: selectedRows });
+            }
+        }
+
         $("#btnAddFee").click(function () {
             const grid = agGridManager.getGrid('myGridRates');
             if (!grid) alert('matanga!!!');
             grid.api.applyServerSideTransaction({
-                add: [{ FeeID: lastId-- }]
+                add: [{ FeeID: lastId--, FeeTypeID: filters.FeeTypeID, StateID: filters.StateID }]
             });
         });
 
-        $("#btnRemoveFee").click(function () {
-            const grid = agGridManager.getGrid('myGridRates');
+        $("#btnRemoveFee").click(handleRemoveFees('myGridRates'));
+
+        $("#btnAddRange").click(function () {
+            const grid = agGridManager.getGrid('myGridRanges');
             if (!grid) alert('matanga!!!');
-            const selectedRows = grid.api.getSelectedRows();
-			let selectedRowsMaps = selectedRows.map(function (item) {
-                return item.FeeID;
-            });
-
-            agGridManager.updateEntity(selectedRowsMaps, '@Url.Action("removeFeeData", "AG")');	
-            grid.api.applyServerSideTransaction({remove: selectedRows});
+            const newRow = {};
+            Object.assign(newRow, focusedRow);
+            newRow.FeeID = lastId--;
+            newRow.ParentFeeID = focusedRow.FeeID;
+            grid.api.applyServerSideTransaction({ add: [newRow] });
         });
 
+        $("#btnRemoveRange").click(handleRemoveFees('myGridRanges'));
 
+        let focusedRowIndex = undefined;
         let focusedRow = undefined;
+
         function handleRowFocused(event) {
-            focusedRow = event.rowIndex;
-            if (focusedRow === undefined || focusedRow < 0) return;
-            const node = event.api.getDisplayedRowAtIndex(focusedRow);
-            const row  = node ? node.data : null;
+            focusedRowIndex = event.rowIndex;
+            if (focusedRowIndex === undefined || focusedRowIndex < 0) return;
+            const node = event.api.getDisplayedRowAtIndex(focusedRowIndex);
+            focusedRow = node ? node.data : null;
 
             const grid = agGridManager.getGrid('myGridRanges');
             if (!grid) alert('matanga!!!');
 
-            grid.datasource.setWhere({ ParentFeeID: row ? row.FeeID : null });
+            grid.datasource.setWhere({ ParentFeeID: focusedRow ? focusedRow.FeeID : null });
             grid.api.refreshServerSideStore();
         }
 
         function handleCellFocused(event) {
-            if (focusedRow !== event.rowIndex) handleRowFocused(event);
+            if (focusedRowIndex !== event.rowIndex) handleRowFocused(event);
         }
 
         agGridManager.onGridReady(function (grid) {

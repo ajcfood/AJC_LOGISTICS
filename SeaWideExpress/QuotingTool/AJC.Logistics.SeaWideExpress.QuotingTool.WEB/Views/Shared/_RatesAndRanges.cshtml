@@ -107,14 +107,16 @@
                 minWidth: 100,
                 onCellValueChanged: (params) => {
                     let CellValueDataChangedModel = {
-                        newValue : params.newValue,
+                        newValue : params.newValue?.value || params.newValue,
                         oldValue : params.oldValue,
-                        field : params.colDef.field,
+                        field    : params.colDef.field,
                         idEntity : params.data.FeeID
                     };
 
+                    /*
                     if ("TypeaheadEditor" == params.colDef.cellEditor?.name)
                         CellValueDataChangedModel.newValue = CellValueDataChangedModel.newValue.value;
+                    */
 
                      var idEntityAffected = agGridManager.updateEntity(
                         (params.data.FeeID > 0) ? CellValueDataChangedModel : GetModel(params.data),
@@ -161,26 +163,24 @@
 
         function GetModel(request) {
             let FeeData = {};
-            if (!$("#FeeType").val() > 0) {
-                alert("Please, select a FeeType.");
-                FeeData.FeeTypeID = 1;
-            }
-            else {
-                FeeData.FeeTypeID = $("#FeeType").val();
-            }
 
-            FeeData.FeeID = request.FeeID;
-            FeeData.ByUomID = request.ByUomID;
-            FeeData.IslandID = request.IslandID?.value;
-            FeeData.CityID = request.CityID?.value;
-            FeeData.StateID = request.StateID;
-            FeeData.Discount = request.Discount;
-            FeeData.Value = request.FeeID;
-            FeeData.ZipCodes = request.ZipCodes;
-            FeeData.FeeMin = request.FeeMin;
-            FeeData.FeeMax = request.FeeMax;
-            FeeData.ValidFrom = request.ValidFrom;
-            FeeData.ValidUntil = request.ValidUntil;
+            FeeData.FeeID       = request.FeeID;
+            FeeData.ParentFeeID = request.ParentFeeID;
+            FeeData.FeeTypeID   = request.FeeTypeID;
+            FeeData.ByUomID     = request.ByUomID?.value  || request.ByUomID;
+            FeeData.IslandID    = request.IslandID?.value || request.IslandID;
+            FeeData.CityID      = request.CityID?.value   || request.CityID;
+            FeeData.StateID     = request.StateID;
+            FeeData.Discount    = request.Discount;
+            FeeData.Value       = request.FeeID;
+            FeeData.ZipCodes    = request.ZipCodes;
+            FeeData.FeeMin      = request.FeeMin;
+            FeeData.FeeMax      = request.FeeMax;
+            FeeData.RangeFrom   = request.RangeFrom;
+            FeeData.RangeTo     = request.RangeTo;
+            FeeData.ValidFrom   = request.ValidFrom;
+            FeeData.ValidUntil  = request.ValidUntil;
+
             return FeeData;
             @*gridManager.updateEntity(FeeData, '@Url.Action("updateFeeRepository", "AG")');*@
         }
