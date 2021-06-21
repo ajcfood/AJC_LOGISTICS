@@ -132,6 +132,7 @@
     };
 
     this.updateEntity = function (entity, endpoint, callback) {
+        var idEntityAffected;
         $.ajax({
             url: endpoint,
             dataType: "json",
@@ -151,6 +152,7 @@
                 alert(xhr.responseJSON.error);
             }
         });
+        return idEntityAffected;
     }
 }
 

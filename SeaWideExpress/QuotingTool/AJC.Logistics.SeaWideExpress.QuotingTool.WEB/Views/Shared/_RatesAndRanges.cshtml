@@ -112,16 +112,17 @@
                         idEntity : params.data.FeeID
                     };
 
-                    /*
-                    if ("TypeaheadEditor" == params.colDef.cellEditor?.name)
-                        CellValueDataChangedModel.newValue = CellValueDataChangedModel.newValue.value;
-                    */
-
                     var idEntityAffected = agGridManager.updateEntity(
                         (params.data.FeeID > 0) ? CellValueDataChangedModel : GetModel(params.data),
                         (params.data.FeeID > 0) ? '@Url.Action("updateSingleFieldFeeData", "AG")' : '@Url.Action("updateFeeRepository", "AG")',
                         (params.data.FeeID > 0) ? null : ModifyModel
                     );
+
+
+                    // Updates the FeeID of the inserted row
+                    if (params.data.FeeID < 0 && idEntityAffected)
+                        params.data.FeeID = idEntityAffected;
+
                 }
             },
             // use the server-side row model instead of the default 'client-side'.
@@ -156,9 +157,10 @@
             const grid = agGridManager.initGrid('myGrid@(Model.GridMode)', gridOptions);
         });
 
+
         function ModifyModel(model) {
             if (model && model.idEntityRequest && model.idEntityRequest < 0) {
-                alert("Congrats! This is a new Entity");
+                alert("Congrats! A new Entity has been created");
                 setNewId(model.idEntityRequest, model.idEntityAffected);
             }
         }
