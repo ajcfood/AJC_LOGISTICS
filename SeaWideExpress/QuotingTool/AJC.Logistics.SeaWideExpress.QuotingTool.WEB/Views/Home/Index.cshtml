@@ -93,8 +93,14 @@
             const grid = agGridManager.getGrid('myGridRates');
             if (!grid) alert('matanga!!!');
             const selectedRows = grid.api.getSelectedRows();
+			let selectedRowsMaps = selectedRows.map(function (item) {
+                return item.FeeID;
+            });
+
+            agGridManager.updateEntity(selectedRowsMaps, '@Url.Action("removeFeeData", "AG")');	
             grid.api.applyServerSideTransaction({remove: selectedRows});
         });
+
 
         let focusedRow = undefined;
         function handleRowFocused(event) {

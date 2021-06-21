@@ -28,9 +28,7 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Helpers
                     var nombre = property.Name;
                     var theValue = property.GetValue(theEntity, null);
                     // A mandatory int when is null, the obtained value is zero.
-                    int theNullInteger;
-                    Int32.TryParse(theValue.ToString(), out theNullInteger);
-                    if (theValue == null || theNullInteger == 0)
+                    if (theValue == null || theValue.ToString() == "0")
                     {
                         return false;
                     }

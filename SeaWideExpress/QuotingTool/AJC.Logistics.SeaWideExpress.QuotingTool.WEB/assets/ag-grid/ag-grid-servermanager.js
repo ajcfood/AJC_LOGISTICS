@@ -131,7 +131,7 @@
         return me;
     };
 
-    this.updateEntity = function (entity, endpoint) {
+    this.updateEntity = function (entity, endpoint, callback) {
         $.ajax({
             url: endpoint,
             dataType: "json",
@@ -141,7 +141,9 @@
             data: JSON.stringify(entity),
             contentType: "application/json; charset=utf-8",
             success: function (data) {
-                alert(data.message);
+                var idEntityAffected = data?.idEntity;
+                if (idEntityAffected)
+                    callback(data.idEntity);
             },
             error: function (xhr) {
                 console.log("Error - Data Sended: " + JSON.stringify(xhr.responseJSON.DataReceived));
