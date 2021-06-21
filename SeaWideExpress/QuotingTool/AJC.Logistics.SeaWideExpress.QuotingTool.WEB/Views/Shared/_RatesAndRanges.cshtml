@@ -96,7 +96,6 @@
         );
 
         // let the grid know which columns has to use.
-        var FeeDataModel = {};@*@Html.Raw(JsonConvert.SerializeObject(new AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeeDataModel()));*@
         var gridOptions = {
             columnDefs: columnDefs,
             defaultColDef: {
@@ -121,15 +120,15 @@
                     var idEntityAffected = agGridManager.updateEntity(
                         (params.data.FeeID > 0) ? CellValueDataChangedModel : GetModel(params.data),
                         (params.data.FeeID > 0) ? '@Url.Action("updateSingleFieldFeeData", "AG")' : '@Url.Action("updateFeeRepository", "AG")',
-                        ModifyModel
+                        (params.data.FeeID > 0) ? null : ModifyModel
                     );
-
-                    if (idEntityAffected)
-                        alert(idEntityAffecte);
                 }
             },
             // use the server-side row model instead of the default 'client-side'.
             rowModelType: 'serverSide',
+            getRowNodeId: function (data) {
+                return data.FeeID;
+            },
             serverSideStoreType: 'full',
             // items to take by request.
             //cacheBlockSize: 4,
@@ -151,14 +150,24 @@
                 where: { "ParentFeeID": null }
                 </text>
             }
-            };
+        };
 
         document.addEventListener('DOMContentLoaded', function () {
             const grid = agGridManager.initGrid('myGrid@(Model.GridMode)', gridOptions);
         });
 
         function ModifyModel(model) {
-            alert(model);
+            if (model && model.idEntityRequest && model.idEntityRequest < 0) {
+                alert("Congrats! This is a new Entity");
+                setNewId(model.idEntityRequest, model.idEntityAffected);
+            }
+        }
+
+        function setNewId(oldId, newId) {
+            var rowNode = gridOptions.api.getRowNode(oldId);
+            var newData = rowNode.data;
+            newData.FeeID = newId;
+            rowNode.setData(newData);
         }
 
         function GetModel(request) {

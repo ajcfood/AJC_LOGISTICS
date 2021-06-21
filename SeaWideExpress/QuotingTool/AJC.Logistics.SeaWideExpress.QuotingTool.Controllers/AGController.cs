@@ -126,7 +126,7 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
         [System.Web.Mvc.HttpPost]
         public JsonResult updateFeeRepository([FromBody] Business.FeeDataModel request)
         {
-            var respuesta = new { idEntity = request.FeeID, message = "OK", error = "", DataReceived = request, OldData = "" };
+            var respuesta = new { idEntity = request.FeeID, idEntityRequest = request.FeeID, message = "OK", error = "", DataReceived = request, OldData = "" };
             Fees oldData = null;
             using (QuotingToolRepository db = new QuotingToolRepository())
             {
@@ -166,12 +166,12 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                         db.Fees.AddObject(FeeData);
 
                     if (db.SaveChanges() > 0)
-                        respuesta = new { idEntity = FeeData.FeeID, message = "OK", error = "", DataReceived = request, OldData = JsonConvert.SerializeObject(oldData) };
+                        respuesta = new { idEntity = FeeData.FeeID, idEntityRequest = request.FeeID, message = "OK", error = "", DataReceived = request, OldData = JsonConvert.SerializeObject(oldData) };
                 }
                 catch (Exception ex)
                 {
                     Response.StatusCode = 500;
-                    respuesta = new { idEntity = request.FeeID, message = "ERROR", error = ex.Message, DataReceived = request, OldData = JsonConvert.SerializeObject(oldData) };
+                    respuesta = new { idEntity = request.FeeID, idEntityRequest = request.FeeID, message = "ERROR", error = ex.Message, DataReceived = request, OldData = JsonConvert.SerializeObject(oldData) };
                 }
             }
 

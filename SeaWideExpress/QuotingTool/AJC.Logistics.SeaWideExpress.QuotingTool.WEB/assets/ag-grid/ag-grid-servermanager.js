@@ -141,9 +141,10 @@
             data: JSON.stringify(entity),
             contentType: "application/json; charset=utf-8",
             success: function (data) {
-                var idEntityAffected = data?.idEntity;
-                if (idEntityAffected)
-                    callback(data.idEntity);
+                var idEntity = {
+                    idEntityAffected: data?.idEntity, idEntityRequest: data?.idEntityRequest};
+                if (idEntity && callback)
+                    callback(idEntity);
             },
             error: function (xhr) {
                 console.log("Error - Data Sended: " + JSON.stringify(xhr.responseJSON.DataReceived));
