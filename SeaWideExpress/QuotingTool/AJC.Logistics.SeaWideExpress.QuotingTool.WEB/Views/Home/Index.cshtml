@@ -80,7 +80,6 @@
 
         $("#FeeSubType").change(handleFeeTypeChanged);
 
-
         let lastId = -1;
         $("#btnAddFee").click(function () {
             const grid = agGridManager.getGrid('myGridRates');
@@ -96,5 +95,27 @@
             const selectedRows = grid.api.getSelectedRows();
             grid.api.applyServerSideTransaction({remove: selectedRows});
         });
+
+        let focusedRow = undefined;
+        function handleRowFocused(event) {
+            focusedRow = event.rowIndex;
+            if (focusedRow === undefined || focusedRow < 0) return;
+            const node = event.api.getDisplayedRowAtIndex(focusedRow);
+            const row  = node ? node.data : null;
+
+            const grid = agGridManager.getGrid('myGridRanges');
+            if (!grid) alert('matanga!!!');
+
+            grid.datasource.setWhere({ ParentFeeID: row ? row.FeeID : null });
+            grid.api.refreshServerSideStore();
+        }
+
+        function handleCellFocused(event) {
+            if (focusedRow !== event.rowIndex) handleRowFocused(event);
+        }
+
+        agGridManager.onGridReady(function (grid) {
+            grid.api.addEventListener('cellFocused', handleCellFocused);
+        }, 'myGridRates');
     });
 </script>

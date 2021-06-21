@@ -85,7 +85,10 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                         {
                             case "ParentFeeID":
                                 if (Int32.TryParse(predicate.Value, out intTemp)) intValue = intTemp;
-                                query = query.Where(fee => fee.ParentFeeID == intValue);
+                                if (intValue == null)
+                                    query = query.Where(fee => fee.ParentFeeID == null);
+                                else
+                                    query = query.Where(fee => fee.ParentFeeID == intValue);
                                 break;
 
                             case "StateID":

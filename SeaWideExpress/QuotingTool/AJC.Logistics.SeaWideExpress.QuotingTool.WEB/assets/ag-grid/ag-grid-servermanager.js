@@ -1,12 +1,30 @@
 ﻿function AGGridManager() {
     this.instances = {};
 
+    this.onGridReady = function (listener, id) {
+        const grid = this.instances[id] || {id};
+        if (grid.ready) listener(grid);
+        else {
+            if (grid.api) grid.api.addEventListener('gridReady', listener);
+        }            
+    }
+
+
     this.initGrid = function (id, options) {
         var container = document.querySelector('#' + id);
 
+        const grid = this.instances[id] || {id};
+
+        const _gridReady = options.onGridReady;
+        options.onGridReady = function handleGridReady(event) {
+            grid.ready = true;
+            if (_gridReady) _gridReady(event);
+        }
+
         agGrid.Grid(container, options);
 
-        const grid = { api: options.api, options };
+        grid.api     = options.api;
+        grid.options = options;
 
         if (options.endpoint) {
 

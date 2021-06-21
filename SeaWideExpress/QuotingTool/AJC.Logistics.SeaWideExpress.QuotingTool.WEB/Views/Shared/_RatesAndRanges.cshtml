@@ -135,6 +135,10 @@
             endpoint: '@Url.Action("getFeeData", "AG")',
             @if (Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.AGGridConfigurationModel.Mode.Ranges) {
                 <text>
+                where: { "ParentFeeID": -1 }
+                </text>
+            } else {
+                <text>
                 where: { "ParentFeeID": null }
                 </text>
             }
