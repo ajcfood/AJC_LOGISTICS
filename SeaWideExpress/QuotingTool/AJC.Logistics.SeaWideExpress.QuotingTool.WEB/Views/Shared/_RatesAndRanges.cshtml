@@ -118,10 +118,10 @@
                         CellValueDataChangedModel.newValue = CellValueDataChangedModel.newValue.value;
                     */
 
-                     var idEntityAffected = agGridManager.updateEntity(
+                    var idEntityAffected = agGridManager.updateEntity(
                         (params.data.FeeID > 0) ? CellValueDataChangedModel : GetModel(params.data),
-                         (params.data.FeeID > 0) ? '@Url.Action("updateSingleFieldFeeData", "AG")' : '@Url.Action("updateFeeRepository", "AG")',
-                         ModifyModel
+                        (params.data.FeeID > 0) ? '@Url.Action("updateSingleFieldFeeData", "AG")' : '@Url.Action("updateFeeRepository", "AG")',
+                        ModifyModel
                     );
 
                     if (idEntityAffected)
