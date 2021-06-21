@@ -120,12 +120,12 @@
 
                     var idEntityAffected = agGridManager.updateEntity(
                         (params.data.FeeID > 0) ? CellValueDataChangedModel : GetModel(params.data),
-                        (params.data.FeeID > 0) ? '@Url.Action("updateSingleFieldFeeData", "AG")' : '@Url.Action("updateFeeRepository", "AG")',
-                        ModifyModel
+                        (params.data.FeeID > 0) ? '@Url.Action("updateSingleFieldFeeData", "AG")' : '@Url.Action("updateFeeRepository", "AG")'
                     );
 
-                    if (idEntityAffected)
-                        alert(idEntityAffecte);
+                    // Updates the FeeID of the inserted row
+                    if (params.data.FeeID < 0 && idEntityAffected)
+                        params.data.FeeID = idEntityAffected;
                 }
             },
             // use the server-side row model instead of the default 'client-side'.
@@ -156,10 +156,6 @@
         document.addEventListener('DOMContentLoaded', function () {
             const grid = agGridManager.initGrid('myGrid@(Model.GridMode)', gridOptions);
         });
-
-        function ModifyModel(model) {
-            alert(model);
-        }
 
         function GetModel(request) {
             let FeeData = {};

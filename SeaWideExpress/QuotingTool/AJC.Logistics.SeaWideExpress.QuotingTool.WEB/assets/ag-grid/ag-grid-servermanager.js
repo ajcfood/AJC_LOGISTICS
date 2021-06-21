@@ -132,6 +132,7 @@
     };
 
     this.updateEntity = function (entity, endpoint, callback) {
+        var idEntityAffected;
         $.ajax({
             url: endpoint,
             dataType: "json",
@@ -141,15 +142,16 @@
             data: JSON.stringify(entity),
             contentType: "application/json; charset=utf-8",
             success: function (data) {
-                var idEntityAffected = data?.idEntity;
-                if (idEntityAffected)
-                    callback(data.idEntity);
+                idEntityAffected = data?.idEntity;
+                /*if (idEntityAffected)
+                    callback(data.idEntity);*/
             },
             error: function (xhr) {
                 console.log("Error - Data Sended: " + JSON.stringify(xhr.responseJSON.DataReceived));
                 alert(xhr.responseJSON.error);
             }
         });
+        return idEntityAffected;
     }
 }
 
