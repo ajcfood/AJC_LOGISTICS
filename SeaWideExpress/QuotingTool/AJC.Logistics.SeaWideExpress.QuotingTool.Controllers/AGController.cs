@@ -92,13 +92,13 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                                 break;
 
                             case "StateID":
-                                intValue = Int32.Parse(predicate.Value);
-                                query = query.Where(fee => fee.StateID == intValue);
+                                if (Int32.TryParse(predicate.Value, out intTemp)) intValue = intTemp;
+                                if (intValue != null) query = query.Where(fee => fee.StateID == intValue);
                                 break;
 
                             case "FeeTypeID":
-                                intValue = Int32.Parse(predicate.Value);
-                                query = query.Where(fee => fee.FeeTypeID == intValue);
+                                if (Int32.TryParse(predicate.Value, out intTemp)) intValue = intTemp;
+                                if (intValue != null) query = query.Where(fee => fee.FeeTypeID == intValue);
                                 break;
                         } 
                     }

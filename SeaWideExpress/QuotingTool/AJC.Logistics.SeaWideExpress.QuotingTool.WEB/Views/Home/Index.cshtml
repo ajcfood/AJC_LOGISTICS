@@ -10,14 +10,14 @@
 <nav class="navbar navbar-light" style="background-color: rgb(245, 247, 247); padding: 6px 10px; border: 1px solid rgb(189, 195, 199); border-bottom: none; ">
     <div>
         <span><b>State</b></span>&nbsp;
-        @Html.DropDownListFor(m => m.State, new SelectList(Model.States, "StateID", "Name"), "--Select--", 
+        @Html.DropDownListFor(m => m.State, new SelectList(Model.States, "StateID", "Name"), "--All--", 
             new {style = "width: 100px"@*, @class = "form-select" *@})
         &nbsp;&nbsp;
         <span><b>Fee Type</b></span>&nbsp;
-        @Html.DropDownListFor(m => m.FeeType, new SelectList(Model.FeeTypes, "FeeTypeID", "Name"), "--Select--", 
+        @Html.DropDownListFor(m => m.FeeType, new SelectList(Model.FeeTypes, "FeeTypeID", "Name"), "--All--", 
             new { style = "width: 100px"@*, @class = "form-select" *@})
         &nbsp;
-        @Html.DropDownListFor(m => m.FeeSubType, new SelectList(Model.FeeSubTypes, "FeeTypeID", "Name"), "--Select--",
+        @Html.DropDownListFor(m => m.FeeSubType, new SelectList(Model.FeeSubTypes, "FeeTypeID", "Name"), "--All--",
             new {style = "width: 150px", data_url = Url.Action("GetFeeSubTypes")@*, @class = "form-select"*@})
         &nbsp;&nbsp;
         <span><b>Show Customers</b></span>&nbsp;
@@ -26,7 +26,7 @@
             <span class="slider round"></span>
         </label>
         &nbsp;&nbsp;
-        <span><b>Period</b></span>&nbsp;<select><option>2020</option><option>2021</option></select>
+        <span><b>Period</b></span>&nbsp;<select id="Period"><option>2020</option><option>2021</option></select>
     </div>   
     <div class="form-inline">
         <button class="btn btn-outline-danger my-2 my-sm-0" id="btnRemoveFee">Remove</button>
@@ -54,15 +54,33 @@
 
 <script>
     $(function () {
-        function handleFeeTypeChanged() {
-            const feeSubType = $("#FeeSubType").val();
-            const disabled = !feeSubType || feeSubType === "--Select--";
+        const filters = {ParentFeeID: null};
+
+        function handleFilterChanged(field, value) {
+            if (!value || value === "--All--")
+                filters[field] = null;
+            else
+                filters[field] = value;
+
+            const disabled = !filters.FeeSubTypeID || !filters.StateID;
             $("#btnAddFee").prop('disabled', disabled);
             $("#btnRemoveFee").prop('disabled', disabled);
+
+            const grid = agGridManager.getGrid('myGridRates');
+            if (grid) {
+                grid.datasource.setWhere(filters);
+                grid.api.refreshServerSideStore();
+            }
         }
 
-        $("#FeeType").change(function () {
+        function handleStateChanged() {
+            handleFilterChanged("StateID", $("#State").val());
+        }
+
+        function handleFeeTypeChanged() {
             var feeTypeID = $(this).val();
+
+            // Refreshes the sub types
             var url = $("#FeeSubType").data("url") + '?feeTypeID=' + feeTypeID;
             var $feeSubType = $("#FeeSubType");
             $.getJSON(url, function (data) {
@@ -72,13 +90,26 @@
                         $feeSubType.append($("<option>").text(item.Text).val(item.Value));
                     });
                 } else {
-                    $feeSubType.append($("<option>").text("--Select--"));
+                    $feeSubType.append($("<option>").text("--All--"));
                 }
-                handleFeeTypeChanged();
-            });
-        });
 
-        $("#FeeSubType").change(handleFeeTypeChanged);
+                // Forces a sub type changes validation
+                handleFeeSubTypeChanged();
+            });
+        }
+
+        function handleFeeSubTypeChanged() {
+            handleFilterChanged("FeeSubTypeID", $("#FeeSubType").val());
+        }
+
+        function handlePeriodChanged() {
+            handleFilterChanged("Period", $("#Period").val());
+        }
+
+        $("#State").change(handleStateChanged);
+        $("#FeeType").change(handleFeeTypeChanged);
+        $("#FeeSubType").change(handleFeeSubTypeChanged);
+        $("#Period").change(handlePeriodChanged);
 
         let lastId = -1;
         $("#btnAddFee").click(function () {
