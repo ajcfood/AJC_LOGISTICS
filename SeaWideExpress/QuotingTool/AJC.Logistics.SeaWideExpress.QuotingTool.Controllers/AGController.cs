@@ -126,7 +126,7 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
         [System.Web.Mvc.HttpPost]
         public JsonResult updateFeeRepository([FromBody] Business.FeeDataModel request)
         {
-            var respuesta = new { message = "OK", error = "", DataReceived = request, OldData = "" };
+            var respuesta = new { idEntity = request.FeeID, message = "OK", error = "", DataReceived = request, OldData = "" };
             Fees oldData = null;
             using (QuotingToolRepository db = new QuotingToolRepository())
             {
@@ -134,15 +134,15 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                 {
                     var FeeData = request.FeeID > 0 ? db.Fees.Where(i => i.FeeID == request.FeeID).Single() : new Fees();
                     oldData = FeeData;
-                    if (request.FeeID > -1)
+                    if (request.FeeID > 0)
                     {
                         FeeData.DateUpdated = System.DateTime.Now;
-                        FeeData.UpdatedBy = "Admin"; // Replace with the right identity,
+                        FeeData.UpdatedBy = "SYSTEM"; // Replace with the right identity,
                     }
                     else
                     {
                         FeeData.DateAdded = System.DateTime.Now;
-                        FeeData.AddedBy = "Admin"; // Replace with the right identity,
+                        FeeData.AddedBy = "SYSTEM"; // Replace with the right identity,
                     }
 
                     FeeData.FeeID = request.FeeID;
@@ -163,12 +163,12 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                         db.Fees.AddObject(FeeData);
 
                     if (db.SaveChanges() > 0)
-                        respuesta = new { message = "OK", error = "", DataReceived = request, OldData = JsonConvert.SerializeObject(oldData) };
+                        respuesta = new { idEntity = FeeData.FeeID, message = "OK", error = "", DataReceived = request, OldData = JsonConvert.SerializeObject(oldData) };
                 }
                 catch (Exception ex)
                 {
                     Response.StatusCode = 500;
-                    respuesta = new { message = "ERROR", error = ex.Message, DataReceived = request, OldData = JsonConvert.SerializeObject(oldData) };
+                    respuesta = new { idEntity = request.FeeID, message = "ERROR", error = ex.Message, DataReceived = request, OldData = JsonConvert.SerializeObject(oldData) };
                 }
             }
 
@@ -185,7 +185,7 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
         [System.Web.Mvc.HttpPost]
         public JsonResult updateSingleFieldFeeData([FromBody] Business.AGCellValueDataChangedModel request)
         {
-            var respuesta = new { message = "OK", error = "", DataReceived = request, OldData = "" };
+            var respuesta = new { idEntity = request.idEntity, message = "OK", error = "", DataReceived = request, OldData = "" };
             Fees oldData = null;
             using (QuotingToolRepository db = new QuotingToolRepository())
             {
@@ -218,18 +218,39 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                         db.Fees.AddObject(FeeData);
 
                     if (db.SaveChanges() > 0)
-                        respuesta = new { message = "OK", error = "", DataReceived = request, OldData = JsonConvert.SerializeObject(oldData) };
+                        respuesta = new { idEntity = request.idEntity, message = "OK", error = "", DataReceived = request, OldData = JsonConvert.SerializeObject(oldData) };
                 }
                 catch (Exception ex)
                 {
                     Response.StatusCode = 500;
-                    respuesta = new { message = "ERROR", error = ex.Message + System.Environment.NewLine + ex.InnerException?.Message, DataReceived = request, OldData = JsonConvert.SerializeObject(oldData) };
+                    respuesta = new { idEntity = request.idEntity, message = "ERROR", error = ex.Message + System.Environment.NewLine + ex.InnerException?.Message, DataReceived = request, OldData = JsonConvert.SerializeObject(oldData) };
                 }
             }
 
             return Json(respuesta, JsonRequestBehavior.AllowGet);
         }
 
+		[System.Web.Mvc.HttpPost]
+        public JsonResult removeFeeData([FromBody] int[] ids) {
+            var respuesta = new { message = "OK", error = "", DataReceived = JsonConvert.SerializeObject(ids), OldData = "" };
+            try
+            {
+                using (QuotingToolRepository db = new QuotingToolRepository())
+                {
+                    foreach (int id in ids)
+                    {
+                        db.Fees.DeleteObject(db.Fees.Where(i => i.FeeID == id).Single());
+                    }
+                    db.SaveChanges();
+                }
+            }
+            catch (Exception ex)
+            {
+                Response.StatusCode = 500;
+                respuesta = new { message = "ERROR", error = ex.Message, DataReceived = JsonConvert.SerializeObject(ids), OldData = "" };
+            }
+            return Json(respuesta, JsonRequestBehavior.AllowGet);
+        }
         #endregion
 
         #region Get Simple Data

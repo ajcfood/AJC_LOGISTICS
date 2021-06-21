@@ -116,7 +116,14 @@
                     if ("TypeaheadEditor" == params.colDef.cellEditor?.name)
                         CellValueDataChangedModel.newValue = CellValueDataChangedModel.newValue.value;
 
-                    agGridManager.updateEntity(CellValueDataChangedModel, '@Url.Action("updateSingleFieldFeeData", "AG")');
+                     var idEntityAffected = agGridManager.updateEntity(
+                        (params.data.FeeID > 0) ? CellValueDataChangedModel : GetModel(params.data),
+                         (params.data.FeeID > 0) ? '@Url.Action("updateSingleFieldFeeData", "AG")' : '@Url.Action("updateFeeRepository", "AG")',
+                         ModifyModel
+                    );
+
+                    if (idEntityAffected)
+                        alert(idEntityAffecte);
                 }
             },
             // use the server-side row model instead of the default 'client-side'.
@@ -148,23 +155,34 @@
             const grid = agGridManager.initGrid('myGrid@(Model.GridMode)', gridOptions);
         });
 
-        function Crear(){
-            alert("seba");
+        function ModifyModel(model) {
+            alert(model);
+        }
+
+        function GetModel(request) {
             let FeeData = {};
-            FeeData.FeeID = -1;
-            @*FeeData.FeeTypeID = 2;
+            if (!$("#FeeType").val() > 0) {
+                alert("Please, select a FeeType.");
+                FeeData.FeeTypeID = 1;
+            }
+            else {
+                FeeData.FeeTypeID = $("#FeeType").val();
+            }
+
+            FeeData.FeeID = request.FeeID;
             FeeData.ByUomID = request.ByUomID;
-            FeeData.CityID = request.CityID;
+            FeeData.IslandID = request.IslandID?.value;
+            FeeData.CityID = request.CityID?.value;
             FeeData.StateID = request.StateID;
             FeeData.Discount = request.Discount;
-            FeeData.IslandID = request.IslandID;
             FeeData.Value = request.FeeID;
             FeeData.ZipCodes = request.ZipCodes;
             FeeData.FeeMin = request.FeeMin;
             FeeData.FeeMax = request.FeeMax;
             FeeData.ValidFrom = request.ValidFrom;
-            FeeData.ValidUntil = request.ValidUntil;*@
-            gridManager.updateEntity(FeeData, '@Url.Action("updateFeeRepository", "AG")');
+            FeeData.ValidUntil = request.ValidUntil;
+            return FeeData;
+            @*gridManager.updateEntity(FeeData, '@Url.Action("updateFeeRepository", "AG")');*@
         }
     }
 
