@@ -5,7 +5,7 @@ using AJC.Logistics.SeaWideExpress.QuotingTool.Models;
 
 namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
 {
-    public class HomeController : Controller
+    public class FeesByTypeController : Controller
     {
         public ActionResult Index() {
             Business.RatesAndRangesModel theModel = new Business.RatesAndRangesModel();

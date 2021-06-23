@@ -115,7 +115,7 @@
   <ItemGroup>
     <Compile Include="ErrorController.cs" />
     <Compile Include="AGController.cs" />
-    <Compile Include="HomeController.cs" />
+    <Compile Include="FeesByTypeController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
