@@ -114,8 +114,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ErrorController.cs" />
-    <Compile Include="AGController.cs" />
     <Compile Include="FeesByTypeController.cs" />
+    <Compile Include="ParamsController.cs" />
+    <Compile Include="FeesGridController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

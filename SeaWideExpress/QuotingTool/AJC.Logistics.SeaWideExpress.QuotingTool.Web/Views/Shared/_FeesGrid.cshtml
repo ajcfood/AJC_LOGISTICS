@@ -12,10 +12,10 @@
     function initGrid() {
         const columnDefs = [];
 
-        const states  = agGridManager.fetchLOV('@Url.Action("getStates", "AG")');
-        const islands = agGridManager.fetchLOV('@Url.Action("getIslands", "AG")');
-        const cities  = agGridManager.fetchLOV('@Url.Action("getCities", "AG")');
-        const uoms    = agGridManager.fetchLOV('@Url.Action("getUoms"  , "AG")');
+        const states  = agGridManager.fetchLOV('@Url.Action("getStates", "Params")');
+        const islands = agGridManager.fetchLOV('@Url.Action("getIslands", "Params")');
+        const cities  = agGridManager.fetchLOV('@Url.Action("getCities", "Params")');
+        const uoms    = agGridManager.fetchLOV('@Url.Action("getUoms"  , "Params")');
 
         const statesStore  = TypeaheadEditor.newStore('states' , states);
         const islandsStore = TypeaheadEditor.newStore('islands', islands);
@@ -114,7 +114,7 @@
 
                     var idEntityAffected = agGridManager.updateEntity(
                         (params.data.FeeID > 0) ? CellValueDataChangedModel : GetModel(params.data),
-                        (params.data.FeeID > 0) ? '@Url.Action("updateSingleFieldFeeData", "AG")' : '@Url.Action("updateFeeRepository", "AG")',
+                        (params.data.FeeID > 0) ? '@Url.Action("updateSingleFieldFeeData", "FeesGrid")' : '@Url.Action("updateFeeRepository", "FeesGrid")',
                         (params.data.FeeID > 0) ? null : ModifyModel
                     );
 
@@ -141,7 +141,7 @@
             undoRedoCellEditingLimit: 20,
             rowSelection: 'multiple',
             suppressRowClickSelection: true,
-            endpoint: '@Url.Action("getFeeData", "AG")',
+            endpoint: '@Url.Action("getFeeData", "FeesGrid")',
             @if (Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.AGGridConfigurationModel.Mode.Ranges) {
                 <text>
                 where: { "ParentFeeID": -1 }
@@ -193,7 +193,7 @@
             FeeData.ValidUntil  = request.ValidUntil;
 
             return FeeData;
-            @*gridManager.updateEntity(FeeData, '@Url.Action("updateFeeRepository", "AG")');*@
+            @*gridManager.updateEntity(FeeData, '@Url.Action("updateFeeRepository", "FeesGrid")');*@
         }
     }
 

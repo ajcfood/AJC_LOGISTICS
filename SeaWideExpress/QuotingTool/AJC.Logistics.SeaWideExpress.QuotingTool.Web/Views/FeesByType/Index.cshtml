@@ -118,7 +118,7 @@
                 if (!grid) alert('matanga!!!');
                 const selectedRows = grid.api.getSelectedRows();
                 let selectedIds = selectedRows.map((item) => (item.FeeID)).filter((id) => (id >= 0));
-                if (selectedIds.length) agGridManager.updateEntity(selectedIds, '@Url.Action("removeFeeData", "AG")');
+                if (selectedIds.length) agGridManager.updateEntity(selectedIds, '@Url.Action("removeFeeData", "FeesGrid")');
                 grid.api.applyServerSideTransaction({ remove: selectedRows });
             }
         }
