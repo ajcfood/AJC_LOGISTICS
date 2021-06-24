@@ -69,10 +69,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AGCellValueDataChangedModel.cs" />
-    <Compile Include="RatesAndRangesModel.cs" />
-    <Compile Include="AGGridConfigurationModel.cs" />
     <Compile Include="AGGridRequestModel.cs" />
     <Compile Include="FeeDataModel.cs" />
+    <Compile Include="FeesByTypeModel.cs" />
+    <Compile Include="FeesGridModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ValidateFile.cs" />
   </ItemGroup>

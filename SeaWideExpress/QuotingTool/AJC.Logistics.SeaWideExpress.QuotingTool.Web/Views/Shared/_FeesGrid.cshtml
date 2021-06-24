@@ -1,4 +1,4 @@
-﻿@model AJC.Logistics.SeaWideExpress.QuotingTool.Business.AGGridConfigurationModel
+﻿@model AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesGridModel
 @using Newtonsoft.Json;
 <script src="~/assets/ag-grid/ag-grid-enterprise.min.js"></script>
 <script src="~/assets/ag-grid/ag-grid-servermanager.js"></script>
@@ -27,7 +27,7 @@
             { headername: "#", checkboxSelection: true, maxWidth: 40 }
         );
 
-        @if (Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.AGGridConfigurationModel.Mode.Rates)
+        @if (Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesGridModel.Mode.Fees)
         {
             <text>
             columnDefs.push(
@@ -38,8 +38,7 @@
                         placeholder: 'State',
                         store: statesStore
                     },
-                    valueFormatter: TypeaheadEditor.getFormatter(statesStore),
-                    hide: true
+                    valueFormatter: TypeaheadEditor.getFormatter(statesStore)
                 },
                 {
                     headerName: "Island", field: "IslandID",
@@ -69,7 +68,7 @@
             </text>
         }
 
-        @if (Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.AGGridConfigurationModel.Mode.Ranges)
+        @if (Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesGridModel.Mode.Ranges)
         {
             <text>
             columnDefs.push(
@@ -94,6 +93,17 @@
             { headerName: "Min", field: "FeeMin" },
             { headerName: "Max", field: "FeeMax" }
         );
+
+        function hideColumn(defs, name) {
+            const def = defs.find((def) => (def.field === name));
+            if (def) def.hide = true;
+        }
+
+        // Hides filter columns
+        @foreach (var filter in Model.FilterBy)
+        {
+            <text>hideColumn(columnDefs, '@(filter)');</text>
+        }
 
         // let the grid know which columns has to use.
         var gridOptions = {
@@ -122,14 +132,13 @@
                     // Updates the FeeID of the inserted row
                     if (params.data.FeeID < 0 && idEntityAffected)
                         params.data.FeeID = idEntityAffected;
-
                 }
             },
             // use the server-side row model instead of the default 'client-side'.
             rowModelType: 'serverSide',
             getRowNodeId: function (data) {
-                return data.FeeID;
-            },
+                    return data.FeeID;
+                },
             serverSideStoreType: 'full',
             // items to take by request.
             //cacheBlockSize: 4,
@@ -142,7 +151,7 @@
             rowSelection: 'multiple',
             suppressRowClickSelection: true,
             endpoint: '@Url.Action("getFeeData", "FeesGrid")',
-            @if (Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.AGGridConfigurationModel.Mode.Ranges) {
+            @if (Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesGridModel.Mode.Ranges) {
                 <text>
                 where: { "ParentFeeID": -1 }
                 </text>

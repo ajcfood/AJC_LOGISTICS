@@ -1,5 +1,5 @@
 ﻿@using AJC.Logistics.SeaWideExpress.QuotingTool.Models
-@model AJC.Logistics.SeaWideExpress.QuotingTool.Business.RatesAndRangesModel
+@model AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesByTypeModel
 
 <link rel="stylesheet" href="~/assets/styles/index.css" />
 
@@ -35,7 +35,7 @@
 </nav>
 
 <div style="width:100%; height:300px">
-    @Html.Partial("~/Views/Shared/_FeesGrid.cshtml", Model.RatesModel)
+    @Html.Partial("~/Views/Shared/_FeesGrid.cshtml", Model.FeesModel)
 </div>
 
 <nav class="navbar navbar-light" style="background-color: rgb(245, 247, 247); padding: 6px 10px 10px 10px; border: 1px solid rgb(189, 195, 199); border-top: none; ">
