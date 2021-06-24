@@ -15,13 +15,15 @@
         const states  = agGridManager.fetchLOV('@Url.Action("getStates", "Params")');
         const islands = agGridManager.fetchLOV('@Url.Action("getIslands", "Params")');
         const cities  = agGridManager.fetchLOV('@Url.Action("getCities", "Params")');
-        const uoms    = agGridManager.fetchLOV('@Url.Action("getUoms"  , "Params")');
+        const uoms = agGridManager.fetchLOV('@Url.Action("getUoms", "Params")');
+        const actions = agGridManager.fetchLOV('@Url.Action("getActions", "Params")');
 
         const statesStore  = TypeaheadEditor.newStore('states' , states);
         const islandsStore = TypeaheadEditor.newStore('islands', islands);
         const citiesStore  = TypeaheadEditor.newStore('cities' , cities);
-        const uomsStore    = TypeaheadEditor.newStore('uoms'   , uoms);
-
+        const uomsStore    = TypeaheadEditor.newStore('uoms', uoms);
+        const actionsStore = TypeaheadEditor.newStore('actions', actions);
+        
         columnDefs.push(
             { headerName: "id", field: "FeeID", hide: true },
             { headername: "#", checkboxSelection: true, maxWidth: 40 }
@@ -80,12 +82,25 @@
         }
 
         columnDefs.push(
+            @if (Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.AGGridConfigurationModel.Mode.Rates) {
+                <text>
+                {
+                    headerName: "Action", field: "ActionID",
+                    cellEditor: TypeaheadEditor,
+                    cellEditorParams: {
+                        placeholder: 'Action',
+                        store: actionsStore
+                    },
+                    valueFormatter: TypeaheadEditor.getFormatter(actionsStore)
+                },
+                </text>
+            }
             { headerName: "Fee", field: "Value" },
             {
-                headerName: "Per", field: "ByUomID",
+                        headerName: "Per", field: "ByUomID",
                 cellEditor: TypeaheadEditor,
                 cellEditorParams: {
-                    placeholder: 'Unit of Measure',
+                            placeholder: 'Unit of Measure',
                     store: uomsStore
                 },
                 valueFormatter: TypeaheadEditor.getFormatter(uomsStore)
@@ -95,7 +110,7 @@
             { headerName: "Max", field: "FeeMax" }
         );
 
-        // let the grid know which columns has to use.
+                // let the grid know which columns has to use.
         var gridOptions = {
             columnDefs: columnDefs,
             defaultColDef: {
@@ -114,7 +129,7 @@
 
                     var idEntityAffected = agGridManager.updateEntity(
                         (params.data.FeeID > 0) ? CellValueDataChangedModel : GetModel(params.data),
-                        (params.data.FeeID > 0) ? '@Url.Action("updateSingleFieldFeeData", "FeesGrid")' : '@Url.Action("updateFeeRepository", "FeesGrid")',
+                                (params.data.FeeID > 0) ? '@Url.Action("updateSingleFieldFeeData", "FeesGrid")' : '@Url.Action("updateFeeRepository", "FeesGrid")',
                         (params.data.FeeID > 0) ? null : ModifyModel
                     );
 
@@ -124,12 +139,12 @@
                         params.data.FeeID = idEntityAffected;
 
                 }
-            },
+                    },
             // use the server-side row model instead of the default 'client-side'.
             rowModelType: 'serverSide',
             getRowNodeId: function (data) {
-                return data.FeeID;
-            },
+                    return data.FeeID;
+                },
             serverSideStoreType: 'full',
             // items to take by request.
             //cacheBlockSize: 4,
@@ -151,48 +166,48 @@
                 where: { "ParentFeeID": null }
                 </text>
             }
-        };
+            };
 
-        document.addEventListener('DOMContentLoaded', function () {
-            const grid = agGridManager.initGrid('myGrid@(Model.GridMode)', gridOptions);
-        });
+                document.addEventListener('DOMContentLoaded', function () {
+                    const grid = agGridManager.initGrid('myGrid@(Model.GridMode)', gridOptions);
+                });
 
 
-        function ModifyModel(model) {
-            if (model && model.idEntityRequest && model.idEntityRequest < 0) {
-                alert("Congrats! A new Entity has been created");
-                setNewId(model.idEntityRequest, model.idEntityAffected);
-            }
-        }
+                function ModifyModel(model) {
+                    if (model && model.idEntityRequest && model.idEntityRequest < 0) {
+                        alert("Congrats! A new Entity has been created");
+                        setNewId(model.idEntityRequest, model.idEntityAffected);
+                    }
+                }
 
-        function setNewId(oldId, newId) {
-            var rowNode = gridOptions.api.getRowNode(oldId);
-            var newData = rowNode.data;
-            newData.FeeID = newId;
-            rowNode.setData(newData);
-        }
+                function setNewId(oldId, newId) {
+                    var rowNode = gridOptions.api.getRowNode(oldId);
+                    var newData = rowNode.data;
+                    newData.FeeID = newId;
+                    rowNode.setData(newData);
+                }
 
-        function GetModel(request) {
-            let FeeData = {};
+                function GetModel(request) {
+                    let FeeData = {};
 
-            FeeData.FeeID       = request.FeeID;
-            FeeData.ParentFeeID = request.ParentFeeID;
-            FeeData.FeeTypeID   = request.FeeTypeID;
-            FeeData.ByUomID     = request.ByUomID?.value  || request.ByUomID;
-            FeeData.IslandID    = request.IslandID?.value || request.IslandID;
-            FeeData.CityID      = request.CityID?.value   || request.CityID;
-            FeeData.StateID     = request.StateID;
-            FeeData.Discount    = request.Discount;
-            FeeData.Value       = request.FeeID;
-            FeeData.ZipCodes    = request.ZipCodes;
-            FeeData.FeeMin      = request.FeeMin;
-            FeeData.FeeMax      = request.FeeMax;
-            FeeData.RangeFrom   = request.RangeFrom;
-            FeeData.RangeTo     = request.RangeTo;
-            FeeData.ValidFrom   = request.ValidFrom;
-            FeeData.ValidUntil  = request.ValidUntil;
+                    FeeData.FeeID       = request.FeeID;
+                    FeeData.ParentFeeID = request.ParentFeeID;
+                    FeeData.FeeTypeID   = request.FeeTypeID;
+                    FeeData.ByUomID     = request.ByUomID?.value  || request.ByUomID;
+                    FeeData.IslandID    = request.IslandID?.value || request.IslandID;
+                    FeeData.CityID      = request.CityID?.value   || request.CityID;
+                    FeeData.StateID     = request.StateID;
+                    FeeData.Discount    = request.Discount;
+                    FeeData.Value       = request.FeeID;
+                    FeeData.ZipCodes    = request.ZipCodes;
+                    FeeData.FeeMin      = request.FeeMin;
+                    FeeData.FeeMax      = request.FeeMax;
+                    FeeData.RangeFrom   = request.RangeFrom;
+                    FeeData.RangeTo     = request.RangeTo;
+                    FeeData.ValidFrom   = request.ValidFrom;
+                    FeeData.ValidUntil  = request.ValidUntil;
 
-            return FeeData;
+                    return FeeData;
             @*gridManager.updateEntity(FeeData, '@Url.Action("updateFeeRepository", "FeesGrid")');*@
         }
     }

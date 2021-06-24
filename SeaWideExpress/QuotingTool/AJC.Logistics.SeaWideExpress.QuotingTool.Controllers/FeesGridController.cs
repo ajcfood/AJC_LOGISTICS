@@ -15,31 +15,31 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
             return View();
         }
         
-        /// <summary>
-        /// Get TestData entities for Ag-Grid
-        /// </summary>
-        /// <param name="request"></param>
-        /// <returns></returns>
-        [System.Web.Mvc.HttpPost]
-        public JsonResult getTestData([FromBody] Business.AGRequestModel request)
-        {
-            using (QuotingToolRepository db = new QuotingToolRepository())
-            {
-                object entities = null;
-                var repo = db.Test.Select(a => new { a.id, a.fechadesde, a.fechahasta, a.precio, a.zona, a.zonaDescripcion }).ToList();
+        ///// <summary>
+        ///// Get TestData entities for Ag-Grid
+        ///// </summary>
+        ///// <param name="request"></param>
+        ///// <returns></returns>
+        //[System.Web.Mvc.HttpPost]
+        //public JsonResult getTestData([FromBody] Business.AGRequestModel request)
+        //{
+        //    using (QuotingToolRepository db = new QuotingToolRepository())
+        //    {
+        //        object entities = null;
+        //        var repo = db.Test.Select(a => new { a.id, a.fechadesde, a.fechahasta, a.precio, a.zona, a.zonaDescripcion }).ToList();
                 
-                if (request.endRow == 0)
-                {
-                    entities = repo;
-                }
-                else
-                {
-                    var itemsToTake = (request.endRow >= repo.Count() ? repo.Count() : request.endRow) - request.startRow;
-                    entities = repo.Skip(request.startRow).Take(itemsToTake);
-                }
-                return Json(new { rows = entities, rowsTotalQuantity = repo.Count() } , JsonRequestBehavior.AllowGet);
-            }
-        }
+        //        if (request.endRow == 0)
+        //        {
+        //            entities = repo;
+        //        }
+        //        else
+        //        {
+        //            var itemsToTake = (request.endRow >= repo.Count() ? repo.Count() : request.endRow) - request.startRow;
+        //            entities = repo.Skip(request.startRow).Take(itemsToTake);
+        //        }
+        //        return Json(new { rows = entities, rowsTotalQuantity = repo.Count() } , JsonRequestBehavior.AllowGet);
+        //    }
+        //}
 
         #region FeeData
         /// <summary>
@@ -64,6 +64,7 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                     ZoneID = fee.ZoneID,
                     ZipCodes = fee.ZipCodes,
                     Value = fee.Value,
+                    ActionID = fee.ActionID,
                     ByUomID = fee.ByUomID,
                     Discount = fee.Discount,
                     FeeMin = fee.FeeMin,
@@ -153,6 +154,7 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                     FeeData.StateID  = request.StateID;
                     FeeData.Discount = request.Discount;
                     FeeData.IslandID = request.IslandID;
+                    FeeData.ActionID = request.ActionID;
                     FeeData.Value    = request.FeeID;
                     FeeData.ZipCodes = request.ZipCodes;
                     FeeData.FeeMin = request.FeeMin;

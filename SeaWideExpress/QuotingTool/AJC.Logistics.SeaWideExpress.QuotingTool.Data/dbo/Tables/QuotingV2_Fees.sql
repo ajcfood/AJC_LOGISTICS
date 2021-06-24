@@ -38,7 +38,8 @@ CREATE TABLE [QuotingV2_Fees]
 	[DateUpdated]	[datetime]		NULL,
 	[UpdatedBy]		[varchar](100)	NULL,
 
-	-- Constraints
+	[ActionID] SMALLINT NULL, 
+    -- Constraints
 	CONSTRAINT [QuotingV2_Fees_PK] PRIMARY KEY ([FeeID]),
 
 	CONSTRAINT [QuotingV2_Fees_Types_FK] 

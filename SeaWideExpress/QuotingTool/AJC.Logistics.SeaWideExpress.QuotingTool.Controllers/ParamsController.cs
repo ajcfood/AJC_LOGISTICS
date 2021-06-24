@@ -6,9 +6,12 @@ using AJC.Logistics.SeaWideExpress.QuotingTool.Models;
 using System;
 using Newtonsoft.Json;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
 {
+   
+
     public class ParamsController : Controller
     {
         public ActionResult Index() {
@@ -84,6 +87,32 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                 var dataSet = db.UOMs.Select(uom => new { value = uom.UomID, label = uom.Name.Trim().ToUpper() }).ToList();
                 return Json(dataSet, JsonRequestBehavior.AllowGet);
             }
+        }
+
+        /// <summary>
+        /// Get Actions_Fee entities for List of Values
+        /// </summary>
+        /// <returns></returns>
+        [System.Web.Mvc.HttpGet]
+        public JsonResult getActions()
+        {
+            using (QuotingToolRepository db = new QuotingToolRepository())
+            {
+
+                var fakeRepository = new List<ActionMock>();
+                fakeRepository.Add(new ActionMock { ActionID = 1, Description = "Fee" });
+                fakeRepository.Add(new ActionMock { ActionID = 2, Description = "Surcharge" });
+                fakeRepository.Add(new ActionMock { ActionID = 3, Description = "Discount" });
+                fakeRepository.Add(new ActionMock { ActionID = 4, Description = "Waiver" });
+
+                var dataSet = fakeRepository.Select(action => new { value = action.ActionID, label = action.Description.Trim().ToUpper()}).ToList();
+                return Json(dataSet, JsonRequestBehavior.AllowGet);
+            }
+        }
+        public class ActionMock
+        {
+            public short? ActionID;
+            public string Description;
         }
 
         #endregion
