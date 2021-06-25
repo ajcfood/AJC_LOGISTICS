@@ -40,7 +40,7 @@
 
 <nav class="navbar navbar-light" style="background-color: rgb(245, 247, 247); padding: 6px 10px 10px 10px; border: 1px solid rgb(189, 195, 199); border-top: none; ">
     <div style="margin: 10px 0">
-        <span><b>Ranges by</b></span>&nbsp;<select><option>Unit</option></select>
+        <span><b>Ranges by</b></span>&nbsp;<select id="ByUomIDs"><option>Unit</option></select>
     </div>
     <div class="form-inline">
         <button class="btn btn-outline-danger my-2 my-sm-0" id="btnRemoveRange">Remove</button>
@@ -106,10 +106,19 @@
             handleFilterChanged("Period", $("#Period").val());
         }
 
+        function handleByOmsIDsChanged() {
+            const grid = agGridManager.getGrid('myGridRanges');
+            if (grid) {
+                grid.datasource.setWhere({ ParentFeeID: focusedRow ? focusedRow.FeeID : null , ByUomID: $("#ByUomIDs").val()});
+                grid.api.refreshServerSideStore();
+            }
+        }
+
         $("#State").change(handleStateChanged);
         $("#FeeType").change(handleFeeTypeChanged);
         $("#FeeSubType").change(handleFeeSubTypeChanged);
         $("#Period").change(handlePeriodChanged);
+        $("#ByUomIDs").change(handleByOmsIDsChanged);
 
         let lastId = -1;
         function handleRemoveFees(id) {
@@ -157,12 +166,23 @@
             const grid = agGridManager.getGrid('myGridRanges');
             if (!grid) alert('matanga!!!');
 
+            handleControls(focusedRow ? focusedRow.FeeID : null);
             grid.datasource.setWhere({ ParentFeeID: focusedRow ? focusedRow.FeeID : null });
             grid.api.refreshServerSideStore();
         }
 
         function handleCellFocused(event) {
             if (focusedRowIndex !== event.rowIndex) handleRowFocused(event);
+        }
+
+        function handleControls(rowID) {
+            $.getJSON('@Url.Action("getUomsByFeeID", "Params")?ParentFeeID=' + rowID, function (data) {
+                $("#ByUomIDs").html('');
+                $("#ByUomIDs").append($("<option>").text("--All--"));
+                $.each(data, function () {
+                    $("#ByUomIDs").append('<option value="' + this.value + '">' + this.label + '</option>');
+                });
+            });
         }
 
         agGridManager.onGridReady(function (grid) {

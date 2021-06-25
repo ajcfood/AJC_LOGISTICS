@@ -89,6 +89,27 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
             }
         }
 
+
+        /// <summary>
+        /// Get UOM entities for a FeeID
+        /// </summary>
+        /// <returns></returns>
+        [System.Web.Mvc.HttpGet]
+        public JsonResult getUomsByFeeID(int ParentFeeID)
+        {
+            using (QuotingToolRepository db = new QuotingToolRepository())
+            {
+                var fees = db.Fees.Where(i => i.ParentFeeID == ParentFeeID).ToList();
+                List<UOM> uoms = new List<UOM>();
+
+                foreach (Fees fee in fees) {
+                    if(fee.ByUomID.HasValue && !uoms.Any(uom => uom.UomID == fee.ByUomID))
+                        uoms.Add(db.UOMs.Where(i => fee.ByUomID == i.UomID).Single());
+                }
+                return Json(uoms.Select(i => new { value= i.UomID, label = i.Name}), JsonRequestBehavior.AllowGet);
+            }
+        }
+
         /// <summary>
         /// Get Actions_Fee entities for List of Values
         /// </summary>
