@@ -21,7 +21,8 @@ ValidationPricesCellEditor.prototype.inputChanged = function (event) {
 }
 
 ValidationPricesCellEditor.prototype.isValid = function (value) {
-    return parseFloat(value) > 0;
+    let isCurrency = /^(?=.*[1-9])\d{0,5}(\.\d{1,2})?$/.test(value)
+    return isCurrency || (value == "") ;
 }
 
 ValidationPricesCellEditor.prototype.getValue = function () {
