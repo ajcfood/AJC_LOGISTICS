@@ -161,7 +161,7 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                     FeeData.Discount = request.Discount;
                     FeeData.IslandID = request.IslandID;
                     FeeData.ActionID = request.ActionID;
-                    FeeData.Value    = request.FeeID;
+                    FeeData.Value    = request.Value;
                     FeeData.ZipCodes = request.ZipCodes;
                     FeeData.FeeMin = request.FeeMin;
                     FeeData.FeeMax = request.FeeMax;
