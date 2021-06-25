@@ -1,4 +1,5 @@
-﻿using System.Data.Objects.SqlClient;
+﻿using System.Collections.Generic;
+using System.Data.Objects.SqlClient;
 using System.Linq;
 using System.Web.Mvc;
 using AJC.Logistics.SeaWideExpress.QuotingTool.Models;
@@ -8,7 +9,7 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
     public class FeesByTypeController : Controller
     {
         public ActionResult Index() {
-            Business.RatesAndRangesModel theModel = new Business.RatesAndRangesModel();
+            Business.FeesByTypeModel theModel = new Business.FeesByTypeModel();
 
             using (QuotingToolRepository db = new QuotingToolRepository())
             {
@@ -16,8 +17,8 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                 theModel.State    = theModel.States.First().StateID.ToString();
                 theModel.FeeTypes = db.FeeTypes.Where(feeType => feeType.ParentFeeTypeID == null).ToList();
             }
-            theModel.RatesModel  = new Business.AGGridConfigurationModel(Business.AGGridConfigurationModel.Mode.Rates);
-            theModel.RangesModel = new Business.AGGridConfigurationModel(Business.AGGridConfigurationModel.Mode.Ranges);
+            theModel.FeesModel   = new Business.FeesGridModel(Business.FeesGridModel.Mode.Fees  , new List<string> { "ParentFeeID", "StateID", "FeeTypeID" });
+            theModel.RangesModel = new Business.FeesGridModel(Business.FeesGridModel.Mode.Ranges, new List<string> { "ParentFeeID" });
 
             return View(theModel);
         }
