@@ -2,8 +2,8 @@
 
 namespace AJC.Logistics.SeaWideExpress.QuotingTool.Business
 {
-    public class FeeDataModel
-    {
+	public class FeeDataModel
+	{
 		public int FeeID { get; set; }
 		public int? ParentFeeID { get; set; }
 		public int FeeTypeID { get; set; }
@@ -24,5 +24,6 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Business
 		public string changedField { get; set; }
 		public decimal? RangeFrom { get; set; }
 		public decimal? RangeTo { get; set; }
+		public short? ActionID { get; set; }
 	}
 }

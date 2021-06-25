@@ -91,22 +91,6 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         /// <summary>
         /// No Metadata Documentation available.
         /// </summary>
-        public ObjectSet<Test> Test
-        {
-            get
-            {
-                if ((_Test == null))
-                {
-                    _Test = base.CreateObjectSet<Test>("Test");
-                }
-                return _Test;
-            }
-        }
-        private ObjectSet<Test> _Test;
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
         public ObjectSet<Fees> Fees
         {
             get
@@ -299,14 +283,6 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         #endregion
 
         #region AddTo Methods
-    
-        /// <summary>
-        /// Deprecated Method for adding a new object to the Test EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
-        /// </summary>
-        public void AddToTest(Test test)
-        {
-            base.AddObject("Test", test);
-        }
     
         /// <summary>
         /// Deprecated Method for adding a new object to the Fees EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
@@ -1764,6 +1740,30 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         private Nullable<global::System.Decimal> _Value;
         partial void OnValueChanging(Nullable<global::System.Decimal> value);
         partial void OnValueChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.Int16> ActionID
+        {
+            get
+            {
+                return _ActionID;
+            }
+            set
+            {
+                OnActionIDChanging(value);
+                ReportPropertyChanging("ActionID");
+                _ActionID = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("ActionID");
+                OnActionIDChanged();
+            }
+        }
+        private Nullable<global::System.Int16> _ActionID;
+        partial void OnActionIDChanging(Nullable<global::System.Int16> value);
+        partial void OnActionIDChanged();
 
         #endregion
 
@@ -3529,183 +3529,6 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
 
         #endregion
 
-    }
-    
-    /// <summary>
-    /// No Metadata Documentation available.
-    /// </summary>
-    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="Test")]
-    [Serializable()]
-    [DataContractAttribute(IsReference=true)]
-    public partial class Test : EntityObject
-    {
-        #region Factory Method
-    
-        /// <summary>
-        /// Create a new Test object.
-        /// </summary>
-        /// <param name="id">Initial value of the id property.</param>
-        public static Test CreateTest(global::System.Int32 id)
-        {
-            Test test = new Test();
-            test.id = id;
-            return test;
-        }
-
-        #endregion
-
-        #region Primitive Properties
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=true, IsNullable=false)]
-        [DataMemberAttribute()]
-        public global::System.Int32 id
-        {
-            get
-            {
-                return _id;
-            }
-            set
-            {
-                if (_id != value)
-                {
-                    OnidChanging(value);
-                    ReportPropertyChanging("id");
-                    _id = StructuralObject.SetValidValue(value);
-                    ReportPropertyChanged("id");
-                    OnidChanged();
-                }
-            }
-        }
-        private global::System.Int32 _id;
-        partial void OnidChanging(global::System.Int32 value);
-        partial void OnidChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
-        [DataMemberAttribute()]
-        public Nullable<global::System.DateTime> fechadesde
-        {
-            get
-            {
-                return _fechadesde;
-            }
-            set
-            {
-                OnfechadesdeChanging(value);
-                ReportPropertyChanging("fechadesde");
-                _fechadesde = StructuralObject.SetValidValue(value);
-                ReportPropertyChanged("fechadesde");
-                OnfechadesdeChanged();
-            }
-        }
-        private Nullable<global::System.DateTime> _fechadesde;
-        partial void OnfechadesdeChanging(Nullable<global::System.DateTime> value);
-        partial void OnfechadesdeChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
-        [DataMemberAttribute()]
-        public Nullable<global::System.DateTime> fechahasta
-        {
-            get
-            {
-                return _fechahasta;
-            }
-            set
-            {
-                OnfechahastaChanging(value);
-                ReportPropertyChanging("fechahasta");
-                _fechahasta = StructuralObject.SetValidValue(value);
-                ReportPropertyChanged("fechahasta");
-                OnfechahastaChanged();
-            }
-        }
-        private Nullable<global::System.DateTime> _fechahasta;
-        partial void OnfechahastaChanging(Nullable<global::System.DateTime> value);
-        partial void OnfechahastaChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
-        [DataMemberAttribute()]
-        public Nullable<global::System.Int32> zona
-        {
-            get
-            {
-                return _zona;
-            }
-            set
-            {
-                OnzonaChanging(value);
-                ReportPropertyChanging("zona");
-                _zona = StructuralObject.SetValidValue(value);
-                ReportPropertyChanged("zona");
-                OnzonaChanged();
-            }
-        }
-        private Nullable<global::System.Int32> _zona;
-        partial void OnzonaChanging(Nullable<global::System.Int32> value);
-        partial void OnzonaChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
-        [DataMemberAttribute()]
-        public global::System.String zonaDescripcion
-        {
-            get
-            {
-                return _zonaDescripcion;
-            }
-            set
-            {
-                OnzonaDescripcionChanging(value);
-                ReportPropertyChanging("zonaDescripcion");
-                _zonaDescripcion = StructuralObject.SetValidValue(value, true);
-                ReportPropertyChanged("zonaDescripcion");
-                OnzonaDescripcionChanged();
-            }
-        }
-        private global::System.String _zonaDescripcion;
-        partial void OnzonaDescripcionChanging(global::System.String value);
-        partial void OnzonaDescripcionChanged();
-    
-        /// <summary>
-        /// No Metadata Documentation available.
-        /// </summary>
-        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
-        [DataMemberAttribute()]
-        public Nullable<global::System.Decimal> precio
-        {
-            get
-            {
-                return _precio;
-            }
-            set
-            {
-                OnprecioChanging(value);
-                ReportPropertyChanging("precio");
-                _precio = StructuralObject.SetValidValue(value);
-                ReportPropertyChanged("precio");
-                OnprecioChanged();
-            }
-        }
-        private Nullable<global::System.Decimal> _precio;
-        partial void OnprecioChanging(Nullable<global::System.Decimal> value);
-        partial void OnprecioChanged();
-
-        #endregion
-
-    
     }
     
     /// <summary>

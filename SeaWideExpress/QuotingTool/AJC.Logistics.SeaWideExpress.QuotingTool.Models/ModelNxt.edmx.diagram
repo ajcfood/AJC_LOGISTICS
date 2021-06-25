@@ -5,7 +5,6 @@
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
       <Diagram DiagramId="9436dfefc0a14255812b8852795ce3e1" Name="Master" ZoomLevel="89" >
-        <EntityTypeShape EntityType="QuotingToolModel.Test" Width="1.5" PointX="0.75" PointY="0.75" />
         <EntityTypeShape EntityType="QuotingToolModel.Fees" Width="1.5" PointX="5.625" PointY="3" />
         <EntityTypeShape EntityType="QuotingToolModel.FeeType" Width="1.5" PointX="3.375" PointY="0.75" />
         <EntityTypeShape EntityType="QuotingToolModel.ServiceTypeFee" Width="1.5" PointX="10.625" PointY="2.25" />

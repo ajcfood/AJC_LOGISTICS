@@ -66,6 +66,7 @@
           <Property Name="AddedBy" Type="varchar" MaxLength="100" Nullable="false" />
           <Property Name="DateUpdated" Type="datetime" />
           <Property Name="UpdatedBy" Type="varchar" MaxLength="100" />
+          <Property Name="ActionID" Type="smallint" />
         </EntityType>
         <EntityType Name="QuotingV2_FeeTypes">
           <Key>
@@ -165,17 +166,6 @@
           <Property Name="AddedBy" Type="varchar" MaxLength="100" Nullable="false" />
           <Property Name="DateUpdated" Type="datetime" />
           <Property Name="UpdatedBy" Type="varchar" MaxLength="100" />
-        </EntityType>
-        <EntityType Name="Test">
-          <Key>
-            <PropertyRef Name="id" />
-          </Key>
-          <Property Name="id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
-          <Property Name="fechadesde" Type="datetime" />
-          <Property Name="fechahasta" Type="datetime" />
-          <Property Name="zona" Type="int" />
-          <Property Name="zonaDescripcion" Type="varchar" MaxLength="50" />
-          <Property Name="precio" Type="decimal" Precision="18" Scale="3" />
         </EntityType>
         <Association Name="QuotingV2_Cities_Island_FK">
           <End Role="QuotingV2_Islands" Type="Self.QuotingV2_Islands" Multiplicity="0..1" />
@@ -406,7 +396,6 @@
           <EntitySet Name="QuotingV2_UOMs" EntityType="Self.QuotingV2_UOMs" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="QuotingV2_ZipCodes" EntityType="Self.QuotingV2_ZipCodes" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="QuotingV2_Zones" EntityType="Self.QuotingV2_Zones" Schema="dbo" store:Type="Tables" />
-          <EntitySet Name="Test" EntityType="Self.Test" Schema="dbo" store:Type="Tables" />
           <AssociationSet Name="QuotingV2_Cities_Island_FK" Association="Self.QuotingV2_Cities_Island_FK">
             <End Role="QuotingV2_Islands" EntitySet="QuotingV2_Islands" />
             <End Role="QuotingV2_Cities" EntitySet="QuotingV2_Cities" />
@@ -485,7 +474,6 @@
     <edmx:ConceptualModels>
       <Schema Namespace="QuotingToolModel" Alias="Self" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
         <EntityContainer Name="QuotingToolRepository" annotation:LazyLoadingEnabled="true" >
-          <EntitySet Name="Test" EntityType="QuotingToolModel.Test" />
           <EntitySet Name="Fees" EntityType="QuotingToolModel.Fees" />
           <EntitySet Name="FeeTypes" EntityType="QuotingToolModel.FeeType" />
           <EntitySet Name="ServiceTypeFees" EntityType="QuotingToolModel.ServiceTypeFee" />
@@ -571,17 +559,6 @@
             <End Role="City" EntitySet="Cities" />
           </AssociationSet>
           </EntityContainer>
-        <EntityType Name="Test">
-          <Key>
-            <PropertyRef Name="id" />
-          </Key>
-          <Property Name="id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="fechadesde" Type="DateTime" Precision="3" />
-          <Property Name="fechahasta" Type="DateTime" Precision="3" />
-          <Property Name="zona" Type="Int32" />
-          <Property Name="zonaDescripcion" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Name="precio" Type="Decimal" Precision="18" Scale="3" />
-        </EntityType>
         <EntityType Name="Fees">
           <Key>
             <PropertyRef Name="FeeID" />
@@ -620,6 +597,7 @@
           <NavigationProperty Name="QuotingV2_Countries" Relationship="QuotingToolModel.QuotingV2_Fees_Country_FK" FromRole="Fees" ToRole="QuotingV2_Countries" />
           <NavigationProperty Name="QuotingV2_Islands" Relationship="QuotingToolModel.QuotingV2_Fees_Island_FK" FromRole="Fees" ToRole="QuotingV2_Islands" />
           <NavigationProperty Name="QuotingV2_States" Relationship="QuotingToolModel.QuotingV2_Fees_State_FK" FromRole="Fees" ToRole="QuotingV2_States" />
+          <Property Name="ActionID" Type="Int16" />
         </EntityType>
         <EntityType Name="FeeType">
           <Key>
@@ -1001,21 +979,10 @@
     <edmx:Mappings>
       <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2008/09/mapping/cs">
         <EntityContainerMapping StorageEntityContainer="QuotingToolModelStoreContainer" CdmEntityContainer="QuotingToolRepository" >
-          <EntitySetMapping Name="Test">
-            <EntityTypeMapping TypeName="QuotingToolModel.Test">
-              <MappingFragment StoreEntitySet="Test">
-                <ScalarProperty Name="precio" ColumnName="precio" />
-                <ScalarProperty Name="zonaDescripcion" ColumnName="zonaDescripcion" />
-                <ScalarProperty Name="zona" ColumnName="zona" />
-                <ScalarProperty Name="fechahasta" ColumnName="fechahasta" />
-                <ScalarProperty Name="fechadesde" ColumnName="fechadesde" />
-                <ScalarProperty Name="id" ColumnName="id" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
           <EntitySetMapping Name="Fees">
             <EntityTypeMapping TypeName="QuotingToolModel.Fees">
               <MappingFragment StoreEntitySet="QuotingV2_Fees">
+                <ScalarProperty Name="ActionID" ColumnName="ActionID" />
                 <ScalarProperty Name="Value" ColumnName="Value" />
                 <ScalarProperty Name="StateID" ColumnName="StateID" />
                 <ScalarProperty Name="CountryID" ColumnName="CountryID" />
