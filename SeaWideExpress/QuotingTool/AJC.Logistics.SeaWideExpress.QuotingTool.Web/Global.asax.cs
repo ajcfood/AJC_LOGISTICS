@@ -19,7 +19,6 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool
         {
             AreaRegistration.RegisterAllAreas();
 
-            System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
             //WebApiConfig.Register(GlobalConfiguration.Configuration);
             //FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
@@ -34,6 +33,13 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool
                 ShowCustomErrorPage(Server.GetLastError());
 
         }
+
+
+        protected void Application_BeginRequest() {
+            System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
+            System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("en-US");
+        }
+
 
         private void ShowCustomErrorPage(Exception exception)
         {

@@ -156,6 +156,7 @@
     <Content Include="assets\ag-grid\ag-grid-servermanager.js" />
     <Content Include="assets\ag-grid\ag-grid-typeahead.js" />
     <Content Include="assets\ag-grid\ag-grid-typeahead.css" />
+    <Content Include="assets\ag-grid\validationPricesCellEditor.js" />
     <Content Include="assets\scripts\index.js" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>

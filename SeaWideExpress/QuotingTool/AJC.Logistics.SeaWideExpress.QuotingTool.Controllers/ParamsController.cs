@@ -136,6 +136,14 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
             public string Description;
         }
 
+
+        public JsonResult getZones() {
+            using (QuotingToolRepository db = new QuotingToolRepository())
+            {
+                var dataSet = db.Zones.Select(zone => new { value = zone.ZoneID, label = zone.Name.Trim() }).ToList();
+                return Json(dataSet, JsonRequestBehavior.AllowGet);
+            }
+        }
         #endregion
     }
 }

@@ -5,9 +5,22 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="~/assets/typeahead/typeahead.bundle.js"></script>
 <script src="~/assets/ag-grid/ag-grid-typeahead.js"></script>
+<script src="~/assets/ag-grid/ValidationPricesCellEditor.js"></script>
 <link rel="stylesheet" href="~/assets/ag-grid/ag-grid-typeahead.css" />
 <div id="myGrid@(Model.GridMode)" style="height: 100%; width:100%;" class="ag-theme-balham"></div>
 <a id="btnCrear" style="display:none;">Crear</a>
+
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+    }
+
+    .invalid-cell {
+        color: red;
+    }
+</style>
 <script>
     function initGrid() {
         const columnDefs = [];
@@ -17,13 +30,15 @@
         const cities  = agGridManager.fetchLOV('@Url.Action("getCities", "Params")');
         const uoms = agGridManager.fetchLOV('@Url.Action("getUoms", "Params")');
         const actions = agGridManager.fetchLOV('@Url.Action("getActions", "Params")');
+        const zones = agGridManager.fetchLOV('@Url.Action("getZones", "Params")');
 
         const statesStore  = TypeaheadEditor.newStore('states' , states);
         const islandsStore = TypeaheadEditor.newStore('islands', islands);
         const citiesStore  = TypeaheadEditor.newStore('cities' , cities);
         const uomsStore    = TypeaheadEditor.newStore('uoms', uoms);
         const actionsStore = TypeaheadEditor.newStore('actions', actions);
-        
+        const zonesStore = TypeaheadEditor.newStore('zones', zones);
+
         columnDefs.push(
             { headerName: "id", field: "FeeID", hide: true },
             { headername: "#", checkboxSelection: true, maxWidth: 40 }
@@ -51,11 +66,15 @@
                         store: islandsStore
                     },
                     valueFormatter: TypeaheadEditor.getFormatter(islandsStore)
-                },
+                }, 
                 {
                     headerName: "Zone", field: "ZoneID",
-                    cellEditor: "agRichSelectCellEditor",
-                    cellEditorParams: { values: ['bari', 'jorgito', 'jorge', 4, 5] }
+                    cellEditor: TypeaheadEditor,
+                    cellEditorParams: {
+                        placeholder: 'Zone',
+                        store: zonesStore
+                    },
+                    valueFormatter: TypeaheadEditor.getFormatter(zonesStore)
                 },
                 {
                     headerName: "City", field: "CityID",
@@ -95,19 +114,37 @@
                 },
                 </text>
             }
-            { headerName: "Fee", field: "Value" },
             {
-                        headerName: "Per", field: "ByUomID",
-                cellEditor: TypeaheadEditor,
-                cellEditorParams: {
-                            placeholder: 'Unit of Measure',
+                headerName: "Fee",
+                field: "Value",
+                cellEditor: ValidationPricesCellEditor
+            },
+            {
+                    headerName: "Per", field: "ByUomID",
+                    cellEditor: TypeaheadEditor,
+                    cellEditorParams: {
+                    placeholder: 'Unit of Measure',
                     store: uomsStore
                 },
                 valueFormatter: TypeaheadEditor.getFormatter(uomsStore)
             },
-            { headerName: "Discount", field: "Discount" },
-            { headerName: "Min", field: "FeeMin" },
-            { headerName: "Max", field: "FeeMax" }
+            {
+                headerName: "Discount",
+                field: "Discount",
+                valueFormatter: params => {
+                    let percentage = parseFloat(params.value * 100);
+                    return ((percentage > 0 && percentage <= 100) ? percentage + "%" : "");
+                }
+            },
+            {
+                headerName: "Min",
+                field: "FeeMin",
+                cellEditor: ValidationPricesCellEditor
+            },
+            {
+                headerName: "Max",
+                field: "FeeMax",
+            }
         );
 
                 // let the grid know which columns has to use.
