@@ -1,13 +1,10 @@
 function ValidationPricesCellEditor() { }
 
 ValidationPricesCellEditor.prototype.init = function (params) {
-    let theValue = params.value ?  params.value : "(Price)";
+    this.params = params;
     this.eGui = document.createElement('div');
-    this.eGui.innerHTML = `
-    <input onClick="this.setSelectionRange(0, this.value.length)" value=${theValue } />
-  `;
-    this.eInput = this.eGui.querySelector('input');
-    this.eInput.addEventListener('input', this.inputChanged.bind(this));
+    //this.eGui.setAttribute("onclick", "alert('seba');");
+
 
 }
 
@@ -18,6 +15,23 @@ ValidationPricesCellEditor.prototype.inputChanged = function (event) {
     } else {
         this.eInput.classList.remove('invalid-cell');
     }
+}
+
+
+ValidationPricesCellEditor.prototype.afterGuiAttached= function(){
+    this.eGui.innerHTML = `
+    <input onClick="this.setSelectionRange(0, this.value.length)" value=${this.params.value} />
+  `;
+    this.eInput = this.eGui.querySelector('input');
+
+    if (this.params.charPress) {
+        this.eInput.value = this.params.charPress;
+    } else {
+        this.eInput.value = this.params.value;
+    }
+
+    this.eInput.addEventListener('input', this.inputChanged.bind(this));
+    this.eInput.focus();
 }
 
 ValidationPricesCellEditor.prototype.isValid = function (value) {

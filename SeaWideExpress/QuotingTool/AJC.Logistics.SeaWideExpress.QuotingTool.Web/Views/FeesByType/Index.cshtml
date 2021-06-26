@@ -66,7 +66,7 @@
             $("#btnAddFee").prop('disabled', disabled);
             //$("#btnRemoveFee").prop('disabled', disabled);
 
-            const grid = agGridManager.getGrid('myGridRates');
+            const grid = agGridManager.getGrid('myGridFees');
             if (grid) {
                 grid.datasource.setWhere(filters);
                 grid.api.refreshServerSideStore();
