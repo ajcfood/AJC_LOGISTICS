@@ -84,7 +84,7 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
         {
             using (QuotingToolRepository db = new QuotingToolRepository())
             {
-                var dataSet = db.UOMs.Select(uom => new { value = uom.UomID, label = uom.Name.Trim().ToUpper() }).ToList();
+                var dataSet = db.UOMs.Select(uom => new { value = uom.UomID, label = uom.Name.Trim() }).ToList();
                 return Json(dataSet, JsonRequestBehavior.AllowGet);
             }
         }

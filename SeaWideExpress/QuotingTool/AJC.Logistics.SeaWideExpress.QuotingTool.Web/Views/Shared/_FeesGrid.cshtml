@@ -32,12 +32,12 @@
         const actions = agGridManager.fetchLOV('@Url.Action("getActions", "Params")');
         const zones = agGridManager.fetchLOV('@Url.Action("getZones", "Params")');
 
-        const statesStore  = TypeaheadEditor.newStore('states' , states);
+        const statesStore  = TypeaheadEditor.newStore('states' , states );
         const islandsStore = TypeaheadEditor.newStore('islands', islands);
-        const citiesStore  = TypeaheadEditor.newStore('cities' , cities);
-        const uomsStore    = TypeaheadEditor.newStore('uoms', uoms);
+        const citiesStore  = TypeaheadEditor.newStore('cities' , cities );
+        const uomsStore    = TypeaheadEditor.newStore('uoms'   , uoms   );
         const actionsStore = TypeaheadEditor.newStore('actions', actions);
-        const zonesStore = TypeaheadEditor.newStore('zones', zones);
+        const zonesStore   = TypeaheadEditor.newStore('zones'  , zones);
 
         columnDefs.push(
             { headerName: "id", field: "FeeID", hide: true },
@@ -107,6 +107,8 @@
                     cellEditor: TypeaheadEditor,
                     cellEditorParams: {
                         placeholder: 'Action',
+                        minLength: 0,
+                        highlight: true,
                         store: actionsStore
                     },
                     valueFormatter: TypeaheadEditor.getFormatter(actionsStore)
@@ -119,10 +121,12 @@
                 cellEditor: ValidationPricesCellEditor
             },
             {
-                    headerName: "Per", field: "ByUomID",
-                    cellEditor: TypeaheadEditor,
-                    cellEditorParams: {
+                headerName: "Per", field: "ByUomID",
+                cellEditor: TypeaheadEditor,
+                cellEditorParams: {
                     placeholder: 'Unit of Measure',
+                    minLength: 0,
+                    highlight: true,
                     store: uomsStore
                 },
                 valueFormatter: TypeaheadEditor.getFormatter(uomsStore)

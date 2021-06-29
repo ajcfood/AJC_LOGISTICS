@@ -16,6 +16,10 @@ INSERT INTO [QuotingV2_FeeTypes]([Name],[Description],[ParentFeeTypeID],[DateAdd
 VALUES('Ocean', 'Ocean Rates', NULL, GETDATE(), 'SYSTEM');
 INSERT INTO [QuotingV2_FeeTypes]([Name],[Description],[ParentFeeTypeID],[DateAdded],[AddedBy])
 VALUES('Ocean Base', 'Base Rate for Ocean', SCOPE_IDENTITY(), GETDATE(), 'SYSTEM');
+INSERT INTO [QuotingV2_FeeTypes]([Name],[Description],[ParentFeeTypeID],[DateAdded],[AddedBy])
+VALUES('Delivery', 'Delivery Rates', NULL, GETDATE(), 'SYSTEM');
+INSERT INTO [QuotingV2_FeeTypes]([Name],[Description],[ParentFeeTypeID],[DateAdded],[AddedBy])
+VALUES('Delivery Base', 'Base Rate for Delivery', SCOPE_IDENTITY(), GETDATE(), 'SYSTEM');
 
 DELETE FROM [QuotingV2_Countries];
 DBCC CHECKIDENT ('[QuotingV2_Countries]', RESEED, 1);

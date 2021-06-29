@@ -1,18 +1,38 @@
 ﻿class TypeaheadEditor {
-    static newSource(list, valueField = "value", displayField = "label") {
-        return new Bloodhound({
+    static newAdvancedSource(engine) {
+        return {
+            ttAdapter: function (params) {
+                return function (q, sync) {
+                    if (q === '' && params.minLength === 0) {
+                        sync(engine.all());
+                    } else {
+                        engine.search(q, sync);
+                    }
+                };
+            },
+            get: function (value) {
+                return engine.get(value);
+            }
+        };
+    }
+
+    static newSource(list, valueField = "value", displayField = "label", params) {
+        const engine = new Bloodhound({
             datumTokenizer: Bloodhound.tokenizers.obj.whitespace(displayField),
             queryTokenizer: Bloodhound.tokenizers.whitespace,
             identify: (obj) => (obj[valueField]),
             local: list
         });
+
+        return this.newAdvancedSource(engine);
     }
 
-    static  newStore(name, list, valueField = "value", displayField = "label", limit = 10) {
+    static newStore(name, list, params, valueField = "value", displayField = "label") {
         return {
-            name, limit,
+            name,
+            ...params,
             display: displayField,
-            source: this.newSource(list, valueField, displayField)
+            source: this.newSource(list, valueField, displayField, params)
         };
     }
 
@@ -95,7 +115,7 @@
         if (stores) allStores = allStores.concat(stores);
         if (store) allStores.push(store);
 
-        allStores = allStores.map((store) => ({ ...store, source: store.source.ttAdapter() }));
+        allStores = allStores.map((store) => ({ ...store, source: store.source.ttAdapter(config) }));
 
         $(this.input).typeahead(config, ...allStores)
             .on('typeahead:select', this.handleChange);

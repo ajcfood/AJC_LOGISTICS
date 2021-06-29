@@ -6,7 +6,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <_PublishTargetUrl>C:\inetpub\wwwroot\QuotingTool</_PublishTargetUrl>
-    <History>True|2021-06-25T21:25:04.4258833Z;True|2021-06-25T13:16:52.9443374-04:00;True|2021-06-19T17:48:11.6090955-04:00;True|2021-06-18T15:50:20.3024385-04:00;True|2021-06-18T15:26:24.8601134-04:00;False|2021-06-18T15:24:26.1273652-04:00;False|2021-06-18T15:20:28.0742790-04:00;False|2021-06-18T15:17:08.5529458-04:00;True|2021-06-11T16:02:31.6999804-04:00;True|2021-06-09T20:14:47.5118606-04:00;</History>
+    <History>True|2021-06-28T16:26:21.3881400Z;True|2021-06-25T17:25:04.4258833-04:00;True|2021-06-25T13:16:52.9443374-04:00;True|2021-06-19T17:48:11.6090955-04:00;True|2021-06-18T15:50:20.3024385-04:00;True|2021-06-18T15:26:24.8601134-04:00;False|2021-06-18T15:24:26.1273652-04:00;False|2021-06-18T15:20:28.0742790-04:00;False|2021-06-18T15:17:08.5529458-04:00;True|2021-06-11T16:02:31.6999804-04:00;True|2021-06-09T20:14:47.5118606-04:00;</History>
   </PropertyGroup>
   <ItemGroup>
     <File Include="aDocuments/DDL.sql">
@@ -26,6 +26,9 @@ by editing this MSBuild file. In order to learn more about this please visit htt
     </File>
     <File Include="assets/ag-grid/ag-grid-typeahead.js">
       <publishTime>06/23/2021 19:07:32</publishTime>
+    </File>
+    <File Include="assets/ag-grid/validationPricesCellEditor.js">
+      <publishTime>06/28/2021 12:25:44</publishTime>
     </File>
     <File Include="assets/bootstrap/css/bootstrap.min.css">
       <publishTime>06/23/2021 19:07:32</publishTime>
@@ -82,13 +85,13 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>06/25/2021 13:12:29</publishTime>
     </File>
     <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Controllers.dll">
-      <publishTime>06/25/2021 13:12:30</publishTime>
+      <publishTime>06/28/2021 12:26:19</publishTime>
     </File>
     <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Controllers.dll.config">
       <publishTime>06/11/2021 15:04:00</publishTime>
     </File>
     <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Controllers.pdb">
-      <publishTime>06/25/2021 13:12:30</publishTime>
+      <publishTime>06/28/2021 12:26:19</publishTime>
     </File>
     <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Helpers.dll">
       <publishTime>06/25/2021 13:12:28</publishTime>
@@ -109,10 +112,10 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>06/25/2021 13:12:27</publishTime>
     </File>
     <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Web.dll">
-      <publishTime>06/25/2021 13:12:32</publishTime>
+      <publishTime>06/28/2021 12:26:20</publishTime>
     </File>
     <File Include="bin/AJC.Logistics.SeaWideExpress.QuotingTool.Web.pdb">
-      <publishTime>06/25/2021 13:12:32</publishTime>
+      <publishTime>06/28/2021 12:26:20</publishTime>
     </File>
     <File Include="bin/Antlr3.Runtime.dll">
       <publishTime>01/27/2017 09:56:08</publishTime>
@@ -412,7 +415,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>06/11/2021 14:57:13</publishTime>
     </File>
     <File Include="Views/FeesByType/Index.cshtml">
-      <publishTime>06/25/2021 17:24:01</publishTime>
+      <publishTime>06/28/2021 12:25:44</publishTime>
     </File>
     <File Include="Views/Home/Index.cshtml">
       <publishTime>06/19/2021 17:44:47</publishTime>
@@ -421,7 +424,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>06/23/2021 19:07:32</publishTime>
     </File>
     <File Include="Views/Shared/_FeesGrid.cshtml">
-      <publishTime>06/25/2021 13:15:01</publishTime>
+      <publishTime>06/28/2021 12:25:44</publishTime>
     </File>
     <File Include="Views/Shared/_RatesAndRanges.cshtml">
       <publishTime>06/19/2021 16:54:16</publishTime>
