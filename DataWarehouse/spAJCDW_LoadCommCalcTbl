@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 6/11/2021 3:05:15 PM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 6/30/2021 11:01:42 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -236,7 +236,7 @@ where InvLOB = '12'
 
 --Lee Pantesco Calculation: 0.5% of Surface Trans GP.
 -- Starting 8/3/20 team GP goes from 0.5% to 1%
--- starting June 2021 he gets 1% tam GO on LOB 10 (ST JAX) and 1% on any load in any LOB that he is the CSR
+-- starting June 2021 he gets 1% tam GO on LOB 10 (ST JAX) and 2.75% on any load in any LOB that he is the CSR
 update tblCommCalc
 set LPComm = GP*.005
 where InvLOB = '11'
@@ -274,27 +274,27 @@ where InvLOB = '10'
 and ACCTYR > 2021
 
 update tblCommCalc
-set LPComm = GP*.02 --1% on team GP for LOB 10 and 1% if he is dispatcher
+set LPComm = GP*.0375 --1% on team GP for LOB 10 and 2.75% if he is dispatcher
 where InvLOB = '10'
 and Dispatcher = 'lpantesco'
 and ACCTMONTH >= 6
 and ACCTYR = 2021
 
 update tblCommCalc
-set LPComm = GP*.02 --1% on team GP for LOB 10 and 1% if he is dispatcher
+set LPComm = GP*.0375 --1% on team GP for LOB 10 and 2.75% if he is dispatcher
 where InvLOB = '10'
 and Dispatcher = 'lpantesco'
 and ACCTYR > 2021
 
 update tblCommCalc
-set LPComm = GP*.01 
+set LPComm = GP*.0275 
 where InvLOB IN ('11','9')
 and Dispatcher = 'lpantesco'
 and ACCTMONTH >= 6
 and ACCTYR = 2021
 
 update tblCommCalc
-set LPComm = GP*.01 
+set LPComm = GP*.0275
 where InvLOB IN ('11','9')
 and Dispatcher = 'lpantesco'
 and ACCTYR > 2021
@@ -1102,14 +1102,14 @@ where InvLOB = '76'
 update tblCommCalc
 set CJComm = GP*.0025
 where InvLOB = '76'
-	AND CSAStation IN ('ANG','JUN')
+	AND CSAStation IN ('ANG','JUN','SEA')
 	AND ACCTMONTH >= 5
 	AND ACCTYR = 2021
 
 update tblCommCalc
 set CJComm = GP*.0025
 where InvLOB = '76'
-	AND CSAStation IN ('ANG','JUN')
+	AND CSAStation IN ('ANG','JUN','SEA')
 	AND ACCTYR > 2021
 
 
@@ -1184,11 +1184,12 @@ and SalesPName IN ('Jason Lewter')
 and ACCTYR > 2020
 
 -- Justin Taylor: 4% of his team's GP (Christian White and Jack Cumiskey), also 5% on his own loads
+-- adding Jordan Williams as part of the team calculations
 -- Effective September 2020 Justin T. will receive 5% of their GP for NVOCC and Air Freight loads delivered: per Rachel email on 9/22/2020
 Update tblCommCalc
 set JTComm = GP * .04
 where InvLOB = '9'
-and SalesPName IN ('Christian White', 'Jack Cumiskey','Justin Taylor')
+and SalesPName IN ('Christian White', 'Jack Cumiskey','Justin Taylor','Jordan Williams')
 
 /* -- removed for 2021 and on per Rachel on 2/1/2021
 Update tblCommCalc
@@ -1364,11 +1365,24 @@ and Dispatcher IN ('treed','treedadmin')
 and ACCTMONTH >= 6
 and ACCTYR = 2021
 
-
 Update tblCommCalc
 set TRComm = GP * .0275
 where InvLOB IN ('9','10','11')
 and Dispatcher IN ('treed','treedadmin')
+and ACCTYR > 2021
+
+-- Terrance and Stephanie getting 1% GP on all ST ATL 1 loads where they are not dispatcher or Matt.  Starting June 2021
+Update tblCommCalc
+set TRComm = GP * .01, SBComm = GP * .01
+where InvLOB IN ('11')
+and Dispatcher NOT IN ('treed','treedadmin','sbutts','sbuttsadmin','matth','mhiggins','mattatl1','mattadmin')
+and ACCTMONTH >= 6
+and ACCTYR = 2021
+
+Update tblCommCalc
+set TRComm = GP * .01, SBComm = GP * .01
+where InvLOB IN ('11')
+and Dispatcher NOT IN ('treed','treedadmin','sbutts','sbuttsadmin','matth','mhiggins','mattatl1','mattadmin')
 and ACCTYR > 2021
 
 --Shari Robinson Calculation:  4% of GP of own accounts in LOB 76 GP less 7% overhead
@@ -1526,19 +1540,33 @@ set GHComm = GP*.01
 where Dispatcher NOT IN ('matth','mattatl1','mhiggins','mattadmin','ghick')
 and InvLOB IN ('9')
 	
---Account Manager Calculations starting June 2021
+--Account Manager Calculations starting June 2021.  Raphael only getting ATL1 AM commission
 update tblCommCalc
-set KCComm = GP*.01, RWComm = GP*.0025, RJComm = GP*.0025
+set KCComm = GP*.01, RWComm = GP*.0025
 where ACCTMGR <> 'UNASSIGNED'
-	and InvLOB IN ('9','10','11')
+	and InvLOB IN ('11')
 	and ACCTMONTH >= 6
 	and ACCTYR = 2021
 
 update tblCommCalc
-set KCComm = GP*.01, RWComm = GP*.0025, RJComm = GP*.0025
+set KCComm = GP*.01, RWComm = GP*.0025
 where ACCTMGR <> 'UNASSIGNED'
-	and InvLOB IN ('9','10','11')
+	and InvLOB IN ('11')
 	and ACCTYR > 2021
+	
+update tblCommCalc
+set RJComm = GP*.0025
+where ACCTMGR <> 'UNASSIGNED'
+	and InvLOB IN ('11')
+	and ACCTMONTH >= 6
+	and ACCTYR = 2021
+
+update tblCommCalc
+set RJComm = GP*.0025
+where ACCTMGR <> 'UNASSIGNED'
+	and InvLOB IN ('11')
+	and ACCTYR > 2021
+
 
 --SELECT * from #tmp1
 --drop table #tmp1
