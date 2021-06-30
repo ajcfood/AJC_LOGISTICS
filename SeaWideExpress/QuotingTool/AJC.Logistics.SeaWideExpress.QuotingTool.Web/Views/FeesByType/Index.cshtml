@@ -107,11 +107,26 @@
         }
 
         function handleByOmsIDsChanged() {
-            const grid = agGridManager.getGrid('myGridRanges');
-            if (grid) {
+            const grid = agGridManager.getGrid('myGridFees');
+            @*if (grid) {
                 grid.datasource.setWhere({ ParentFeeID: focusedRow ? focusedRow.FeeID : null , ByUomID: $("#ByUomIDs").val()});
                 grid.api.refreshServerSideStore();
-            }
+            }*@
+
+            let CellValueDataChangedModel = {
+                newValue: $("#ByUomIDs").val() == "--All--" ? null : $("#ByUomIDs").val(), 
+                oldValue : null,
+                field: 'ByUomID',
+                idEntity: focusedRow.FeeID
+            };
+
+            agGridManager.updateEntity(
+                 CellValueDataChangedModel,
+                 '@Url.Action("updateSingleFieldFeeData", "FeesGrid")',
+                  null
+            );
+
+            grid.api.refreshServerSideStore();
         }
 
         $("#State").change(handleStateChanged);
@@ -165,8 +180,8 @@
 
             const grid = agGridManager.getGrid('myGridRanges');
             if (!grid) alert('matanga!!!');
-
-            handleControls(focusedRow ? focusedRow.FeeID : null);
+            getUoms(focusedRow.ByUomID);
+            //handleControls(focusedRow ? focusedRow.FeeID : null);
             grid.datasource.setWhere({ ParentFeeID: focusedRow ? focusedRow.FeeID : null });
             grid.api.refreshServerSideStore();
         }
@@ -175,6 +190,16 @@
             if (focusedRowIndex !== event.rowIndex) handleRowFocused(event);
         }
 
+
+        function  getUoms(id){
+                $.getJSON('@Url.Action("getUoms", "Params")', function (data) {
+                $("#ByUomIDs").html('');
+                $("#ByUomIDs").append($("<option>").text("--All--"));
+                    $.each(data, function () {
+                        $("#ByUomIDs").append('<option value="' + this.value + '" ' + ((id && this.value == id) ?  'selected' : ''  ) + '>' + this.label + '</option>');
+                });
+            });
+        }
         function handleControls(rowID) {
             $.getJSON('@Url.Action("getUomsByFeeID", "Params")?ParentFeeID=' + rowID, function (data) {
                 $("#ByUomIDs").html('');
@@ -187,6 +212,7 @@
 
         agGridManager.onGridReady(function (grid) {
             grid.api.addEventListener('cellFocused', handleCellFocused);
+            getUoms(); 
         }, 'myGridFees');
     });
 </script>
