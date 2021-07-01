@@ -1,6 +1,6 @@
 USE [AJCDW]
 GO
-/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 6/30/2021 11:01:42 AM ******/
+/****** Object:  StoredProcedure [dbo].[spAJCDW_LoadCommCalcTbl]    Script Date: 7/1/2021 1:56:43 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1542,29 +1542,29 @@ and InvLOB IN ('9')
 	
 --Account Manager Calculations starting June 2021.  Raphael only getting ATL1 AM commission
 update tblCommCalc
-set KCComm = GP*.01, RWComm = GP*.0025
+set KCComm = GP*.01, RWComm = GP*.0025, RJComm = GP*.0025
 where ACCTMGR <> 'UNASSIGNED'
 	and InvLOB IN ('11')
 	and ACCTMONTH >= 6
 	and ACCTYR = 2021
 
 update tblCommCalc
-set KCComm = GP*.01, RWComm = GP*.0025
+set KCComm = GP*.01, RWComm = GP*.0025, RJComm = GP*.0025
 where ACCTMGR <> 'UNASSIGNED'
 	and InvLOB IN ('11')
 	and ACCTYR > 2021
 	
 update tblCommCalc
-set RJComm = GP*.0025
-where ACCTMGR <> 'UNASSIGNED'
-	and InvLOB IN ('11')
+set KCComm = GP*.01, RWComm = GP*.0025, RJComm = GP*.0025
+where ACCTMGR = 'Rose White'
+	and InvLOB NOT IN ('11')
 	and ACCTMONTH >= 6
 	and ACCTYR = 2021
 
 update tblCommCalc
-set RJComm = GP*.0025
-where ACCTMGR <> 'UNASSIGNED'
-	and InvLOB IN ('11')
+set KCComm = GP*.01, RWComm = GP*.0025, RJComm = GP*.0025
+where ACCTMGR = 'Rose White'
+	and InvLOB NOT IN ('11')
 	and ACCTYR > 2021
 
 
