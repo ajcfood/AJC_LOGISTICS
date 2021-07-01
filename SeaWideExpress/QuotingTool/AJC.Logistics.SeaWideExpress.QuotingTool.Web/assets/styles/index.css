@@ -66,6 +66,10 @@ input:checked + .slider:before {
     padding-bottom: 2px;
 }
 
+.allValue {
+    color: silver;
+}
+
 .ag-theme-balham .ag-row-selected {
     background-color: rgb(183, 228, 255, 0.5);
 }

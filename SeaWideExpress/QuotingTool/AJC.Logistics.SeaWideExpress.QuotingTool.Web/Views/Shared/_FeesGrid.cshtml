@@ -23,6 +23,11 @@
 </style>
 <script>
     function initGrid() {
+        function placeholderRenderer(params) {
+            const value = (params.valueFormatted === null || params.valueFormatted === undefined) ? params.value : params.valueFormatted;
+            return ( (value === "" || value === null || value === undefined) ? ('<p' + (params.class ? ' class="' + params.class + '"' : '') + '>' + params.placeholder + '</p>') : value);
+        }
+
         const columnDefs = [];
 
         const states  = agGridManager.fetchLOV('@Url.Action("getStates", "Params")');
@@ -64,7 +69,9 @@
                         placeholder: 'Island',
                         store: islandsStore
                     },
-                    valueFormatter: TypeaheadEditor.getFormatter(islandsStore)
+                    valueFormatter: TypeaheadEditor.getFormatter(islandsStore),
+                    cellRenderer: placeholderRenderer,
+                    cellRendererParams: { class: "allValue", placeholder: "ANY" }
                 }, 
                 {
                     headerName: "Zone", field: "ZoneID",
@@ -73,7 +80,9 @@
                         placeholder: 'Zone',
                         store: zonesStore
                     },
-                    valueFormatter: TypeaheadEditor.getFormatter(zonesStore)
+                    valueFormatter: TypeaheadEditor.getFormatter(zonesStore),
+                    cellRenderer: placeholderRenderer,
+                    cellRendererParams: { class: "allValue", placeholder: "ANY" }
                 },
                 {
                     headerName: "City", field: "CityID",
@@ -82,9 +91,16 @@
                         placeholder: 'City',
                         store: citiesStore
                     },
-                    valueFormatter: TypeaheadEditor.getFormatter(citiesStore)
+                    valueFormatter: TypeaheadEditor.getFormatter(citiesStore),
+                    cellRenderer: placeholderRenderer,
+                    cellRendererParams: { class: "allValue", placeholder: "ANY" }
                 },
-                { headerName: "Zip Codes", field: "ZipCodes" }
+                {
+                    headerName: "Zip Codes",
+                    field: "ZipCodes",
+                    cellRenderer: placeholderRenderer,
+                    cellRendererParams: { class: "allValue", placeholder: "ANY" }
+                }
             );
             </text>
         }
