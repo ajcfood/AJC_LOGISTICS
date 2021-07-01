@@ -33,6 +33,15 @@ VALUES('HI','Hawaii',1,GETDATE(),'SYSTEM');
 INSERT INTO [QuotingV2_States]([Code],[Name],[CountryID],[DateAdded],[AddedBy])
 VALUES('AK','Alaska',1,GETDATE(),'SYSTEM');
 
+DELETE FROM [QuotingV2_Zones];
+DBCC CHECKIDENT ('[QuotingV2_Zones]', RESEED, 1);
+INSERT INTO QuotingV2_Zones(StateID, Code, Name, DateAdded, AddedBy) 
+VALUES(1, 'K-1', 'K-1', GETDATE(), 'SYSTEM');
+INSERT INTO QuotingV2_Zones(StateID, Code, Name, DateAdded, AddedBy) 
+VALUES(1, 'K-2', 'K-2', GETDATE(), 'SYSTEM');
+INSERT INTO QuotingV2_Zones(StateID, Code, Name, DateAdded, AddedBy) 
+VALUES(1, 'K-3', 'K-3', GETDATE(), 'SYSTEM');
+
 DELETE FROM [QuotingV2_Islands];
 DBCC CHECKIDENT ('[QuotingV2_Islands]', RESEED, 1);
 INSERT INTO [QuotingV2_Islands]([StateID],[Name],[DateAdded],[AddedBy])

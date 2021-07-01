@@ -40,7 +40,7 @@
 
 <nav class="navbar navbar-light" style="background-color: rgb(245, 247, 247); padding: 6px 10px 10px 10px; border: 1px solid rgb(189, 195, 199); border-top: none; ">
     <div style="margin: 10px 0">
-        <span><b>Ranges by</b></span>&nbsp;<select id="ByUomIDs"><option>Unit</option></select>
+        <span><b>Ranges by</b></span>&nbsp;<select id="RangeByUomID"><option>Unit</option></select>
     </div>
     <div class="form-inline">
         <button class="btn btn-outline-danger my-2 my-sm-0" id="btnRemoveRange">Remove</button>
@@ -106,7 +106,7 @@
             handleFilterChanged("Period", $("#Period").val());
         }
 
-        function handleByOmsIDsChanged() {
+        function handleRangeByUomIDChanged() {
             const grid = agGridManager.getGrid('myGridFees');
             @*if (grid) {
                 grid.datasource.setWhere({ ParentFeeID: focusedRow ? focusedRow.FeeID : null , ByUomID: $("#ByUomIDs").val()});
@@ -114,9 +114,9 @@
             }*@
 
             let CellValueDataChangedModel = {
-                newValue: $("#ByUomIDs").val() == "--All--" ? null : $("#ByUomIDs").val(), 
+                newValue: $("#RangeByUomID").val() == "--No Ranges--" ? null : $("#RangeByUomID").val(), 
                 oldValue : null,
-                field: 'ByUomID',
+                field: 'RangeByUomID',
                 idEntity: focusedRow.FeeID
             };
 
@@ -126,14 +126,17 @@
                   null
             );
 
-            grid.api.refreshServerSideStore();
+            // Update the focused row data and refresh
+            focusedRow.RangeByUomID = CellValueDataChangedModel.newValue;
+
+            //grid.api.refreshServerSideStore();
         }
 
         $("#State").change(handleStateChanged);
         $("#FeeType").change(handleFeeTypeChanged);
         $("#FeeSubType").change(handleFeeSubTypeChanged);
         $("#Period").change(handlePeriodChanged);
-        $("#ByUomIDs").change(handleByOmsIDsChanged);
+        $("#RangeByUomID").change(handleRangeByUomIDChanged);
 
         let lastId = -1;
         function handleRemoveFees(id) {
@@ -180,8 +183,9 @@
 
             const grid = agGridManager.getGrid('myGridRanges');
             if (!grid) alert('matanga!!!');
-            getUoms(focusedRow.ByUomID);
-            //handleControls(focusedRow ? focusedRow.FeeID : null);
+
+            $("#RangeByUomID").val(focusedRow.RangeByUomID || "--No Ranges--");
+
             grid.datasource.setWhere({ ParentFeeID: focusedRow ? focusedRow.FeeID : null });
             grid.api.refreshServerSideStore();
         }
@@ -190,25 +194,17 @@
             if (focusedRowIndex !== event.rowIndex) handleRowFocused(event);
         }
 
-
-        function  getUoms(id){
+        function  getUoms(){
                 $.getJSON('@Url.Action("getUoms", "Params")', function (data) {
-                $("#ByUomIDs").html('');
-                $("#ByUomIDs").append($("<option>").text("--All--"));
+                $("#RangeByUomID").html('');
+                    $("#RangeByUomID").append($("<option selected>").text("--No Ranges--"));
                     $.each(data, function () {
-                        $("#ByUomIDs").append('<option value="' + this.value + '" ' + ((id && this.value == id) ?  'selected' : ''  ) + '>' + this.label + '</option>');
+                        $("#RangeByUomID").append('<option value="' + this.value + '">' + this.label + '</option>');
                 });
             });
         }
-        function handleControls(rowID) {
-            $.getJSON('@Url.Action("getUomsByFeeID", "Params")?ParentFeeID=' + rowID, function (data) {
-                $("#ByUomIDs").html('');
-                $("#ByUomIDs").append($("<option>").text("--All--"));
-                $.each(data, function () {
-                    $("#ByUomIDs").append('<option value="' + this.value + '">' + this.label + '</option>');
-                });
-            });
-        }
+
+        getUoms();
 
         agGridManager.onGridReady(function (grid) {
             grid.api.addEventListener('cellFocused', handleCellFocused);

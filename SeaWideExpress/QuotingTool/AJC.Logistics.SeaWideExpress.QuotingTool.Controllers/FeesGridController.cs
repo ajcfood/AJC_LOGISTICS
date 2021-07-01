@@ -71,6 +71,7 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                     FeeMax = fee.FeeMax,
                     ValidFrom = fee.ValidFrom,
                     ValidUntil = fee.ValidUntil,
+                    RangeByUomID = fee.RangeByUomID,
                     RangeFrom = fee.RangeFrom,
                     RangeTo = fee.RangeTo
                 });
