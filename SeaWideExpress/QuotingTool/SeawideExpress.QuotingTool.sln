@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31205.134
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AJC.Logistics.SeaWideExpress.QuotingTool.Web", "AJC.Logistics.SeaWideExpress.QuotingTool.Web\AJC.Logistics.SeaWideExpress.QuotingTool.Web.csproj", "{FD08796D-D02D-4BDD-BEEB-B5C8E2B84DB6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AJC.Logistics.SeaWideExpress.QuotingTool.Controllers", "AJC.Logistics.SeaWideExpress.QuotingTool.Controllers\AJC.Logistics.SeaWideExpress.QuotingTool.Controllers.csproj", "{20322415-BAEF-47D3-B7A2-0989FB3242CA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AJC.Logistics.SeaWideExpress.QuotingTool.Models", "AJC.Logistics.SeaWideExpress.QuotingTool.Models\AJC.Logistics.SeaWideExpress.QuotingTool.Models.csproj", "{4AA12CB5-8611-48F0-8AF5-235080EA48B2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AJC.Logistics.SeaWideExpress.QuotingTool.Helpers", "AJC.Logistics.SeaWideExpress.QuotingTool.Helpers\AJC.Logistics.SeaWideExpress.QuotingTool.Helpers.csproj", "{05107D42-2BBF-4BA2-AD27-36DEECA273E1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AJC.Logistics.SeaWideExpress.QuotingTool.Business", "AJC.Logistics.SeaWideExpress.QuotingTool.Business\AJC.Logistics.SeaWideExpress.QuotingTool.Business.csproj", "{BACE01A8-F8E8-4BBC-A5FC-7BEEEF8F6480}"
+EndProject
+Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "AJC.Logistics.SeaWideExpress.QuotingTool.Data", "AJC.Logistics.SeaWideExpress.QuotingTool.Data\AJC.Logistics.SeaWideExpress.QuotingTool.Data.sqlproj", "{433496C9-A18F-4053-A484-291C4D14E497}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FD08796D-D02D-4BDD-BEEB-B5C8E2B84DB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD08796D-D02D-4BDD-BEEB-B5C8E2B84DB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD08796D-D02D-4BDD-BEEB-B5C8E2B84DB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD08796D-D02D-4BDD-BEEB-B5C8E2B84DB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20322415-BAEF-47D3-B7A2-0989FB3242CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20322415-BAEF-47D3-B7A2-0989FB3242CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20322415-BAEF-47D3-B7A2-0989FB3242CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20322415-BAEF-47D3-B7A2-0989FB3242CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4AA12CB5-8611-48F0-8AF5-235080EA48B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4AA12CB5-8611-48F0-8AF5-235080EA48B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4AA12CB5-8611-48F0-8AF5-235080EA48B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4AA12CB5-8611-48F0-8AF5-235080EA48B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05107D42-2BBF-4BA2-AD27-36DEECA273E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05107D42-2BBF-4BA2-AD27-36DEECA273E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05107D42-2BBF-4BA2-AD27-36DEECA273E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05107D42-2BBF-4BA2-AD27-36DEECA273E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BACE01A8-F8E8-4BBC-A5FC-7BEEEF8F6480}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BACE01A8-F8E8-4BBC-A5FC-7BEEEF8F6480}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BACE01A8-F8E8-4BBC-A5FC-7BEEEF8F6480}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BACE01A8-F8E8-4BBC-A5FC-7BEEEF8F6480}.Release|Any CPU.Build.0 = Release|Any CPU
+		{433496C9-A18F-4053-A484-291C4D14E497}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{433496C9-A18F-4053-A484-291C4D14E497}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{433496C9-A18F-4053-A484-291C4D14E497}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{433496C9-A18F-4053-A484-291C4D14E497}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{433496C9-A18F-4053-A484-291C4D14E497}.Release|Any CPU.Build.0 = Release|Any CPU
+		{433496C9-A18F-4053-A484-291C4D14E497}.Release|Any CPU.Deploy.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {85FB0EA9-8437-4602-BDB9-91D2102FCF0B}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,1178 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="2.0" xmlns:edmx="http://schemas.microsoft.com/ado/2008/10/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+    <Schema Namespace="QuotingToolModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2008" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/02/edm/ssdl">
+        <EntityType Name="__RefactorLog">
+          <Key>
+            <PropertyRef Name="OperationKey" />
+          </Key>
+          <Property Name="OperationKey" Type="uniqueidentifier" Nullable="false" />
+        </EntityType>
+        <EntityType Name="QuotingV2_Cities">
+          <Key>
+            <PropertyRef Name="CityID" />
+          </Key>
+          <Property Name="CityID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="StateID" Type="int" Nullable="false" />
+          <Property Name="IslandID" Type="int" />
+          <Property Name="Name" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="DateAdded" Type="datetime" Nullable="false" />
+          <Property Name="AddedBy" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="DateUpdated" Type="datetime" />
+          <Property Name="UpdatedBy" Type="varchar" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="QuotingV2_Countries">
+          <Key>
+            <PropertyRef Name="CountryID" />
+          </Key>
+          <Property Name="CountryID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ShortCode" Type="varchar" MaxLength="2" Nullable="false" />
+          <Property Name="LongCode" Type="varchar" MaxLength="3" Nullable="false" />
+          <Property Name="Name" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="DateAdded" Type="datetime" Nullable="false" />
+          <Property Name="AddedBy" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="DateUpdated" Type="datetime" />
+          <Property Name="UpdatedBy" Type="varchar" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="QuotingV2_Fees">
+          <Key>
+            <PropertyRef Name="FeeID" />
+          </Key>
+          <Property Name="FeeID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="FeeTypeID" Type="int" Nullable="false" />
+          <Property Name="CountryID" Type="int" />
+          <Property Name="StateID" Type="int" />
+          <Property Name="IslandID" Type="int" />
+          <Property Name="ZoneID" Type="int" />
+          <Property Name="CityID" Type="int" />
+          <Property Name="ZipCodes" Type="varchar" MaxLength="4000" />
+          <Property Name="CustomerID" Type="int" />
+          <Property Name="Value" Type="decimal" Precision="5" Scale="2" />
+          <Property Name="ByUomID" Type="int" />
+          <Property Name="Discount" Type="decimal" Precision="3" Scale="3" />
+          <Property Name="FeeMin" Type="decimal" Precision="7" Scale="2" />
+          <Property Name="FeeMax" Type="decimal" Precision="7" Scale="2" />
+          <Property Name="RangeByUomID" Type="int" />
+          <Property Name="ParentFeeID" Type="int" />
+          <Property Name="RangeFrom" Type="decimal" Precision="7" Scale="2" />
+          <Property Name="RangeTo" Type="decimal" Precision="7" Scale="2" />
+          <Property Name="ValidFrom" Type="datetime" />
+          <Property Name="ValidUntil" Type="datetime" />
+          <Property Name="Notes" Type="varchar" MaxLength="100" />
+          <Property Name="DateAdded" Type="datetime" Nullable="false" />
+          <Property Name="AddedBy" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="DateUpdated" Type="datetime" />
+          <Property Name="UpdatedBy" Type="varchar" MaxLength="100" />
+          <Property Name="ActionID" Type="smallint" />
+        </EntityType>
+        <EntityType Name="QuotingV2_FeeTypes">
+          <Key>
+            <PropertyRef Name="FeeTypeID" />
+          </Key>
+          <Property Name="FeeTypeID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="Description" Type="varchar" MaxLength="400" />
+          <Property Name="ParentFeeTypeID" Type="int" />
+          <Property Name="DateAdded" Type="datetime" Nullable="false" />
+          <Property Name="AddedBy" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="DateUpdated" Type="datetime" />
+          <Property Name="UpdatedBy" Type="varchar" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="QuotingV2_Islands">
+          <Key>
+            <PropertyRef Name="IslandID" />
+          </Key>
+          <Property Name="IslandID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="StateID" Type="varchar" MaxLength="2" Nullable="false" />
+          <Property Name="Name" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="DateAdded" Type="datetime" Nullable="false" />
+          <Property Name="AddedBy" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="DateUpdated" Type="datetime" />
+          <Property Name="UpdatedBy" Type="varchar" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="QuotingV2_ServiceTypeFees">
+          <Key>
+            <PropertyRef Name="ServiceTypeChargeID" />
+          </Key>
+          <Property Name="ServiceTypeChargeID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ServiceTypeID" Type="int" Nullable="false" />
+          <Property Name="FeeTypeID" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="QuotingV2_ServiceTypes">
+          <Key>
+            <PropertyRef Name="ServiceTypeID" />
+          </Key>
+          <Property Name="ServiceTypeID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="Description" Type="varchar" MaxLength="400" />
+          <Property Name="Show" Type="varchar" MaxLength="1" Nullable="false" />
+          <Property Name="Position" Type="int" />
+          <Property Name="DateAdded" Type="datetime" Nullable="false" />
+          <Property Name="AddedBy" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="DateUpdated" Type="datetime" />
+          <Property Name="UpdatedBy" Type="varchar" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="QuotingV2_States">
+          <Key>
+            <PropertyRef Name="StateID" />
+          </Key>
+          <Property Name="StateID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Code" Type="varchar" MaxLength="10" />
+          <Property Name="Name" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="CountryID" Type="int" Nullable="false" />
+          <Property Name="DateAdded" Type="datetime" Nullable="false" />
+          <Property Name="AddedBy" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="DateUpdated" Type="datetime" />
+          <Property Name="UpdatedBy" Type="varchar" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="QuotingV2_UOMs">
+          <Key>
+            <PropertyRef Name="UomID" />
+          </Key>
+          <Property Name="UomID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="Description" Type="varchar" MaxLength="400" />
+          <Property Name="DateAdded" Type="datetime" Nullable="false" />
+          <Property Name="AddedBy" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="DateUpdated" Type="datetime" />
+          <Property Name="UpdatedBy" Type="varchar" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="QuotingV2_ZipCodes">
+          <Key>
+            <PropertyRef Name="CountryID" />
+            <PropertyRef Name="ZipCode" />
+          </Key>
+          <Property Name="CountryID" Type="int" Nullable="false" />
+          <Property Name="ZipCode" Type="int" Nullable="false" />
+          <Property Name="DateAdded" Type="datetime" Nullable="false" />
+          <Property Name="AddedBy" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="DateUpdated" Type="datetime" />
+          <Property Name="UpdatedBy" Type="varchar" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="QuotingV2_Zones">
+          <Key>
+            <PropertyRef Name="ZoneID" />
+          </Key>
+          <Property Name="ZoneID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="StateID" Type="int" Nullable="false" />
+          <Property Name="IslandID" Type="int" />
+          <Property Name="CityID" Type="int" />
+          <Property Name="Code" Type="varchar" MaxLength="10" Nullable="false" />
+          <Property Name="Name" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="DateAdded" Type="datetime" Nullable="false" />
+          <Property Name="AddedBy" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="DateUpdated" Type="datetime" />
+          <Property Name="UpdatedBy" Type="varchar" MaxLength="100" />
+        </EntityType>
+        <Association Name="QuotingV2_Cities_Island_FK">
+          <End Role="QuotingV2_Islands" Type="Self.QuotingV2_Islands" Multiplicity="0..1" />
+          <End Role="QuotingV2_Cities" Type="Self.QuotingV2_Cities" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_Islands">
+              <PropertyRef Name="IslandID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Cities">
+              <PropertyRef Name="IslandID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Cities_State_FK">
+          <End Role="QuotingV2_States" Type="Self.QuotingV2_States" Multiplicity="1" />
+          <End Role="QuotingV2_Cities" Type="Self.QuotingV2_Cities" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_States">
+              <PropertyRef Name="StateID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Cities">
+              <PropertyRef Name="StateID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Fees_City_FK">
+          <End Role="QuotingV2_Cities" Type="Self.QuotingV2_Cities" Multiplicity="0..1" />
+          <End Role="QuotingV2_Fees" Type="Self.QuotingV2_Fees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_Cities">
+              <PropertyRef Name="CityID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Fees">
+              <PropertyRef Name="CityID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Fees_Country_FK">
+          <End Role="QuotingV2_Countries" Type="Self.QuotingV2_Countries" Multiplicity="0..1" />
+          <End Role="QuotingV2_Fees" Type="Self.QuotingV2_Fees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_Countries">
+              <PropertyRef Name="CountryID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Fees">
+              <PropertyRef Name="CountryID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Fees_Island_FK">
+          <End Role="QuotingV2_Islands" Type="Self.QuotingV2_Islands" Multiplicity="0..1" />
+          <End Role="QuotingV2_Fees" Type="Self.QuotingV2_Fees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_Islands">
+              <PropertyRef Name="IslandID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Fees">
+              <PropertyRef Name="IslandID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Fees_Parent_FK">
+          <End Role="QuotingV2_Fees" Type="Self.QuotingV2_Fees" Multiplicity="0..1" />
+          <End Role="QuotingV2_Fees1" Type="Self.QuotingV2_Fees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_Fees">
+              <PropertyRef Name="FeeID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Fees1">
+              <PropertyRef Name="ParentFeeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Fees_RangeUom_FK">
+          <End Role="QuotingV2_UOMs" Type="Self.QuotingV2_UOMs" Multiplicity="0..1" />
+          <End Role="QuotingV2_Fees" Type="Self.QuotingV2_Fees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_UOMs">
+              <PropertyRef Name="UomID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Fees">
+              <PropertyRef Name="RangeByUomID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Fees_State_FK">
+          <End Role="QuotingV2_States" Type="Self.QuotingV2_States" Multiplicity="0..1" />
+          <End Role="QuotingV2_Fees" Type="Self.QuotingV2_Fees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_States">
+              <PropertyRef Name="StateID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Fees">
+              <PropertyRef Name="StateID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Fees_Types_FK">
+          <End Role="QuotingV2_FeeTypes" Type="Self.QuotingV2_FeeTypes" Multiplicity="1" />
+          <End Role="QuotingV2_Fees" Type="Self.QuotingV2_Fees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_FeeTypes">
+              <PropertyRef Name="FeeTypeID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Fees">
+              <PropertyRef Name="FeeTypeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Fees_Uom_FK">
+          <End Role="QuotingV2_UOMs" Type="Self.QuotingV2_UOMs" Multiplicity="0..1" />
+          <End Role="QuotingV2_Fees" Type="Self.QuotingV2_Fees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_UOMs">
+              <PropertyRef Name="UomID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Fees">
+              <PropertyRef Name="ByUomID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_FeeTypes_Parent_FK">
+          <End Role="QuotingV2_FeeTypes" Type="Self.QuotingV2_FeeTypes" Multiplicity="0..1" />
+          <End Role="QuotingV2_FeeTypes1" Type="Self.QuotingV2_FeeTypes" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_FeeTypes">
+              <PropertyRef Name="FeeTypeID" />
+            </Principal>
+            <Dependent Role="QuotingV2_FeeTypes1">
+              <PropertyRef Name="ParentFeeTypeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_ServiceTypeCharges_FeeType_FK">
+          <End Role="QuotingV2_FeeTypes" Type="Self.QuotingV2_FeeTypes" Multiplicity="1" />
+          <End Role="QuotingV2_ServiceTypeFees" Type="Self.QuotingV2_ServiceTypeFees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_FeeTypes">
+              <PropertyRef Name="FeeTypeID" />
+            </Principal>
+            <Dependent Role="QuotingV2_ServiceTypeFees">
+              <PropertyRef Name="FeeTypeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_ServiceTypeCharges_ServiceType_FK">
+          <End Role="QuotingV2_ServiceTypes" Type="Self.QuotingV2_ServiceTypes" Multiplicity="1" />
+          <End Role="QuotingV2_ServiceTypeFees" Type="Self.QuotingV2_ServiceTypeFees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_ServiceTypes">
+              <PropertyRef Name="ServiceTypeID" />
+            </Principal>
+            <Dependent Role="QuotingV2_ServiceTypeFees">
+              <PropertyRef Name="ServiceTypeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_States_Country_FK">
+          <End Role="QuotingV2_Countries" Type="Self.QuotingV2_Countries" Multiplicity="1" />
+          <End Role="QuotingV2_States" Type="Self.QuotingV2_States" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_Countries">
+              <PropertyRef Name="CountryID" />
+            </Principal>
+            <Dependent Role="QuotingV2_States">
+              <PropertyRef Name="CountryID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_ZipCodes_Country_FK">
+          <End Role="QuotingV2_Countries" Type="Self.QuotingV2_Countries" Multiplicity="1" />
+          <End Role="QuotingV2_ZipCodes" Type="Self.QuotingV2_ZipCodes" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_Countries">
+              <PropertyRef Name="CountryID" />
+            </Principal>
+            <Dependent Role="QuotingV2_ZipCodes">
+              <PropertyRef Name="CountryID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Zones_City_FK">
+          <End Role="QuotingV2_Cities" Type="Self.QuotingV2_Cities" Multiplicity="0..1" />
+          <End Role="QuotingV2_Zones" Type="Self.QuotingV2_Zones" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_Cities">
+              <PropertyRef Name="CityID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Zones">
+              <PropertyRef Name="CityID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Zones_Island_FK">
+          <End Role="QuotingV2_Islands" Type="Self.QuotingV2_Islands" Multiplicity="0..1" />
+          <End Role="QuotingV2_Zones" Type="Self.QuotingV2_Zones" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_Islands">
+              <PropertyRef Name="IslandID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Zones">
+              <PropertyRef Name="IslandID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Zones_State_FK">
+          <End Role="QuotingV2_States" Type="Self.QuotingV2_States" Multiplicity="1" />
+          <End Role="QuotingV2_Zones" Type="Self.QuotingV2_Zones" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_States">
+              <PropertyRef Name="StateID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Zones">
+              <PropertyRef Name="StateID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityContainer Name="QuotingToolModelStoreContainer">
+          <EntitySet Name="__RefactorLog" EntityType="Self.__RefactorLog" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="QuotingV2_Cities" EntityType="Self.QuotingV2_Cities" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="QuotingV2_Countries" EntityType="Self.QuotingV2_Countries" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="QuotingV2_Fees" EntityType="Self.QuotingV2_Fees" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="QuotingV2_FeeTypes" EntityType="Self.QuotingV2_FeeTypes" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="QuotingV2_Islands" EntityType="Self.QuotingV2_Islands" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="QuotingV2_ServiceTypeFees" EntityType="Self.QuotingV2_ServiceTypeFees" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="QuotingV2_ServiceTypes" EntityType="Self.QuotingV2_ServiceTypes" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="QuotingV2_States" EntityType="Self.QuotingV2_States" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="QuotingV2_UOMs" EntityType="Self.QuotingV2_UOMs" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="QuotingV2_ZipCodes" EntityType="Self.QuotingV2_ZipCodes" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="QuotingV2_Zones" EntityType="Self.QuotingV2_Zones" Schema="dbo" store:Type="Tables" />
+          <AssociationSet Name="QuotingV2_Cities_Island_FK" Association="Self.QuotingV2_Cities_Island_FK">
+            <End Role="QuotingV2_Islands" EntitySet="QuotingV2_Islands" />
+            <End Role="QuotingV2_Cities" EntitySet="QuotingV2_Cities" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Cities_State_FK" Association="Self.QuotingV2_Cities_State_FK">
+            <End Role="QuotingV2_States" EntitySet="QuotingV2_States" />
+            <End Role="QuotingV2_Cities" EntitySet="QuotingV2_Cities" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Fees_City_FK" Association="Self.QuotingV2_Fees_City_FK">
+            <End Role="QuotingV2_Cities" EntitySet="QuotingV2_Cities" />
+            <End Role="QuotingV2_Fees" EntitySet="QuotingV2_Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Fees_Country_FK" Association="Self.QuotingV2_Fees_Country_FK">
+            <End Role="QuotingV2_Countries" EntitySet="QuotingV2_Countries" />
+            <End Role="QuotingV2_Fees" EntitySet="QuotingV2_Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Fees_Island_FK" Association="Self.QuotingV2_Fees_Island_FK">
+            <End Role="QuotingV2_Islands" EntitySet="QuotingV2_Islands" />
+            <End Role="QuotingV2_Fees" EntitySet="QuotingV2_Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Fees_Parent_FK" Association="Self.QuotingV2_Fees_Parent_FK">
+            <End Role="QuotingV2_Fees" EntitySet="QuotingV2_Fees" />
+            <End Role="QuotingV2_Fees1" EntitySet="QuotingV2_Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Fees_RangeUom_FK" Association="Self.QuotingV2_Fees_RangeUom_FK">
+            <End Role="QuotingV2_UOMs" EntitySet="QuotingV2_UOMs" />
+            <End Role="QuotingV2_Fees" EntitySet="QuotingV2_Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Fees_State_FK" Association="Self.QuotingV2_Fees_State_FK">
+            <End Role="QuotingV2_States" EntitySet="QuotingV2_States" />
+            <End Role="QuotingV2_Fees" EntitySet="QuotingV2_Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Fees_Types_FK" Association="Self.QuotingV2_Fees_Types_FK">
+            <End Role="QuotingV2_FeeTypes" EntitySet="QuotingV2_FeeTypes" />
+            <End Role="QuotingV2_Fees" EntitySet="QuotingV2_Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Fees_Uom_FK" Association="Self.QuotingV2_Fees_Uom_FK">
+            <End Role="QuotingV2_UOMs" EntitySet="QuotingV2_UOMs" />
+            <End Role="QuotingV2_Fees" EntitySet="QuotingV2_Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_FeeTypes_Parent_FK" Association="Self.QuotingV2_FeeTypes_Parent_FK">
+            <End Role="QuotingV2_FeeTypes" EntitySet="QuotingV2_FeeTypes" />
+            <End Role="QuotingV2_FeeTypes1" EntitySet="QuotingV2_FeeTypes" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_ServiceTypeCharges_FeeType_FK" Association="Self.QuotingV2_ServiceTypeCharges_FeeType_FK">
+            <End Role="QuotingV2_FeeTypes" EntitySet="QuotingV2_FeeTypes" />
+            <End Role="QuotingV2_ServiceTypeFees" EntitySet="QuotingV2_ServiceTypeFees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_ServiceTypeCharges_ServiceType_FK" Association="Self.QuotingV2_ServiceTypeCharges_ServiceType_FK">
+            <End Role="QuotingV2_ServiceTypes" EntitySet="QuotingV2_ServiceTypes" />
+            <End Role="QuotingV2_ServiceTypeFees" EntitySet="QuotingV2_ServiceTypeFees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_States_Country_FK" Association="Self.QuotingV2_States_Country_FK">
+            <End Role="QuotingV2_Countries" EntitySet="QuotingV2_Countries" />
+            <End Role="QuotingV2_States" EntitySet="QuotingV2_States" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_ZipCodes_Country_FK" Association="Self.QuotingV2_ZipCodes_Country_FK">
+            <End Role="QuotingV2_Countries" EntitySet="QuotingV2_Countries" />
+            <End Role="QuotingV2_ZipCodes" EntitySet="QuotingV2_ZipCodes" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Zones_City_FK" Association="Self.QuotingV2_Zones_City_FK">
+            <End Role="QuotingV2_Cities" EntitySet="QuotingV2_Cities" />
+            <End Role="QuotingV2_Zones" EntitySet="QuotingV2_Zones" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Zones_Island_FK" Association="Self.QuotingV2_Zones_Island_FK">
+            <End Role="QuotingV2_Islands" EntitySet="QuotingV2_Islands" />
+            <End Role="QuotingV2_Zones" EntitySet="QuotingV2_Zones" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Zones_State_FK" Association="Self.QuotingV2_Zones_State_FK">
+            <End Role="QuotingV2_States" EntitySet="QuotingV2_States" />
+            <End Role="QuotingV2_Zones" EntitySet="QuotingV2_Zones" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema></edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="QuotingToolModel" Alias="Self" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
+        <EntityContainer Name="QuotingToolRepository" annotation:LazyLoadingEnabled="true" >
+          <EntitySet Name="Fees" EntityType="QuotingToolModel.Fees" />
+          <EntitySet Name="FeeTypes" EntityType="QuotingToolModel.FeeType" />
+          <EntitySet Name="ServiceTypeFees" EntityType="QuotingToolModel.ServiceTypeFee" />
+          <EntitySet Name="ServiceTypes" EntityType="QuotingToolModel.ServiceType" />
+          <EntitySet Name="UOMs" EntityType="QuotingToolModel.UOM" />
+          <AssociationSet Name="QuotingV2_Fees_Parent_FK" Association="QuotingToolModel.QuotingV2_Fees_Parent_FK">
+            <End Role="QuotingV2_Fees" EntitySet="Fees" />
+            <End Role="QuotingV2_Fees1" EntitySet="Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Fees_RangeUom_FK" Association="QuotingToolModel.QuotingV2_Fees_RangeUom_FK">
+            <End Role="QuotingV2_UOMs" EntitySet="UOMs" />
+            <End Role="QuotingV2_Fees" EntitySet="Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Fees_Types_FK" Association="QuotingToolModel.QuotingV2_Fees_Types_FK">
+            <End Role="QuotingV2_FeeTypes" EntitySet="FeeTypes" />
+            <End Role="QuotingV2_Fees" EntitySet="Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Fees_Uom_FK" Association="QuotingToolModel.QuotingV2_Fees_Uom_FK">
+            <End Role="QuotingV2_UOMs" EntitySet="UOMs" />
+            <End Role="QuotingV2_Fees" EntitySet="Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_FeeTypes_Parent_FK" Association="QuotingToolModel.QuotingV2_FeeTypes_Parent_FK">
+            <End Role="QuotingV2_FeeTypes" EntitySet="FeeTypes" />
+            <End Role="QuotingV2_FeeTypes1" EntitySet="FeeTypes" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_ServiceTypeCharges_FeeType_FK" Association="QuotingToolModel.QuotingV2_ServiceTypeCharges_FeeType_FK">
+            <End Role="QuotingV2_FeeTypes" EntitySet="FeeTypes" />
+            <End Role="QuotingV2_ServiceTypeFees" EntitySet="ServiceTypeFees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_ServiceTypeCharges_ServiceType_FK" Association="QuotingToolModel.QuotingV2_ServiceTypeCharges_ServiceType_FK">
+            <End Role="QuotingV2_ServiceTypes" EntitySet="ServiceTypes" />
+            <End Role="QuotingV2_ServiceTypeFees" EntitySet="ServiceTypeFees" />
+          </AssociationSet>
+          <EntitySet Name="C__RefactorLog" EntityType="QuotingToolModel.C__RefactorLog" />
+          <EntitySet Name="Cities" EntityType="QuotingToolModel.City" />
+          <EntitySet Name="Countries" EntityType="QuotingToolModel.Country" />
+          <EntitySet Name="Islands" EntityType="QuotingToolModel.Island" />
+          <EntitySet Name="States" EntityType="QuotingToolModel.State" />
+          <EntitySet Name="ZipCodes" EntityType="QuotingToolModel.ZipCodes" />
+          <EntitySet Name="Zones" EntityType="QuotingToolModel.Zone" />
+          <AssociationSet Name="QuotingV2_Cities_State_FK" Association="QuotingToolModel.QuotingV2_Cities_State_FK">
+            <End Role="QuotingV2_States" EntitySet="States" />
+            <End Role="QuotingV2_Cities" EntitySet="Cities" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Fees_City_FK" Association="QuotingToolModel.QuotingV2_Fees_City_FK">
+            <End Role="QuotingV2_Cities" EntitySet="Cities" />
+            <End Role="Fees" EntitySet="Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Zones_City_FK" Association="QuotingToolModel.QuotingV2_Zones_City_FK">
+            <End Role="QuotingV2_Cities" EntitySet="Cities" />
+            <End Role="QuotingV2_Zones" EntitySet="Zones" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Fees_Country_FK" Association="QuotingToolModel.QuotingV2_Fees_Country_FK">
+            <End Role="QuotingV2_Countries" EntitySet="Countries" />
+            <End Role="Fees" EntitySet="Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_States_Country_FK" Association="QuotingToolModel.QuotingV2_States_Country_FK">
+            <End Role="QuotingV2_Countries" EntitySet="Countries" />
+            <End Role="QuotingV2_States" EntitySet="States" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_ZipCodes_Country_FK" Association="QuotingToolModel.QuotingV2_ZipCodes_Country_FK">
+            <End Role="QuotingV2_Countries" EntitySet="Countries" />
+            <End Role="QuotingV2_ZipCodes" EntitySet="ZipCodes" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Fees_Island_FK" Association="QuotingToolModel.QuotingV2_Fees_Island_FK">
+            <End Role="QuotingV2_Islands" EntitySet="Islands" />
+            <End Role="Fees" EntitySet="Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Fees_State_FK" Association="QuotingToolModel.QuotingV2_Fees_State_FK">
+            <End Role="QuotingV2_States" EntitySet="States" />
+            <End Role="Fees" EntitySet="Fees" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Zones_Island_FK" Association="QuotingToolModel.QuotingV2_Zones_Island_FK">
+            <End Role="QuotingV2_Islands" EntitySet="Islands" />
+            <End Role="QuotingV2_Zones" EntitySet="Zones" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Zones_State_FK" Association="QuotingToolModel.QuotingV2_Zones_State_FK">
+            <End Role="QuotingV2_States" EntitySet="States" />
+            <End Role="QuotingV2_Zones" EntitySet="Zones" />
+          </AssociationSet>
+          <AssociationSet Name="QuotingV2_Cities_Island_FK" Association="QuotingToolModel.QuotingV2_Cities_Island_FK">
+            <End Role="Island" EntitySet="Islands" />
+            <End Role="City" EntitySet="Cities" />
+          </AssociationSet>
+          </EntityContainer>
+        <EntityType Name="Fees">
+          <Key>
+            <PropertyRef Name="FeeID" />
+          </Key>
+          <Property Name="FeeID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="FeeTypeID" Type="Int32" Nullable="false" />
+          <Property Name="IslandID" Type="Int32" />
+          <Property Name="ZoneID" Type="Int32" />
+          <Property Name="CityID" Type="Int32" />
+          <Property Name="ZipCodes" Type="String" MaxLength="4000" FixedLength="false" Unicode="false" />
+          <Property Name="CustomerID" Type="Int32" />
+          <Property Name="ByUomID" Type="Int32" />
+          <Property Name="Discount" Type="Decimal" Precision="3" Scale="3" />
+          <Property Name="FeeMin" Type="Decimal" Precision="7" Scale="2" />
+          <Property Name="FeeMax" Type="Decimal" Precision="7" Scale="2" />
+          <Property Name="RangeByUomID" Type="Int32" />
+          <Property Name="ParentFeeID" Type="Int32" />
+          <Property Name="RangeFrom" Type="Decimal" Precision="7" Scale="2" />
+          <Property Name="RangeTo" Type="Decimal" Precision="7" Scale="2" />
+          <Property Name="ValidFrom" Type="DateTime" Precision="3" />
+          <Property Name="ValidUntil" Type="DateTime" Precision="3" />
+          <Property Name="Notes" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="DateAdded" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="AddedBy" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="DateUpdated" Type="DateTime" Precision="3" />
+          <Property Name="UpdatedBy" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="QuotingV2_Fees1" Relationship="QuotingToolModel.QuotingV2_Fees_Parent_FK" FromRole="QuotingV2_Fees" ToRole="QuotingV2_Fees1" />
+          <NavigationProperty Name="QuotingV2_Fees2" Relationship="QuotingToolModel.QuotingV2_Fees_Parent_FK" FromRole="QuotingV2_Fees1" ToRole="QuotingV2_Fees" />
+          <NavigationProperty Name="QuotingV2_UOMs" Relationship="QuotingToolModel.QuotingV2_Fees_RangeUom_FK" FromRole="QuotingV2_Fees" ToRole="QuotingV2_UOMs" />
+          <NavigationProperty Name="QuotingV2_FeeTypes" Relationship="QuotingToolModel.QuotingV2_Fees_Types_FK" FromRole="QuotingV2_Fees" ToRole="QuotingV2_FeeTypes" />
+          <NavigationProperty Name="QuotingV2_UOMs1" Relationship="QuotingToolModel.QuotingV2_Fees_Uom_FK" FromRole="QuotingV2_Fees" ToRole="QuotingV2_UOMs" />
+          <Property Name="CountryID" Type="Int32" />
+          <Property Name="StateID" Type="Int32" />
+          <Property Name="Value" Type="Decimal" Precision="5" Scale="2" />
+          <NavigationProperty Name="QuotingV2_Cities" Relationship="QuotingToolModel.QuotingV2_Fees_City_FK" FromRole="Fees" ToRole="QuotingV2_Cities" />
+          <NavigationProperty Name="QuotingV2_Countries" Relationship="QuotingToolModel.QuotingV2_Fees_Country_FK" FromRole="Fees" ToRole="QuotingV2_Countries" />
+          <NavigationProperty Name="QuotingV2_Islands" Relationship="QuotingToolModel.QuotingV2_Fees_Island_FK" FromRole="Fees" ToRole="QuotingV2_Islands" />
+          <NavigationProperty Name="QuotingV2_States" Relationship="QuotingToolModel.QuotingV2_Fees_State_FK" FromRole="Fees" ToRole="QuotingV2_States" />
+          <Property Name="ActionID" Type="Int16" />
+        </EntityType>
+        <EntityType Name="FeeType">
+          <Key>
+            <PropertyRef Name="FeeTypeID" />
+          </Key>
+          <Property Name="FeeTypeID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="Description" Type="String" MaxLength="400" FixedLength="false" Unicode="false" />
+          <Property Name="ParentFeeTypeID" Type="Int32" />
+          <Property Name="DateAdded" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="AddedBy" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="DateUpdated" Type="DateTime" Precision="3" />
+          <Property Name="UpdatedBy" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="QuotingV2_Fees" Relationship="QuotingToolModel.QuotingV2_Fees_Types_FK" FromRole="QuotingV2_FeeTypes" ToRole="QuotingV2_Fees" />
+          <NavigationProperty Name="QuotingV2_FeeTypes1" Relationship="QuotingToolModel.QuotingV2_FeeTypes_Parent_FK" FromRole="QuotingV2_FeeTypes" ToRole="QuotingV2_FeeTypes1" />
+          <NavigationProperty Name="QuotingV2_FeeTypes2" Relationship="QuotingToolModel.QuotingV2_FeeTypes_Parent_FK" FromRole="QuotingV2_FeeTypes1" ToRole="QuotingV2_FeeTypes" />
+          <NavigationProperty Name="QuotingV2_ServiceTypeFees" Relationship="QuotingToolModel.QuotingV2_ServiceTypeCharges_FeeType_FK" FromRole="QuotingV2_FeeTypes" ToRole="QuotingV2_ServiceTypeFees" />
+        </EntityType>
+        <EntityType Name="ServiceTypeFee">
+          <Key>
+            <PropertyRef Name="ServiceTypeChargeID" />
+          </Key>
+          <Property Name="ServiceTypeChargeID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ServiceTypeID" Type="Int32" Nullable="false" />
+          <Property Name="FeeTypeID" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="QuotingV2_FeeTypes" Relationship="QuotingToolModel.QuotingV2_ServiceTypeCharges_FeeType_FK" FromRole="QuotingV2_ServiceTypeFees" ToRole="QuotingV2_FeeTypes" />
+          <NavigationProperty Name="QuotingV2_ServiceTypes" Relationship="QuotingToolModel.QuotingV2_ServiceTypeCharges_ServiceType_FK" FromRole="QuotingV2_ServiceTypeFees" ToRole="QuotingV2_ServiceTypes" />
+        </EntityType>
+        <EntityType Name="ServiceType">
+          <Key>
+            <PropertyRef Name="ServiceTypeID" />
+          </Key>
+          <Property Name="ServiceTypeID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="Description" Type="String" MaxLength="400" FixedLength="false" Unicode="false" />
+          <Property Name="Show" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
+          <Property Name="Position" Type="Int32" />
+          <Property Name="DateAdded" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="AddedBy" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="DateUpdated" Type="DateTime" Precision="3" />
+          <Property Name="UpdatedBy" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="QuotingV2_ServiceTypeFees" Relationship="QuotingToolModel.QuotingV2_ServiceTypeCharges_ServiceType_FK" FromRole="QuotingV2_ServiceTypes" ToRole="QuotingV2_ServiceTypeFees" />
+        </EntityType>
+        <EntityType Name="UOM">
+          <Key>
+            <PropertyRef Name="UomID" />
+          </Key>
+          <Property Name="UomID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="Description" Type="String" MaxLength="400" FixedLength="false" Unicode="false" />
+          <Property Name="DateAdded" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="AddedBy" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="DateUpdated" Type="DateTime" Precision="3" />
+          <Property Name="UpdatedBy" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="QuotingV2_Fees" Relationship="QuotingToolModel.QuotingV2_Fees_RangeUom_FK" FromRole="QuotingV2_UOMs" ToRole="QuotingV2_Fees" />
+          <NavigationProperty Name="QuotingV2_Fees1" Relationship="QuotingToolModel.QuotingV2_Fees_Uom_FK" FromRole="QuotingV2_UOMs" ToRole="QuotingV2_Fees" />
+        </EntityType>
+        <Association Name="QuotingV2_Fees_Parent_FK">
+          <End Type="QuotingToolModel.Fees" Role="QuotingV2_Fees" Multiplicity="0..1" />
+          <End Type="QuotingToolModel.Fees" Role="QuotingV2_Fees1" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_Fees">
+              <PropertyRef Name="FeeID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Fees1">
+              <PropertyRef Name="ParentFeeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Fees_RangeUom_FK">
+          <End Type="QuotingToolModel.UOM" Role="QuotingV2_UOMs" Multiplicity="0..1" />
+          <End Type="QuotingToolModel.Fees" Role="QuotingV2_Fees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_UOMs">
+              <PropertyRef Name="UomID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Fees">
+              <PropertyRef Name="RangeByUomID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Fees_Types_FK">
+          <End Type="QuotingToolModel.FeeType" Role="QuotingV2_FeeTypes" Multiplicity="1" />
+          <End Type="QuotingToolModel.Fees" Role="QuotingV2_Fees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_FeeTypes">
+              <PropertyRef Name="FeeTypeID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Fees">
+              <PropertyRef Name="FeeTypeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Fees_Uom_FK">
+          <End Type="QuotingToolModel.UOM" Role="QuotingV2_UOMs" Multiplicity="0..1" />
+          <End Type="QuotingToolModel.Fees" Role="QuotingV2_Fees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_UOMs">
+              <PropertyRef Name="UomID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Fees">
+              <PropertyRef Name="ByUomID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_FeeTypes_Parent_FK">
+          <End Type="QuotingToolModel.FeeType" Role="QuotingV2_FeeTypes" Multiplicity="0..1" />
+          <End Type="QuotingToolModel.FeeType" Role="QuotingV2_FeeTypes1" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_FeeTypes">
+              <PropertyRef Name="FeeTypeID" />
+            </Principal>
+            <Dependent Role="QuotingV2_FeeTypes1">
+              <PropertyRef Name="ParentFeeTypeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_ServiceTypeCharges_FeeType_FK">
+          <End Type="QuotingToolModel.FeeType" Role="QuotingV2_FeeTypes" Multiplicity="1" />
+          <End Type="QuotingToolModel.ServiceTypeFee" Role="QuotingV2_ServiceTypeFees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_FeeTypes">
+              <PropertyRef Name="FeeTypeID" />
+            </Principal>
+            <Dependent Role="QuotingV2_ServiceTypeFees">
+              <PropertyRef Name="FeeTypeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_ServiceTypeCharges_ServiceType_FK">
+          <End Type="QuotingToolModel.ServiceType" Role="QuotingV2_ServiceTypes" Multiplicity="1" />
+          <End Type="QuotingToolModel.ServiceTypeFee" Role="QuotingV2_ServiceTypeFees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_ServiceTypes">
+              <PropertyRef Name="ServiceTypeID" />
+            </Principal>
+            <Dependent Role="QuotingV2_ServiceTypeFees">
+              <PropertyRef Name="ServiceTypeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="C__RefactorLog">
+          <Key>
+            <PropertyRef Name="OperationKey" />
+          </Key>
+          <Property Name="OperationKey" Type="Guid" Nullable="false" />
+        </EntityType>
+        <EntityType Name="City">
+          <Key>
+            <PropertyRef Name="CityID" />
+          </Key>
+          <Property Name="CityID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="StateID" Type="Int32" Nullable="false" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="DateAdded" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="AddedBy" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="DateUpdated" Type="DateTime" Precision="3" />
+          <Property Name="UpdatedBy" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="QuotingV2_States" Relationship="QuotingToolModel.QuotingV2_Cities_State_FK" FromRole="QuotingV2_Cities" ToRole="QuotingV2_States" />
+          <NavigationProperty Name="QuotingV2_Fees" Relationship="QuotingToolModel.QuotingV2_Fees_City_FK" FromRole="QuotingV2_Cities" ToRole="Fees" />
+          <NavigationProperty Name="QuotingV2_Zones" Relationship="QuotingToolModel.QuotingV2_Zones_City_FK" FromRole="QuotingV2_Cities" ToRole="QuotingV2_Zones" />
+          <Property Name="IslandID" Type="Int32" />
+          <NavigationProperty Name="QuotingV2_Islands" Relationship="QuotingToolModel.QuotingV2_Cities_Island_FK" FromRole="City" ToRole="Island" />
+        </EntityType>
+        <EntityType Name="Country">
+          <Key>
+            <PropertyRef Name="CountryID" />
+          </Key>
+          <Property Name="CountryID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ShortCode" Type="String" Nullable="false" MaxLength="2" FixedLength="false" Unicode="false" />
+          <Property Name="LongCode" Type="String" Nullable="false" MaxLength="3" FixedLength="false" Unicode="false" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="DateAdded" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="AddedBy" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="DateUpdated" Type="DateTime" Precision="3" />
+          <Property Name="UpdatedBy" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="QuotingV2_Fees" Relationship="QuotingToolModel.QuotingV2_Fees_Country_FK" FromRole="QuotingV2_Countries" ToRole="Fees" />
+          <NavigationProperty Name="QuotingV2_States" Relationship="QuotingToolModel.QuotingV2_States_Country_FK" FromRole="QuotingV2_Countries" ToRole="QuotingV2_States" />
+          <NavigationProperty Name="QuotingV2_ZipCodes" Relationship="QuotingToolModel.QuotingV2_ZipCodes_Country_FK" FromRole="QuotingV2_Countries" ToRole="QuotingV2_ZipCodes" />
+        </EntityType>
+        <EntityType Name="Island">
+          <Key>
+            <PropertyRef Name="IslandID" />
+          </Key>
+          <Property Name="IslandID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="StateID" Type="String" Nullable="false" MaxLength="2" FixedLength="false" Unicode="false" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="DateAdded" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="AddedBy" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="DateUpdated" Type="DateTime" Precision="3" />
+          <Property Name="UpdatedBy" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="QuotingV2_Fees" Relationship="QuotingToolModel.QuotingV2_Fees_Island_FK" FromRole="QuotingV2_Islands" ToRole="Fees" />
+          <NavigationProperty Name="QuotingV2_Zones" Relationship="QuotingToolModel.QuotingV2_Zones_Island_FK" FromRole="QuotingV2_Islands" ToRole="QuotingV2_Zones" />
+          <NavigationProperty Name="QuotingV2_Cities" Relationship="QuotingToolModel.QuotingV2_Cities_Island_FK" FromRole="Island" ToRole="City" />
+        </EntityType>
+        <EntityType Name="State">
+          <Key>
+            <PropertyRef Name="StateID" />
+          </Key>
+          <Property Name="StateID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Code" Type="String" MaxLength="10" FixedLength="false" Unicode="false" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="CountryID" Type="Int32" Nullable="false" />
+          <Property Name="DateAdded" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="AddedBy" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="DateUpdated" Type="DateTime" Precision="3" />
+          <Property Name="UpdatedBy" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="QuotingV2_Cities" Relationship="QuotingToolModel.QuotingV2_Cities_State_FK" FromRole="QuotingV2_States" ToRole="QuotingV2_Cities" />
+          <NavigationProperty Name="QuotingV2_Countries" Relationship="QuotingToolModel.QuotingV2_States_Country_FK" FromRole="QuotingV2_States" ToRole="QuotingV2_Countries" />
+          <NavigationProperty Name="QuotingV2_Fees" Relationship="QuotingToolModel.QuotingV2_Fees_State_FK" FromRole="QuotingV2_States" ToRole="Fees" />
+          <NavigationProperty Name="QuotingV2_Zones" Relationship="QuotingToolModel.QuotingV2_Zones_State_FK" FromRole="QuotingV2_States" ToRole="QuotingV2_Zones" />
+        </EntityType>
+        <EntityType Name="ZipCodes">
+          <Key>
+            <PropertyRef Name="CountryID" />
+            <PropertyRef Name="ZipCode" />
+          </Key>
+          <Property Name="CountryID" Type="Int32" Nullable="false" />
+          <Property Name="ZipCode" Type="Int32" Nullable="false" />
+          <Property Name="DateAdded" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="AddedBy" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="DateUpdated" Type="DateTime" Precision="3" />
+          <Property Name="UpdatedBy" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="QuotingV2_Countries" Relationship="QuotingToolModel.QuotingV2_ZipCodes_Country_FK" FromRole="QuotingV2_ZipCodes" ToRole="QuotingV2_Countries" />
+        </EntityType>
+        <EntityType Name="Zone">
+          <Key>
+            <PropertyRef Name="ZoneID" />
+          </Key>
+          <Property Name="ZoneID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="StateID" Type="Int32" Nullable="false" />
+          <Property Name="IslandID" Type="Int32" />
+          <Property Name="CityID" Type="Int32" />
+          <Property Name="Code" Type="String" Nullable="false" MaxLength="10" FixedLength="false" Unicode="false" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="DateAdded" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="AddedBy" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="DateUpdated" Type="DateTime" Precision="3" />
+          <Property Name="UpdatedBy" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="QuotingV2_Cities" Relationship="QuotingToolModel.QuotingV2_Zones_City_FK" FromRole="QuotingV2_Zones" ToRole="QuotingV2_Cities" />
+          <NavigationProperty Name="QuotingV2_Islands" Relationship="QuotingToolModel.QuotingV2_Zones_Island_FK" FromRole="QuotingV2_Zones" ToRole="QuotingV2_Islands" />
+          <NavigationProperty Name="QuotingV2_States" Relationship="QuotingToolModel.QuotingV2_Zones_State_FK" FromRole="QuotingV2_Zones" ToRole="QuotingV2_States" />
+        </EntityType>
+        <Association Name="QuotingV2_Cities_State_FK">
+          <End Type="QuotingToolModel.State" Role="QuotingV2_States" Multiplicity="1" />
+          <End Type="QuotingToolModel.City" Role="QuotingV2_Cities" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_States">
+              <PropertyRef Name="StateID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Cities">
+              <PropertyRef Name="StateID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Fees_City_FK">
+          <End Type="QuotingToolModel.City" Role="QuotingV2_Cities" Multiplicity="0..1" />
+          <End Type="QuotingToolModel.Fees" Role="Fees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_Cities">
+              <PropertyRef Name="CityID" />
+            </Principal>
+            <Dependent Role="Fees">
+              <PropertyRef Name="CityID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Zones_City_FK">
+          <End Type="QuotingToolModel.City" Role="QuotingV2_Cities" Multiplicity="0..1" />
+          <End Type="QuotingToolModel.Zone" Role="QuotingV2_Zones" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_Cities">
+              <PropertyRef Name="CityID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Zones">
+              <PropertyRef Name="CityID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Fees_Country_FK">
+          <End Type="QuotingToolModel.Country" Role="QuotingV2_Countries" Multiplicity="0..1" />
+          <End Type="QuotingToolModel.Fees" Role="Fees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_Countries">
+              <PropertyRef Name="CountryID" />
+            </Principal>
+            <Dependent Role="Fees">
+              <PropertyRef Name="CountryID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_States_Country_FK">
+          <End Type="QuotingToolModel.Country" Role="QuotingV2_Countries" Multiplicity="1" />
+          <End Type="QuotingToolModel.State" Role="QuotingV2_States" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_Countries">
+              <PropertyRef Name="CountryID" />
+            </Principal>
+            <Dependent Role="QuotingV2_States">
+              <PropertyRef Name="CountryID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_ZipCodes_Country_FK">
+          <End Type="QuotingToolModel.Country" Role="QuotingV2_Countries" Multiplicity="1" />
+          <End Type="QuotingToolModel.ZipCodes" Role="QuotingV2_ZipCodes" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_Countries">
+              <PropertyRef Name="CountryID" />
+            </Principal>
+            <Dependent Role="QuotingV2_ZipCodes">
+              <PropertyRef Name="CountryID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Fees_Island_FK">
+          <End Type="QuotingToolModel.Island" Role="QuotingV2_Islands" Multiplicity="0..1" />
+          <End Type="QuotingToolModel.Fees" Role="Fees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_Islands">
+              <PropertyRef Name="IslandID" />
+            </Principal>
+            <Dependent Role="Fees">
+              <PropertyRef Name="IslandID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Fees_State_FK">
+          <End Type="QuotingToolModel.State" Role="QuotingV2_States" Multiplicity="0..1" />
+          <End Type="QuotingToolModel.Fees" Role="Fees" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_States">
+              <PropertyRef Name="StateID" />
+            </Principal>
+            <Dependent Role="Fees">
+              <PropertyRef Name="StateID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Zones_Island_FK">
+          <End Type="QuotingToolModel.Island" Role="QuotingV2_Islands" Multiplicity="0..1" />
+          <End Type="QuotingToolModel.Zone" Role="QuotingV2_Zones" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_Islands">
+              <PropertyRef Name="IslandID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Zones">
+              <PropertyRef Name="IslandID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Zones_State_FK">
+          <End Type="QuotingToolModel.State" Role="QuotingV2_States" Multiplicity="1" />
+          <End Type="QuotingToolModel.Zone" Role="QuotingV2_Zones" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="QuotingV2_States">
+              <PropertyRef Name="StateID" />
+            </Principal>
+            <Dependent Role="QuotingV2_Zones">
+              <PropertyRef Name="StateID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="QuotingV2_Cities_Island_FK">
+          <End Type="QuotingToolModel.Island" Role="Island" Multiplicity="0..1" />
+          <End Type="QuotingToolModel.City" Role="City" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Island">
+              <PropertyRef Name="IslandID" />
+            </Principal>
+            <Dependent Role="City">
+              <PropertyRef Name="IslandID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2008/09/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="QuotingToolModelStoreContainer" CdmEntityContainer="QuotingToolRepository" >
+          <EntitySetMapping Name="Fees">
+            <EntityTypeMapping TypeName="QuotingToolModel.Fees">
+              <MappingFragment StoreEntitySet="QuotingV2_Fees">
+                <ScalarProperty Name="ActionID" ColumnName="ActionID" />
+                <ScalarProperty Name="Value" ColumnName="Value" />
+                <ScalarProperty Name="StateID" ColumnName="StateID" />
+                <ScalarProperty Name="CountryID" ColumnName="CountryID" />
+                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
+                <ScalarProperty Name="DateUpdated" ColumnName="DateUpdated" />
+                <ScalarProperty Name="AddedBy" ColumnName="AddedBy" />
+                <ScalarProperty Name="DateAdded" ColumnName="DateAdded" />
+                <ScalarProperty Name="Notes" ColumnName="Notes" />
+                <ScalarProperty Name="ValidUntil" ColumnName="ValidUntil" />
+                <ScalarProperty Name="ValidFrom" ColumnName="ValidFrom" />
+                <ScalarProperty Name="RangeTo" ColumnName="RangeTo" />
+                <ScalarProperty Name="RangeFrom" ColumnName="RangeFrom" />
+                <ScalarProperty Name="ParentFeeID" ColumnName="ParentFeeID" />
+                <ScalarProperty Name="RangeByUomID" ColumnName="RangeByUomID" />
+                <ScalarProperty Name="FeeMax" ColumnName="FeeMax" />
+                <ScalarProperty Name="FeeMin" ColumnName="FeeMin" />
+                <ScalarProperty Name="Discount" ColumnName="Discount" />
+                <ScalarProperty Name="ByUomID" ColumnName="ByUomID" />
+                <ScalarProperty Name="CustomerID" ColumnName="CustomerID" />
+                <ScalarProperty Name="ZipCodes" ColumnName="ZipCodes" />
+                <ScalarProperty Name="CityID" ColumnName="CityID" />
+                <ScalarProperty Name="ZoneID" ColumnName="ZoneID" />
+                <ScalarProperty Name="IslandID" ColumnName="IslandID" />
+                <ScalarProperty Name="FeeTypeID" ColumnName="FeeTypeID" />
+                <ScalarProperty Name="FeeID" ColumnName="FeeID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="FeeTypes">
+            <EntityTypeMapping TypeName="QuotingToolModel.FeeType">
+              <MappingFragment StoreEntitySet="QuotingV2_FeeTypes">
+                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
+                <ScalarProperty Name="DateUpdated" ColumnName="DateUpdated" />
+                <ScalarProperty Name="AddedBy" ColumnName="AddedBy" />
+                <ScalarProperty Name="DateAdded" ColumnName="DateAdded" />
+                <ScalarProperty Name="ParentFeeTypeID" ColumnName="ParentFeeTypeID" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="FeeTypeID" ColumnName="FeeTypeID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ServiceTypeFees">
+            <EntityTypeMapping TypeName="QuotingToolModel.ServiceTypeFee">
+              <MappingFragment StoreEntitySet="QuotingV2_ServiceTypeFees">
+                <ScalarProperty Name="FeeTypeID" ColumnName="FeeTypeID" />
+                <ScalarProperty Name="ServiceTypeID" ColumnName="ServiceTypeID" />
+                <ScalarProperty Name="ServiceTypeChargeID" ColumnName="ServiceTypeChargeID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ServiceTypes">
+            <EntityTypeMapping TypeName="QuotingToolModel.ServiceType">
+              <MappingFragment StoreEntitySet="QuotingV2_ServiceTypes">
+                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
+                <ScalarProperty Name="DateUpdated" ColumnName="DateUpdated" />
+                <ScalarProperty Name="AddedBy" ColumnName="AddedBy" />
+                <ScalarProperty Name="DateAdded" ColumnName="DateAdded" />
+                <ScalarProperty Name="Position" ColumnName="Position" />
+                <ScalarProperty Name="Show" ColumnName="Show" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="ServiceTypeID" ColumnName="ServiceTypeID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="UOMs">
+            <EntityTypeMapping TypeName="QuotingToolModel.UOM">
+              <MappingFragment StoreEntitySet="QuotingV2_UOMs">
+                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
+                <ScalarProperty Name="DateUpdated" ColumnName="DateUpdated" />
+                <ScalarProperty Name="AddedBy" ColumnName="AddedBy" />
+                <ScalarProperty Name="DateAdded" ColumnName="DateAdded" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="UomID" ColumnName="UomID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="C__RefactorLog">
+            <EntityTypeMapping TypeName="QuotingToolModel.C__RefactorLog">
+              <MappingFragment StoreEntitySet="__RefactorLog">
+                <ScalarProperty Name="OperationKey" ColumnName="OperationKey" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Cities">
+            <EntityTypeMapping TypeName="QuotingToolModel.City">
+              <MappingFragment StoreEntitySet="QuotingV2_Cities">
+                <ScalarProperty Name="IslandID" ColumnName="IslandID" />
+                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
+                <ScalarProperty Name="DateUpdated" ColumnName="DateUpdated" />
+                <ScalarProperty Name="AddedBy" ColumnName="AddedBy" />
+                <ScalarProperty Name="DateAdded" ColumnName="DateAdded" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="StateID" ColumnName="StateID" />
+                <ScalarProperty Name="CityID" ColumnName="CityID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Countries">
+            <EntityTypeMapping TypeName="QuotingToolModel.Country">
+              <MappingFragment StoreEntitySet="QuotingV2_Countries">
+                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
+                <ScalarProperty Name="DateUpdated" ColumnName="DateUpdated" />
+                <ScalarProperty Name="AddedBy" ColumnName="AddedBy" />
+                <ScalarProperty Name="DateAdded" ColumnName="DateAdded" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="LongCode" ColumnName="LongCode" />
+                <ScalarProperty Name="ShortCode" ColumnName="ShortCode" />
+                <ScalarProperty Name="CountryID" ColumnName="CountryID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Islands">
+            <EntityTypeMapping TypeName="QuotingToolModel.Island">
+              <MappingFragment StoreEntitySet="QuotingV2_Islands">
+                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
+                <ScalarProperty Name="DateUpdated" ColumnName="DateUpdated" />
+                <ScalarProperty Name="AddedBy" ColumnName="AddedBy" />
+                <ScalarProperty Name="DateAdded" ColumnName="DateAdded" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="StateID" ColumnName="StateID" />
+                <ScalarProperty Name="IslandID" ColumnName="IslandID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="States">
+            <EntityTypeMapping TypeName="QuotingToolModel.State">
+              <MappingFragment StoreEntitySet="QuotingV2_States">
+                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
+                <ScalarProperty Name="DateUpdated" ColumnName="DateUpdated" />
+                <ScalarProperty Name="AddedBy" ColumnName="AddedBy" />
+                <ScalarProperty Name="DateAdded" ColumnName="DateAdded" />
+                <ScalarProperty Name="CountryID" ColumnName="CountryID" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="Code" ColumnName="Code" />
+                <ScalarProperty Name="StateID" ColumnName="StateID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ZipCodes">
+            <EntityTypeMapping TypeName="QuotingToolModel.ZipCodes">
+              <MappingFragment StoreEntitySet="QuotingV2_ZipCodes">
+                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
+                <ScalarProperty Name="DateUpdated" ColumnName="DateUpdated" />
+                <ScalarProperty Name="AddedBy" ColumnName="AddedBy" />
+                <ScalarProperty Name="DateAdded" ColumnName="DateAdded" />
+                <ScalarProperty Name="ZipCode" ColumnName="ZipCode" />
+                <ScalarProperty Name="CountryID" ColumnName="CountryID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Zones">
+            <EntityTypeMapping TypeName="QuotingToolModel.Zone">
+              <MappingFragment StoreEntitySet="QuotingV2_Zones">
+                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
+                <ScalarProperty Name="DateUpdated" ColumnName="DateUpdated" />
+                <ScalarProperty Name="AddedBy" ColumnName="AddedBy" />
+                <ScalarProperty Name="DateAdded" ColumnName="DateAdded" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="Code" ColumnName="Code" />
+                <ScalarProperty Name="CityID" ColumnName="CityID" />
+                <ScalarProperty Name="IslandID" ColumnName="IslandID" />
+                <ScalarProperty Name="StateID" ColumnName="StateID" />
+                <ScalarProperty Name="ZoneID" ColumnName="ZoneID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2008/10/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="True" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="true" />
+        <DesignerProperty Name="UseLegacyProvider" Value="true" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="Default" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>

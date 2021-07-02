@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "library": "typeahead.js@0.11.1",
+      "destination": "assets/typeahead/"
+    }
+  ]
+}

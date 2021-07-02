@@ -1,0 +1,13 @@
+11/6/2021 6:02:18 p. m.	This log contains information about the import operation of the script '01 - DDL - Units of Meassure.sql' into project 'AJC.Logistics.SeaWideExpress.QuotingTool.Data' on computer 'EXTERMINAITOR03' by user'PC One.
+11/6/2021 6:02:18 p. m.	Started importing file: C:\Users\PC One\AppData\Local\Temp\tmp8CB4.tmp 
+11/6/2021 6:02:18 p. m.	File name C:\Users\PC One\AppData\Local\Temp\tmp8CB4.tmp (size: 7180)
+11/6/2021 6:02:18 p. m.	Parsing import script
+11/6/2021 6:02:18 p. m.	Total number of batches in script: 6
+11/6/2021 6:02:18 p. m.	Total number of statements in script: 5
+11/6/2021 6:02:18 p. m.	The script was successfully imported into the project.
+11/6/2021 6:02:18 p. m.	Analyzing schema objects...
+11/6/2021 6:02:18 p. m.	Scanning project for duplicate elements
+11/6/2021 6:02:18 p. m.	Finished duplicate element processing
+11/6/2021 6:02:19 p. m.	In the script that you provided to the import operation, one or more statements were not fully understood. These statements were moved to the ScriptsIgnoredOnImport.sql file. Review the file contents for additional information.
+11/6/2021 6:02:19 p. m.	A summary of the import was saved to the following location: C:\Trabajo\Nexumtec - Work\WeThinkLabsRepo.V2\AJC_LOGISTICS\SeaWideExpress\QuotingTool\AJC.Logistics.SeaWideExpress.QuotingTool.Data\Import Script Logs\01 - DDL - Units of _20210611090218.log
+11/6/2021 6:02:19 p. m.	Click Finish to continue...

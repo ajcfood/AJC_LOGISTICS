@@ -1,0 +1,283 @@
+﻿@model AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesGridModel
+@using Newtonsoft.Json;
+<script src="~/assets/ag-grid/ag-grid-enterprise.min.js"></script>
+<script src="~/assets/ag-grid/ag-grid-servermanager.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="~/assets/typeahead/typeahead.bundle.js"></script>
+<script src="~/assets/ag-grid/ag-grid-typeahead.js"></script>
+<script src="~/assets/ag-grid/ValidationPricesCellEditor.js"></script>
+<link rel="stylesheet" href="~/assets/ag-grid/ag-grid-typeahead.css" />
+<div id="myGrid@(Model.GridMode)" style="height: 100%; width:100%;" class="ag-theme-balham"></div>
+<a id="btnCrear" style="display:none;">Crear</a>
+
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+    }
+
+    .invalid-cell {
+        color: red;
+    }
+</style>
+<script>
+    function initGrid() {
+        function placeholderRenderer(params) {
+            const value = (params.valueFormatted === null || params.valueFormatted === undefined) ? params.value : params.valueFormatted;
+            return ( (value === "" || value === null || value === undefined) ? ('<p' + (params.class ? ' class="' + params.class + '"' : '') + '>' + params.placeholder + '</p>') : value);
+        }
+
+        const columnDefs = [];
+
+        const states  = agGridManager.fetchLOV('@Url.Action("getStates", "Params")');
+        const islands = agGridManager.fetchLOV('@Url.Action("getIslands", "Params")');
+        const cities  = agGridManager.fetchLOV('@Url.Action("getCities", "Params")');
+        const uoms = agGridManager.fetchLOV('@Url.Action("getUoms", "Params")');
+        const actions = agGridManager.fetchLOV('@Url.Action("getActions", "Params")');
+        const zones = agGridManager.fetchLOV('@Url.Action("getZones", "Params")');
+
+        const statesStore  = TypeaheadEditor.newStore('states' , states );
+        const islandsStore = TypeaheadEditor.newStore('islands', islands);
+        const citiesStore  = TypeaheadEditor.newStore('cities' , cities );
+        const uomsStore    = TypeaheadEditor.newStore('uoms'   , uoms   );
+        const actionsStore = TypeaheadEditor.newStore('actions', actions);
+        const zonesStore   = TypeaheadEditor.newStore('zones'  , zones);
+
+        columnDefs.push(
+            { headerName: "id", field: "FeeID", hide: true },
+            { headername: "#", checkboxSelection: true, maxWidth: 40 }
+        );
+
+        @if (Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesGridModel.Mode.Fees)
+        {
+            <text>
+            columnDefs.push(
+                {
+                    headerName: "State", field: "StateID",
+                    cellEditor: TypeaheadEditor,
+                    cellEditorParams: {
+                        placeholder: 'State',
+                        store: statesStore
+                    },
+                    valueFormatter: TypeaheadEditor.getFormatter(statesStore)
+                },
+                {
+                    headerName: "Island", field: "IslandID",
+                    cellEditor: TypeaheadEditor,
+                    cellEditorParams: {
+                        placeholder: 'Island',
+                        store: islandsStore
+                    },
+                    valueFormatter: TypeaheadEditor.getFormatter(islandsStore),
+                    cellRenderer: placeholderRenderer,
+                    cellRendererParams: { class: "allValue", placeholder: "ANY" }
+                }, 
+                {
+                    headerName: "Zone", field: "ZoneID",
+                    cellEditor: TypeaheadEditor,
+                    cellEditorParams: {
+                        placeholder: 'Zone',
+                        store: zonesStore
+                    },
+                    valueFormatter: TypeaheadEditor.getFormatter(zonesStore),
+                    cellRenderer: placeholderRenderer,
+                    cellRendererParams: { class: "allValue", placeholder: "ANY" }
+                },
+                {
+                    headerName: "City", field: "CityID",
+                    cellEditor: TypeaheadEditor,
+                    cellEditorParams: {
+                        placeholder: 'City',
+                        store: citiesStore
+                    },
+                    valueFormatter: TypeaheadEditor.getFormatter(citiesStore),
+                    cellRenderer: placeholderRenderer,
+                    cellRendererParams: { class: "allValue", placeholder: "ANY" }
+                },
+                {
+                    headerName: "Zip Codes",
+                    field: "ZipCodes",
+                    cellRenderer: placeholderRenderer,
+                    cellRendererParams: { class: "allValue", placeholder: "ANY" }
+                }
+            );
+            </text>
+        }
+
+        @if (Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesGridModel.Mode.Ranges)
+        {
+            <text>
+            columnDefs.push(
+                { headerName: "From" , field: "RangeFrom" },
+                { headerName: "Until", field: "RangeTo" }
+            );
+            </text>
+        }
+
+        columnDefs.push(
+            @if (Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesGridModel.Mode.Fees) {
+                <text>
+                {
+                    headerName: "Action", field: "ActionID",
+                    cellEditor: TypeaheadEditor,
+                    cellEditorParams: {
+                        placeholder: 'Action',
+                        minLength: 0,
+                        highlight: true,
+                        store: actionsStore
+                    },
+                    valueFormatter: TypeaheadEditor.getFormatter(actionsStore)
+                },
+                </text>
+            }
+            {
+                headerName: "Fee",
+                field: "Value",
+                cellEditor: ValidationPricesCellEditor
+            },
+            {
+                headerName: "Per", field: "ByUomID",
+                cellEditor: TypeaheadEditor,
+                cellEditorParams: {
+                    placeholder: 'Unit of Measure',
+                    minLength: 0,
+                    highlight: true,
+                    store: uomsStore
+                },
+                valueFormatter: TypeaheadEditor.getFormatter(uomsStore)
+            },
+            {
+                headerName: "Discount",
+                field: "Discount",
+                valueFormatter: params => {
+                    let percentage = parseFloat(params.value * 100);
+                    return ((percentage > 0 && percentage <= 100) ? percentage + "%" : "");
+                }
+            },
+            {
+                headerName: "Min",
+                field: "FeeMin",
+                cellEditor: ValidationPricesCellEditor
+            },
+            {
+                headerName: "Max",
+                field: "FeeMax",
+            }
+        );
+
+        function hideColumn(defs, name) {
+            const def = defs.find((def) => (def.field === name));
+            if (def) def.hide = true;
+        }
+
+        // Hides filter columns
+        @foreach (var filter in Model.FilterBy)
+        {
+            <text>hideColumn(columnDefs, '@(filter)');</text>
+        }
+
+        // let the grid know which columns has to use.
+        var gridOptions = {
+            columnDefs: columnDefs,
+            defaultColDef: {
+                sortable: true,
+                filter: true,
+                editable: true,
+                flex: 1,
+                minWidth: 100,
+                onCellValueChanged: (params) => {
+                    let CellValueDataChangedModel = {
+                        newValue : params.newValue?.value || params.newValue,
+                        oldValue : params.oldValue,
+                        field    : params.colDef.field,
+                        idEntity : params.data.FeeID
+                    };
+
+                    var idEntityAffected = agGridManager.updateEntity(
+                        (params.data.FeeID > 0) ? CellValueDataChangedModel : GetModel(params.data),
+                                (params.data.FeeID > 0) ? '@Url.Action("updateSingleFieldFeeData", "FeesGrid")' : '@Url.Action("updateFeeRepository", "FeesGrid")',
+                        (params.data.FeeID > 0) ? null : ModifyModel
+                    );
+
+
+                    // Updates the FeeID of the inserted row
+                    if (params.data.FeeID < 0 && idEntityAffected)
+                        params.data.FeeID = idEntityAffected;
+                }
+                    },
+            // use the server-side row model instead of the default 'client-side'.
+            rowModelType: 'serverSide',
+            getRowNodeId: function (data) {
+                    return data.FeeID;
+                },
+            serverSideStoreType: 'full',
+            // items to take by request.
+            //cacheBlockSize: 4,
+            // enables pagination in the grid
+            pagination: false,
+            // sets rows qunatity to show per page (default is 100)
+            //paginationPageSize: 4,
+            undoRedoCellEditing: true,
+            undoRedoCellEditingLimit: 20,
+            rowSelection: 'multiple',
+            suppressRowClickSelection: true,
+            endpoint: '@Url.Action("getFeeData", "FeesGrid")',
+            @if (Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesGridModel.Mode.Ranges) {
+                <text>
+                where: { "ParentFeeID": -1 }
+                </text>
+            } else {
+                <text>
+                where: { "ParentFeeID": null }
+                </text>
+            }
+            };
+
+                document.addEventListener('DOMContentLoaded', function () {
+                    const grid = agGridManager.initGrid('myGrid@(Model.GridMode)', gridOptions);
+                });
+
+
+                function ModifyModel(model) {
+                    if (model && model.idEntityRequest && model.idEntityRequest < 0) {
+                        alert("Congrats! A new Entity has been created");
+                        setNewId(model.idEntityRequest, model.idEntityAffected);
+                    }
+                }
+
+                function setNewId(oldId, newId) {
+                    var rowNode = gridOptions.api.getRowNode(oldId);
+                    var newData = rowNode.data;
+                    newData.FeeID = newId;
+                    rowNode.setData(newData);
+                }
+
+                function GetModel(request) {
+                    let FeeData = {};
+
+                    FeeData.FeeID       = request.FeeID;
+                    FeeData.ParentFeeID = request.ParentFeeID;
+                    FeeData.FeeTypeID   = request.FeeTypeID;
+                    FeeData.ByUomID     = request.ByUomID?.value  || request.ByUomID;
+                    FeeData.IslandID    = request.IslandID?.value || request.IslandID;
+                    FeeData.CityID      = request.CityID?.value   || request.CityID;
+                    FeeData.StateID     = request.StateID;
+                    FeeData.Discount    = request.Discount;
+                    FeeData.Value       = request.Value;
+                    FeeData.ZipCodes    = request.ZipCodes;
+                    FeeData.FeeMin      = request.FeeMin;
+                    FeeData.FeeMax      = request.FeeMax;
+                    FeeData.RangeFrom   = request.RangeFrom;
+                    FeeData.RangeTo     = request.RangeTo;
+                    FeeData.ValidFrom   = request.ValidFrom;
+                    FeeData.ValidUntil  = request.ValidUntil;
+
+                    return FeeData;
+            @*gridManager.updateEntity(FeeData, '@Url.Action("updateFeeRepository", "FeesGrid")');*@
+        }
+    }
+
+    initGrid();
+
+</script>
