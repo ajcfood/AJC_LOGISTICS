@@ -17,6 +17,8 @@
         <AssociationConnector Association="QuotingToolModel.QuotingV2_FeeTypes_Parent_FK" />
         <AssociationConnector Association="QuotingToolModel.QuotingV2_ServiceTypeCharges_FeeType_FK" />
         <AssociationConnector Association="QuotingToolModel.QuotingV2_ServiceTypeCharges_ServiceType_FK" />
+        <EntityTypeShape EntityType="QuotingToolModel.QuotingV2_Prospects" Width="1.5" PointX="0.75" PointY="0.75" />
+        <EntityTypeShape EntityType="QuotingToolModel.vw_Customers" Width="1.5" PointX="0.75" PointY="4.75" />
       </Diagram>
       <Diagram DiagramId="4fe137b38ebb4a16a83f564f96d93132" Name="Parameters" >
         <EntityTypeShape EntityType="QuotingToolModel.C__RefactorLog" Width="1.5" PointX="0.75" PointY="7.75" />

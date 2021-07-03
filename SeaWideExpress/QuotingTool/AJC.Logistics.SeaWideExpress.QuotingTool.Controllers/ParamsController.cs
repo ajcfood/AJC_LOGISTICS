@@ -144,6 +144,29 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                 return Json(dataSet, JsonRequestBehavior.AllowGet);
             }
         }
+
+
+        /// <summary>
+        /// Get Rates Types and SubTypes Concatenated entities for List of Values
+        /// </summary>
+        /// <returns></returns>
+        [System.Web.Mvc.HttpGet]
+        public JsonResult getRatesTypesSubTypes()
+        {
+            using (QuotingToolRepository db = new QuotingToolRepository())
+            {
+                Dictionary<string, string> TypesSubTypes = new Dictionary<string, string>();
+                var types = db.FeeTypes.Where(i => !i.ParentFeeTypeID.HasValue) .ToList();
+                foreach (FeeType type in types) {
+                    TypesSubTypes.Add(type.FeeTypeID.ToString(), type.Name);
+                    var subtypes = db.FeeTypes.Where(i => i.ParentFeeTypeID == type.FeeTypeID).ToList();
+                    foreach (FeeType subType in subtypes) {
+                        TypesSubTypes.Add(subType.FeeTypeID.ToString(), type.Name + '-' + subType.Name);
+                    }                
+                }
+                return Json(TypesSubTypes.Select(i => new { value = i.Key, label = i.Value }).ToList(), JsonRequestBehavior.AllowGet) ;
+            }
+        }
         #endregion
     }
 }

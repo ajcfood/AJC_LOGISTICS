@@ -1,8 +1,9 @@
 ﻿@model AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesGridModel
 @using Newtonsoft.Json;
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js" integrity="sha256-T0Vest3yCU7pafRw9r+settMBX6JkKN06dqBnpQ8d30=" crossorigin="anonymous"></script>
 <script src="~/assets/ag-grid/ag-grid-enterprise.min.js"></script>
 <script src="~/assets/ag-grid/ag-grid-servermanager.js"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="~/assets/typeahead/typeahead.bundle.js"></script>
 <script src="~/assets/ag-grid/ag-grid-typeahead.js"></script>
 <script src="~/assets/ag-grid/ValidationPricesCellEditor.js"></script>
@@ -36,13 +37,15 @@
         const uoms = agGridManager.fetchLOV('@Url.Action("getUoms", "Params")');
         const actions = agGridManager.fetchLOV('@Url.Action("getActions", "Params")');
         const zones = agGridManager.fetchLOV('@Url.Action("getZones", "Params")');
+        const ratesTypeSubType = agGridManager.fetchLOV('@Url.Action("getRatesTypesSubTypes", "Params")');
 
         const statesStore  = TypeaheadEditor.newStore('states' , states );
         const islandsStore = TypeaheadEditor.newStore('islands', islands);
         const citiesStore  = TypeaheadEditor.newStore('cities' , cities );
         const uomsStore    = TypeaheadEditor.newStore('uoms'   , uoms   );
         const actionsStore = TypeaheadEditor.newStore('actions', actions);
-        const zonesStore   = TypeaheadEditor.newStore('zones'  , zones);
+        const zonesStore = TypeaheadEditor.newStore('zones', zones);
+        const ratesTypeSubTypeStore = TypeaheadEditor.newStore('rateTypeSubType', ratesTypeSubType );
 
         columnDefs.push(
             { headerName: "id", field: "FeeID", hide: true },
@@ -72,7 +75,7 @@
                     valueFormatter: TypeaheadEditor.getFormatter(islandsStore),
                     cellRenderer: placeholderRenderer,
                     cellRendererParams: { class: "allValue", placeholder: "ANY" }
-                }, 
+                },
                 {
                     headerName: "Zone", field: "ZoneID",
                     cellEditor: TypeaheadEditor,
@@ -133,6 +136,7 @@
             }
             {
                 headerName: "Fee",
+                maxWidth: "60", 
                 field: "Value",
                 cellEditor: ValidationPricesCellEditor
             },
@@ -149,6 +153,7 @@
             },
             {
                 headerName: "Discount",
+                maxWidth: "100", 
                 field: "Discount",
                 valueFormatter: params => {
                     let percentage = parseFloat(params.value * 100);
@@ -157,12 +162,40 @@
             },
             {
                 headerName: "Min",
+                maxWidth : "70", 
                 field: "FeeMin",
                 cellEditor: ValidationPricesCellEditor
             },
             {
                 headerName: "Max",
+                maxWidth: "70", 
                 field: "FeeMax",
+                cellEditor: ValidationPricesCellEditor
+            }
+            @if (Model.FilterBy.Contains("CustomerID")){
+                <text>
+            ,{
+                headerName: "Over",
+                cellRenderer: placeholderRenderer,
+                cellRendererParams: { class: "allValue", placeholder: "OVER" },
+                maxWidth: "70", 
+                editable: false,
+                showHeader: false
+            },
+            {
+                headerName: "Rate Type",
+                field: "FeeTypeID",
+                cellEditor: TypeaheadEditor,
+                cellEditorParams: {
+                    placeholder: 'Action',
+                    minLength: 0,
+                    highlight: true,
+                    store: ratesTypeSubTypeStore
+                },
+                valueFormatter: TypeaheadEditor.getFormatter(ratesTypeSubTypeStore)
+            }
+
+                </text>
             }
         );
 
@@ -240,7 +273,7 @@
 
 
                 function ModifyModel(model) {
-                    if (model && model.idEntityRequest && model.idEntityRequest < 0) {
+                    if (model && model.idEntityRequest && model.idEntityRequest < 0 && model.idEntityAffected > 0) {
                         alert("Congrats! A new Entity has been created");
                         setNewId(model.idEntityRequest, model.idEntityAffected);
                     }
@@ -258,7 +291,7 @@
 
                     FeeData.FeeID       = request.FeeID;
                     FeeData.ParentFeeID = request.ParentFeeID;
-                    FeeData.FeeTypeID   = request.FeeTypeID;
+                    FeeData.FeeTypeID   = request.FeeTypeID?.value ||request.FeeTypeID;
                     FeeData.ByUomID     = request.ByUomID?.value  || request.ByUomID;
                     FeeData.IslandID    = request.IslandID?.value || request.IslandID;
                     FeeData.CityID      = request.CityID?.value   || request.CityID;
@@ -272,6 +305,7 @@
                     FeeData.RangeTo     = request.RangeTo;
                     FeeData.ValidFrom   = request.ValidFrom;
                     FeeData.ValidUntil  = request.ValidUntil;
+                    FeeData.CustomerID  = request.CustomerID;
 
                     return FeeData;
             @*gridManager.updateEntity(FeeData, '@Url.Action("updateFeeRepository", "FeesGrid")');*@

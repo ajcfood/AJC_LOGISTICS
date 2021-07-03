@@ -73,7 +73,9 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                     ValidUntil = fee.ValidUntil,
                     RangeByUomID = fee.RangeByUomID,
                     RangeFrom = fee.RangeFrom,
-                    RangeTo = fee.RangeTo
+                    RangeTo = fee.RangeTo,
+                    Notes = fee.Notes,
+                    CustomerID = fee.CustomerID
                 });
 
                 if (request.whereClause != null && request.whereClause.Length>0)
@@ -106,7 +108,11 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                             case "ByUomID":
                                 if (Int32.TryParse(predicate.Value, out intTemp)) intValue = intTemp;
                                 if (intValue != null) query = query.Where(fee => fee.ByUomID == intValue);
+                                break;
 
+                            case "CustomerID":
+                                if (Int32.TryParse(predicate.Value, out intTemp)) intValue = intTemp;
+                                if (intValue != null) query = query.Where(fee => fee.CustomerID == intValue);
                                 break;
                         } 
                     }
@@ -156,20 +162,21 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                     FeeData.FeeID       = request.FeeID;
                     FeeData.ParentFeeID = request.ParentFeeID;
                     FeeData.FeeTypeID   = request.FeeTypeID;
-                    FeeData.ByUomID  = request.ByUomID;
-                    FeeData.CityID   = request.CityID;
-                    FeeData.StateID  = request.StateID;
-                    FeeData.Discount = request.Discount;
-                    FeeData.IslandID = request.IslandID;
-                    FeeData.ActionID = request.ActionID;
-                    FeeData.Value    = request.Value;
-                    FeeData.ZipCodes = request.ZipCodes;
-                    FeeData.FeeMin = request.FeeMin;
-                    FeeData.FeeMax = request.FeeMax;
-                    FeeData.RangeFrom = request.RangeFrom;
-                    FeeData.RangeTo = request.RangeTo;
-                    FeeData.ValidFrom = request.ValidFrom;
-                    FeeData.ValidUntil = request.ValidUntil;
+                    FeeData.ByUomID     = request.ByUomID;
+                    FeeData.CityID      = request.CityID;
+                    FeeData.StateID     = request.StateID;
+                    FeeData.Discount    = request.Discount;
+                    FeeData.IslandID    = request.IslandID;
+                    FeeData.ActionID    = request.ActionID;
+                    FeeData.Value       = request.Value;
+                    FeeData.ZipCodes    = request.ZipCodes;
+                    FeeData.FeeMin      = request.FeeMin;
+                    FeeData.FeeMax      = request.FeeMax;
+                    FeeData.RangeFrom   = request.RangeFrom;
+                    FeeData.RangeTo     = request.RangeTo;
+                    FeeData.ValidFrom   = request.ValidFrom;
+                    FeeData.ValidUntil  = request.ValidUntil;
+                    FeeData.CustomerID  = request.CustomerID;
 
                     if (request.FeeID < 0 && Helpers.NewEntityCreationHelper.CheckMandatoryFields(FeeData, typeof(Fees)))
                         db.Fees.AddObject(FeeData);

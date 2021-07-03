@@ -93,6 +93,17 @@
           <Property Name="DateUpdated" Type="datetime" />
           <Property Name="UpdatedBy" Type="varchar" MaxLength="100" />
         </EntityType>
+        <EntityType Name="QuotingV2_Prospects">
+          <Key>
+            <PropertyRef Name="ProspectID" />
+          </Key>
+          <Property Name="ProspectID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="DateAdded" Type="datetime" Nullable="false" />
+          <Property Name="AddedBy" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="DateUpdated" Type="datetime" />
+          <Property Name="UpdatedBy" Type="varchar" MaxLength="100" />
+        </EntityType>
         <EntityType Name="QuotingV2_ServiceTypeFees">
           <Key>
             <PropertyRef Name="ServiceTypeChargeID" />
@@ -166,6 +177,15 @@
           <Property Name="AddedBy" Type="varchar" MaxLength="100" Nullable="false" />
           <Property Name="DateUpdated" Type="datetime" />
           <Property Name="UpdatedBy" Type="varchar" MaxLength="100" />
+        </EntityType>
+        <!--Errors Found During Generation:
+warning 6002: The table/view 'QuotingTool.dbo.vw_Customers' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+        <EntityType Name="vw_Customers">
+          <Key>
+            <PropertyRef Name="CustomerID" />
+          </Key>
+          <Property Name="CustomerID" Type="int" Nullable="false" />
+          <Property Name="Name" Type="varchar" MaxLength="50" />
         </EntityType>
         <Association Name="QuotingV2_Cities_Island_FK">
           <End Role="QuotingV2_Islands" Type="Self.QuotingV2_Islands" Multiplicity="0..1" />
@@ -390,12 +410,19 @@
           <EntitySet Name="QuotingV2_Fees" EntityType="Self.QuotingV2_Fees" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="QuotingV2_FeeTypes" EntityType="Self.QuotingV2_FeeTypes" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="QuotingV2_Islands" EntityType="Self.QuotingV2_Islands" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="QuotingV2_Prospects" EntityType="Self.QuotingV2_Prospects" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="QuotingV2_ServiceTypeFees" EntityType="Self.QuotingV2_ServiceTypeFees" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="QuotingV2_ServiceTypes" EntityType="Self.QuotingV2_ServiceTypes" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="QuotingV2_States" EntityType="Self.QuotingV2_States" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="QuotingV2_UOMs" EntityType="Self.QuotingV2_UOMs" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="QuotingV2_ZipCodes" EntityType="Self.QuotingV2_ZipCodes" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="QuotingV2_Zones" EntityType="Self.QuotingV2_Zones" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="vw_Customers" EntityType="Self.vw_Customers" store:Type="Views" store:Schema="dbo">
+            <DefiningQuery>SELECT 
+[vw_Customers].[CustomerID] AS [CustomerID], 
+[vw_Customers].[Name] AS [Name]
+FROM [dbo].[vw_Customers] AS [vw_Customers]</DefiningQuery>
+          </EntitySet>
           <AssociationSet Name="QuotingV2_Cities_Island_FK" Association="Self.QuotingV2_Cities_Island_FK">
             <End Role="QuotingV2_Islands" EntitySet="QuotingV2_Islands" />
             <End Role="QuotingV2_Cities" EntitySet="QuotingV2_Cities" />
@@ -558,6 +585,8 @@
             <End Role="Island" EntitySet="Islands" />
             <End Role="City" EntitySet="Cities" />
           </AssociationSet>
+          <EntitySet Name="QuotingV2_Prospects" EntityType="QuotingToolModel.QuotingV2_Prospects" />
+          <EntitySet Name="vw_Customers" EntityType="QuotingToolModel.vw_Customers" />
           </EntityContainer>
         <EntityType Name="Fees">
           <Key>
@@ -973,6 +1002,24 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <EntityType Name="QuotingV2_Prospects">
+          <Key>
+            <PropertyRef Name="ProspectID" />
+          </Key>
+          <Property Name="ProspectID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="DateAdded" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="AddedBy" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="DateUpdated" Type="DateTime" Precision="3" />
+          <Property Name="UpdatedBy" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="vw_Customers">
+          <Key>
+            <PropertyRef Name="CustomerID" />
+          </Key>
+          <Property Name="CustomerID" Type="Int32" Nullable="false" />
+          <Property Name="Name" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+        </EntityType>
         </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -1149,6 +1196,26 @@
                 <ScalarProperty Name="IslandID" ColumnName="IslandID" />
                 <ScalarProperty Name="StateID" ColumnName="StateID" />
                 <ScalarProperty Name="ZoneID" ColumnName="ZoneID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="QuotingV2_Prospects">
+            <EntityTypeMapping TypeName="QuotingToolModel.QuotingV2_Prospects">
+              <MappingFragment StoreEntitySet="QuotingV2_Prospects">
+                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
+                <ScalarProperty Name="DateUpdated" ColumnName="DateUpdated" />
+                <ScalarProperty Name="AddedBy" ColumnName="AddedBy" />
+                <ScalarProperty Name="DateAdded" ColumnName="DateAdded" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="ProspectID" ColumnName="ProspectID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="vw_Customers">
+            <EntityTypeMapping TypeName="QuotingToolModel.vw_Customers">
+              <MappingFragment StoreEntitySet="vw_Customers">
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="CustomerID" ColumnName="CustomerID" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

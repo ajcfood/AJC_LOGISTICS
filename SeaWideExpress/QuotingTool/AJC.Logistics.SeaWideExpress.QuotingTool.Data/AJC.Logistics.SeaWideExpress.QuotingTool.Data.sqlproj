@@ -59,6 +59,7 @@
     <Folder Include="dbo\" />
     <Folder Include="dbo\Tables\" />
     <Folder Include="Scripts\" />
+    <Folder Include="dbo\Views\" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\Tables\QuotingV2_UOMs.sql" />
@@ -73,6 +74,8 @@
     <Build Include="dbo\Tables\QuotingV2_Zones.sql" />
     <Build Include="dbo\Tables\QuotingV2_ZipCodes.sql" />
     <Build Include="dbo\Tables\QuotingV2_Countries.sql" />
+    <Build Include="dbo\Tables\QuotingV2_Prospects.sql" />
+    <Build Include="dbo\Views\vw_Customers.sql" />
   </ItemGroup>
   <ItemGroup>
     <RefactorLog Include="AJC.Logistics.SeaWideExpress.QuotingTool.Data.refactorlog" />

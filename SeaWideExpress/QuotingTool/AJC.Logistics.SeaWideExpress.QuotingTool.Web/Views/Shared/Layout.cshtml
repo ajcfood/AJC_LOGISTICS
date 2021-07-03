@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="generator" content="Hugo 0.83.1">
     <title>Seawide QuotingTool</title>
-
     <link rel="canonical" href="">
     <!-- Bootstrap core CSS -->
+    <link href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet" />
     <link href="@Url.Content("~/assets/bootstrap/css/bootstrap.min.css")" rel="stylesheet">
     <link href="@Url.Content("~/assets/bootstrap/headers.css")" rel="stylesheet">
     <!-- Styles for ag-grid -->
@@ -73,7 +73,7 @@
 
                 <ul class="nav col-12 col-lg-auto my-2 justify-content-center my-md-0 text-small">
                     <li>
-                        <a href="#" class="nav-link text-white">
+                        <a href="@Url.Action("Index", "FeesByType")" id="btnRates"  class="nav-link text-white">
                             <svg class="bi d-block mx-auto mb-1" width="24" height="24"><use xlink:href="#home"></use></svg>
                             Rates
                         </a>
@@ -97,7 +97,7 @@
                         </a>
                     </li>*@
                     <li>
-                        <a href="#" class="nav-link text-secondary">
+                        <a href="@Url.Action("Index", "FeesByCustomer")" id="btnCustomers" class="nav-link text-secondary">
                             <svg class="bi d-block mx-auto mb-1" width="24" height="24"><use xlink:href="#people-circle"></use></svg>
                             Customers
                         </a>
