@@ -70,7 +70,6 @@
   <ItemGroup>
     <Compile Include="AGCellValueDataChangedModel.cs" />
     <Compile Include="AGGridRequestModel.cs" />
-    <Compile Include="CustomerEntity.cs" />
     <Compile Include="FeeDataModel.cs" />
     <Compile Include="FeesByTypeModel.cs" />
     <Compile Include="FeesGridModel.cs" />
