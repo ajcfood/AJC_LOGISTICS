@@ -15,6 +15,16 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Business
         public IEnumerable<State> States { get; set; }
         public IEnumerable<FeeType> FeeTypes { get; set; }
         public IEnumerable<FeeType> FeeSubTypes { get; set; }
+        public IEnumerable<int> Periods
+        {
+            get
+            {
+                List<int> response = new List<int>();
+                for (int year = 2020; year <= DateTime.Now.Year + 1; year++)
+                    response.Add(year);
+                return response;
+            }
+        }
         public FeesGridModel FeesModel { get; set; }
         public FeesGridModel RangesModel { get; set; }
         public IEnumerable<vw_Customers> Customers { get; set; }
@@ -29,6 +39,7 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Business
         {
             this.FeeTypes    = new List<FeeType>();
             this.FeeSubTypes = new List<FeeType>();
+
         }
     }
 

@@ -24,6 +24,8 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
             theModel.Title = "Rate Adjustments by Customer";
             
             TempData["Model"] = theModel;
+
+            TempData["ShowCustomer"] = false;
             return RedirectToAction("Index", "FeesByType");
         }
     }

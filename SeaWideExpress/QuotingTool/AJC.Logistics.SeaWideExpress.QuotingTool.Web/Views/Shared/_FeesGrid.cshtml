@@ -1,5 +1,6 @@
 ﻿@model AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesGridModel
 @using Newtonsoft.Json;
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js" integrity="sha256-T0Vest3yCU7pafRw9r+settMBX6JkKN06dqBnpQ8d30=" crossorigin="anonymous"></script>
 <script src="~/assets/ag-grid/ag-grid-enterprise.min.js"></script>
@@ -7,6 +8,7 @@
 <script src="~/assets/typeahead/typeahead.bundle.js"></script>
 <script src="~/assets/ag-grid/ag-grid-typeahead.js"></script>
 <script src="~/assets/ag-grid/ValidationPricesCellEditor.js"></script>
+<script src="~/assets/combo-autocomplete/combo-autocomplete.js"></script>
 <link rel="stylesheet" href="~/assets/ag-grid/ag-grid-typeahead.css" />
 <div id="myGrid@(Model.GridMode)" style="height: 100%; width:100%;" class="ag-theme-balham"></div>
 <a id="btnCrear" style="display:none;">Crear</a>
@@ -37,6 +39,7 @@
         const uoms = agGridManager.fetchLOV('@Url.Action("getUoms", "Params")');
         const actions = agGridManager.fetchLOV('@Url.Action("getActions", "Params")');
         const zones = agGridManager.fetchLOV('@Url.Action("getZones", "Params")');
+        const customers = agGridManager.fetchLOV('@Url.Action("getCustomers", "Params")');
         const ratesTypeSubType = agGridManager.fetchLOV('@Url.Action("getRatesTypesSubTypes", "Params")');
 
         const statesStore  = TypeaheadEditor.newStore('states' , states );
@@ -44,7 +47,8 @@
         const citiesStore  = TypeaheadEditor.newStore('cities' , cities );
         const uomsStore    = TypeaheadEditor.newStore('uoms'   , uoms   );
         const actionsStore = TypeaheadEditor.newStore('actions', actions);
-        const zonesStore = TypeaheadEditor.newStore('zones', zones);
+        const zonesStore   = TypeaheadEditor.newStore('zones', zones);
+        const customersStore = TypeaheadEditor.newStore('customers', customers);
         const ratesTypeSubTypeStore = TypeaheadEditor.newStore('rateTypeSubType', ratesTypeSubType );
 
         columnDefs.push(
@@ -54,7 +58,9 @@
 
         @if (Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesGridModel.Mode.Fees)
         {
-            <text>
+
+
+<text>
             columnDefs.push(
                 {
                     headerName: "State", field: "StateID",
@@ -65,11 +71,26 @@
                     },
                     valueFormatter: TypeaheadEditor.getFormatter(statesStore)
                 },
+                @if ((TempData["ShowCustomer"] == null ? false : (bool)TempData["ShowCustomer"]) == true) {
+                    <text>
+                                {
+                                headerName: "Customer", field: "CustomerID",
+                        cellEditor: TypeaheadEditor,
+                        cellEditorParams: {
+                                    placeholder: 'Customer',
+                            store: customersStore
+                        },
+                        valueFormatter: TypeaheadEditor.getFormatter(customersStore),
+                        cellRenderer: placeholderRenderer,
+                        cellRendererParams: { class: "allValue", placeholder: "ANY" }
+                },
+                    </text>
+                }
                 {
-                    headerName: "Island", field: "IslandID",
+                headerName: "Island", field: "IslandID",
                     cellEditor: TypeaheadEditor,
                     cellEditorParams: {
-                        placeholder: 'Island',
+                    placeholder: 'Island',
                         store: islandsStore
                     },
                     valueFormatter: TypeaheadEditor.getFormatter(islandsStore),
@@ -77,10 +98,10 @@
                     cellRendererParams: { class: "allValue", placeholder: "ANY" }
                 },
                 {
-                    headerName: "Zone", field: "ZoneID",
+                headerName: "Zone", field: "ZoneID",
                     cellEditor: TypeaheadEditor,
                     cellEditorParams: {
-                        placeholder: 'Zone',
+                    placeholder: 'Zone',
                         store: zonesStore
                     },
                     valueFormatter: TypeaheadEditor.getFormatter(zonesStore),
@@ -88,10 +109,10 @@
                     cellRendererParams: { class: "allValue", placeholder: "ANY" }
                 },
                 {
-                    headerName: "City", field: "CityID",
+                headerName: "City", field: "CityID",
                     cellEditor: TypeaheadEditor,
                     cellEditorParams: {
-                        placeholder: 'City',
+                    placeholder: 'City',
                         store: citiesStore
                     },
                     valueFormatter: TypeaheadEditor.getFormatter(citiesStore),
@@ -99,7 +120,7 @@
                     cellRendererParams: { class: "allValue", placeholder: "ANY" }
                 },
                 {
-                    headerName: "Zip Codes",
+                headerName: "Zip Codes",
                     field: "ZipCodes",
                     cellRenderer: placeholderRenderer,
                     cellRendererParams: { class: "allValue", placeholder: "ANY" }
@@ -136,7 +157,7 @@
             }
             {
                 headerName: "Fee",
-                maxWidth: "60", 
+                maxWidth: "60",
                 field: "Value",
                 cellEditor: ValidationPricesCellEditor
             },
@@ -153,7 +174,7 @@
             },
             {
                 headerName: "Discount",
-                maxWidth: "100", 
+                maxWidth: "100",
                 field: "Discount",
                 valueFormatter: params => {
                     let percentage = parseFloat(params.value * 100);
@@ -162,13 +183,13 @@
             },
             {
                 headerName: "Min",
-                maxWidth : "70", 
+                maxWidth : "70",
                 field: "FeeMin",
                 cellEditor: ValidationPricesCellEditor
             },
             {
                 headerName: "Max",
-                maxWidth: "70", 
+                maxWidth: "70",
                 field: "FeeMax",
                 cellEditor: ValidationPricesCellEditor
             }
@@ -178,7 +199,7 @@
                 headerName: "Over",
                 cellRenderer: placeholderRenderer,
                 cellRendererParams: { class: "allValue", placeholder: "OVER" },
-                maxWidth: "70", 
+                maxWidth: "70",
                 editable: false,
                 showHeader: false
             },
@@ -198,6 +219,7 @@
                 </text>
             }
         );
+
 
         function hideColumn(defs, name) {
             const def = defs.find((def) => (def.field === name));
@@ -313,5 +335,4 @@
     }
 
     initGrid();
-
 </script>

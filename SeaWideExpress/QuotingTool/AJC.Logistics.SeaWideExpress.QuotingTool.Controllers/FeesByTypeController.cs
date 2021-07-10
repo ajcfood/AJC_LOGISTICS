@@ -12,8 +12,18 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
     {
         public ActionResult Index() {
             Business.FeesMasterModel theModel = TempData["Model"] == null ? BuildModel() : (Business.FeesMasterModel)TempData["Model"];
-            
             return View(theModel);
+        }
+
+        public ActionResult IndexShowCustomer()
+        {
+            TempData["ShowCustomer"] = true;
+            return RedirectToAction("Index");
+        }
+
+        public ActionResult IndexHiddenCustomer() {
+            TempData["ShowCustomer"] = false;
+            return RedirectToAction("Index");
         }
 
         private FeesMasterModel BuildModel()

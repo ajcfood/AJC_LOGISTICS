@@ -1,19 +1,46 @@
 ﻿@using AJC.Logistics.SeaWideExpress.QuotingTool.Models
 @model AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesMasterModel
-
 <link rel="stylesheet" href="~/assets/styles/index.css" />
+<style>
+    .custom-combobox {
+        position: relative;
+        display: inline-block;
+    }
 
+    .custom-combobox-toggle {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        margin-left: -1px;
+        padding: 0;
+    }
+
+    .custom-combobox-input {
+        margin: 0;
+        /*max-width: 150px !important;*/
+        /*max-width:100px;*/
+        padding: 5px 10px;
+    }
+
+    .seawideSelect {
+        margin-right: 20px;
+        display: inline-block;
+    }
+</style>
 <br />
 <h3 style="text-align:center;">@Model.Title</h3>
 
 <nav class="navbar navbar-light" style="background-color: rgb(245, 247, 247); padding: 6px 10px; border: 1px solid rgb(189, 195, 199); border-bottom: none; ">
     <div>
         <span><b>State</b></span>&nbsp;
-        @Html.DropDownListFor(m => m.State, new SelectList(Model.States, "StateID", "Name"), "--All--",
-            new
-                 {
-                     style = "width: 100px"@*, @class = "form-select" *@})
-        &nbsp;&nbsp;
+        <div class="ui-widget seawideSelect">
+            @Html.DropDownListFor(m => m.State, new SelectList(Model.States, "StateID", "Name"), "--All--",
+                new
+                     {
+                         style = "width: 100px",
+                         id = "State"@*, @class = "form-select" *@})
+            &nbsp;&nbsp;
+        </div>
 
         @if (Model is AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesByTypeModel)
         {
@@ -29,25 +56,49 @@
                            {
                                style = "width: 150px",
                                data_url = Url.Action("GetFeeSubTypes")@*, @class = "form-select"*@})
-                &nbsp; &nbsp;
-                <span><b>Show Customers</b></span>&nbsp;
-                <label class="switch">
-                    <input type="checkbox">
-                    <span class="slider round"></span>
-                </label>
-                &nbsp; &nbsp;
-                <span><b>Period</b></span>&nbsp;<select id="Period"><option>2020</option><option>2021</option></select>
             </text>
         }
         else
         {
             <text>
                 <span><b>Customer</b></span>&nbsp;
-                @Html.DropDownListFor(m => m.Customers, new SelectList(Model.Customers, "CustomerID", "Name"), "--All--",
-                            new{style = "width: 100px"@*, @class = "form-select" *@})
-            &nbsp;
+                <div class="ui-widget" style="display:inline-block;">
+                    @Html.DropDownListFor(m => m.Customers, new SelectList(Model.Customers, "CustomerID", "Name"), "--All--",
+                    new
+                    {
+                        style = "width: 100px",
+                             id = "Customers"@*, @class = "form-select" *@})
+                </div>
             </text>
         }
+
+        &nbsp; &nbsp;
+        @if (Model is AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesByTypeModel)
+        {
+            <text>
+                <span><b>Show Customers</b></span>&nbsp;
+                <label class="switch">
+                    <input id="showCustomersSwitch" type="checkbox">
+                    <span class="slider round"></span>
+                </label>
+                &nbsp; &nbsp;
+            </text>
+        }
+        else
+        {
+            <text>
+                <span style="margin-left:20px;"><b>Detailed View</b></span>&nbsp;
+                <label class="switch">
+                    <input type="checkbox">
+                    <span class="slider round"></span>
+                </label>
+                &nbsp; &nbsp;
+            </text>
+        }
+        <span><b>Period</b></span>&nbsp;@Html.DropDownListFor(m => m.Periods, new SelectList(Model.Periods), "--All--",
+new
+{
+style = "width: 100px"@*, @class = "form-select" *@})
     </div>
     <div class="form-inline">
         <button class="btn btn-outline-danger my-2 my-sm-0" id="btnRemoveFee">Remove</button>
@@ -77,62 +128,62 @@
     $(function () {
         const filters = { ParentFeeID: null, StateID: @(Model.State), CustomerID : null};
 
-        function handleFilterChanged(field, value) {
-            if (!value || value === "--All--")
-                filters[field] = null;
-            else
-                filters[field] = value;
+    function handleFilterChanged(field, value) {
+        if (!value || value === "--All--")
+            filters[field] = null;
+        else
+            filters[field] = value;
 
-            const disabled = (!filters.FeeTypeID || !filters.StateID);
+        const disabled = (!filters.FeeTypeID || !filters.StateID);
             $("#btnAddFee").prop('disabled', disabled);
-            //$("#btnRemoveFee").prop('disabled', disabled);
-            if(disabled)
+        //$("#btnRemoveFee").prop('disabled', disabled);
+        if(disabled)
                 $("#btnAddFee").prop('disabled',  !filters.CustomerID);
-            const grid = agGridManager.getGrid('myGridFees');
-            if (grid) {
-                grid.datasource.setWhere(filters);
-                grid.api.refreshServerSideStore();
-            }
+        const grid = agGridManager.getGrid('myGridFees');
+        if (grid) {
+            grid.datasource.setWhere(filters);
+            grid.api.refreshServerSideStore();
         }
+    }
 
-        function handleStateChanged() {
-            handleFilterChanged("StateID", $("#State").val());
-        }
+    function handleStateChanged() {
+        handleFilterChanged("StateID", $("#State").val());
+    }
 
-        function handleFeeTypeChanged() {
-            var feeTypeID = $(this).val();
+    function handleFeeTypeChanged() {
+        var feeTypeID = $(this).val();
 
-            // Refreshes the sub types
-            var url = $("#FeeSubType").data("url") + '?feeTypeID=' + feeTypeID;
-            var $feeSubType = $("#FeeSubType");
+        // Refreshes the sub types
+        var url = $("#FeeSubType").data("url") + '?feeTypeID=' + feeTypeID;
+        var $feeSubType = $("#FeeSubType");
             $.getJSON(url, function (data) {
                 $feeSubType.empty();
-                if (data.length > 0) {
+            if (data.length > 0) {
                     $.each(data, function (i, item) {
                         $feeSubType.append($("<option>").text(item.Text).val(item.Value));
-                    });
+                });
                 } else {
                     $feeSubType.append($("<option>").text("--All--"));
-                }
+    }
 
-                // Forces a sub type changes validation
-                handleFeeSubTypeChanged();
+    // Forces a sub type changes validation
+    handleFeeSubTypeChanged();
             });
         }
 
         function handleFeeSubTypeChanged() {
-            handleFilterChanged("FeeTypeID", $("#FeeSubType").val());
-        }
+        handleFilterChanged("FeeTypeID", $("#FeeSubType").val());
+    }
 
-        function handlePeriodChanged() {
-            handleFilterChanged("Period", $("#Period").val());
-        }
+    function handlePeriodChanged() {
+        handleFilterChanged("Period", $("#Period").val());
+    }
 
-        function handleRangeByUomIDChanged() {
-            const grid = agGridManager.getGrid('myGridFees');
+    function handleRangeByUomIDChanged() {
+        const grid = agGridManager.getGrid('myGridFees');
             @*if (grid) {
-                grid.datasource.setWhere({ ParentFeeID: focusedRow ? focusedRow.FeeID : null , ByUomID: $("#ByUomIDs").val()});
-                grid.api.refreshServerSideStore();
+            grid.datasource.setWhere({ ParentFeeID: focusedRow ? focusedRow.FeeID : null , ByUomID: $("#ByUomIDs").val()});
+    grid.api.refreshServerSideStore();
             }*@
 
             let CellValueDataChangedModel = {
@@ -142,46 +193,64 @@
                 idEntity: focusedRow.FeeID
             };
 
-            agGridManager.updateEntity(
-                 CellValueDataChangedModel,
-                 '@Url.Action("updateSingleFieldFeeData", "FeesGrid")',
-                  null
-            );
+    agGridManager.updateEntity(
+         CellValueDataChangedModel,
+         '@Url.Action("updateSingleFieldFeeData", "FeesGrid")',
+          null
+    );
 
-            // Update the focused row data and refresh
-            focusedRow.RangeByUomID = CellValueDataChangedModel.newValue;
+        // Update the focused row data and refresh
+        focusedRow.RangeByUomID = CellValueDataChangedModel.newValue;
 
             //grid.api.refreshServerSideStore();
-        }
+    }
 
-        function handleCustomersChanged() {
-            handleFilterChanged("CustomerID", $("#Customers").val());
-        }
+    function handleCustomersChanged() {
+        handleFilterChanged("CustomerID", $("#Customers").val());
+    }
 
-        $("#State").change(handleStateChanged);
-        $("#FeeType").change(handleFeeTypeChanged);
-        $("#FeeSubType").change(handleFeeSubTypeChanged);
-        $("#Period").change(handlePeriodChanged);
-        $("#RangeByUomID").change(handleRangeByUomIDChanged);
-        $("#Customers").change(handleCustomersChanged);
+    function handleShowCustomersSwitchChanged() {
+        let columnVisible = $("#showCustomersSwitch").is(":checked");
+        //let columnDefs = agGridManager.getGrid('myGridFees').options.columnDefs;
+        //ColumnVisibility(columnDefs, "CustomerID", columnVisible);
+        if (columnVisible)
+            window.location.href = "@Url.Action("IndexShowCustomer")";
+        else
+            window.location.href = "@Url.Action("IndexHiddenCustomer")";
+    }
 
-        let lastId = -1;
-        function handleRemoveFees(id) {
-            return function () {
-                const grid = agGridManager.getGrid(id);
-                if (!grid) alert('matanga!!!');
-                const selectedRows = grid.api.getSelectedRows();
-                let selectedIds = selectedRows.map((item) => (item.FeeID)).filter((id) => (id >= 0));
-                if (selectedIds.length) agGridManager.updateEntity(selectedIds, '@Url.Action("removeFeeData", "FeesGrid")');
-                grid.api.applyServerSideTransaction({ remove: selectedRows });
+    function ColumnVisibility(defs, name, isVisible) {
+        const def = defs.find((def) => (def.field === name));
+        if (def) def.hide = !isVisible;
+    }
+
+    $("#State").change(handleStateChanged);
+    $("#FeeType").change(handleFeeTypeChanged);
+    $("#FeeSubType").change(handleFeeSubTypeChanged);
+    $("#Period").change(handlePeriodChanged);
+    $("#RangeByUomID").change(handleRangeByUomIDChanged);
+    $("#Customers").change(handleCustomersChanged);
+    $("#showCustomersSwitch").change(handleShowCustomersSwitchChanged);
+
+
+
+    let lastId = -1;
+    function handleRemoveFees(id) {
+        return function () {
+            const grid = agGridManager.getGrid(id);
+            if (!grid) alert('matanga!!!');
+            const selectedRows = grid.api.getSelectedRows();
+            let selectedIds = selectedRows.map((item) => (item.FeeID)).filter((id) => (id >= 0));
+            if (selectedIds.length) agGridManager.updateEntity(selectedIds, '@Url.Action("removeFeeData", "FeesGrid")');
+            grid.api.applyServerSideTransaction({ remove: selectedRows });
             }
         }
 
         $("#btnAddFee").click(function () {
-            const grid = agGridManager.getGrid('myGridFees');
-            if (!grid) alert('matanga!!!');
-            grid.api.applyServerSideTransaction({
-                @if (Model is AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesByTypeModel)
+        const grid = agGridManager.getGrid('myGridFees');
+        if (!grid) alert('matanga!!!');
+        grid.api.applyServerSideTransaction({
+            @if (Model is AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesByTypeModel)
                 {
                     <text>add: [{ FeeID: lastId--, FeeTypeID: filters.FeeTypeID, StateID: filters.StateID }]</text>
                 }
@@ -189,43 +258,43 @@
                     <text>add: [{ FeeID: lastId--, StateID: filters.StateID, CustomerID: filters.CustomerID }]</text>
                 }
 
-            });
         });
+    });
 
         $("#btnRemoveFee").click(handleRemoveFees('myGridFees'));
 
         $("#btnAddRange").click(function () {
-            const grid = agGridManager.getGrid('myGridRanges');
-            if (!grid) alert('matanga!!!');
-            const newRow = {};
-            Object.assign(newRow, focusedRow);
-            newRow.FeeID = lastId--;
-            newRow.ParentFeeID = focusedRow.FeeID;
-            grid.api.applyServerSideTransaction({ add: [newRow] });
-        });
+        const grid = agGridManager.getGrid('myGridRanges');
+        if (!grid) alert('matanga!!!');
+        const newRow = {};
+        Object.assign(newRow, focusedRow);
+        newRow.FeeID = lastId--;
+        newRow.ParentFeeID = focusedRow.FeeID;
+        grid.api.applyServerSideTransaction({ add: [newRow] });
+    });
 
         $("#btnRemoveRange").click(handleRemoveFees('myGridRanges'));
 
-        let focusedRowIndex = undefined;
-        let focusedRow = undefined;
+    let focusedRowIndex = undefined;
+    let focusedRow = undefined;
 
-        function handleRowFocused(event) {
-            focusedRowIndex = event.rowIndex;
-            if (focusedRowIndex === undefined || focusedRowIndex < 0) return;
-            const node = event.api.getDisplayedRowAtIndex(focusedRowIndex);
-            focusedRow = node ? node.data : null;
+    function handleRowFocused(event) {
+        focusedRowIndex = event.rowIndex;
+        if (focusedRowIndex === undefined || focusedRowIndex < 0) return;
+        const node = event.api.getDisplayedRowAtIndex(focusedRowIndex);
+        focusedRow = node ? node.data : null;
 
-            const grid = agGridManager.getGrid('myGridRanges');
-            if (!grid) alert('matanga!!!');
+        const grid = agGridManager.getGrid('myGridRanges');
+        if (!grid) alert('matanga!!!');
 
             $("#RangeByUomID").val(focusedRow.RangeByUomID || "--No Ranges--");
 
-            grid.datasource.setWhere({ ParentFeeID: focusedRow ? focusedRow.FeeID : null });
-            grid.api.refreshServerSideStore();
+        grid.datasource.setWhere({ ParentFeeID: focusedRow ? focusedRow.FeeID : null });
+    grid.api.refreshServerSideStore();
         }
 
         function handleCellFocused(event) {
-            if (focusedRowIndex !== event.rowIndex) handleRowFocused(event);
+        if (focusedRowIndex !== event.rowIndex) handleRowFocused(event);
         }
 
         function  getUoms(){
@@ -234,15 +303,22 @@
                 $("#RangeByUomID").append($("<option selected>").text("--No Ranges--"));
                 $.each(data, function () {
                         $("#RangeByUomID").append('<option value="' + this.value + '">' + this.label + '</option>');
-                });
+            });
             });
         }
 
         agGridManager.onGridReady(function (grid) {
             grid.api.addEventListener('cellFocused', handleCellFocused);
             getUoms();
-            $("#@(Model is AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesByCustomerModel ? "btnRates" : "btnCustomers")").removeClass('text-white').addClass('text-secondary');
-            $("#@(Model is AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesByCustomerModel ? "btnCustomers" : "btnRates")").addClass('text-white');
+                $("#@(Model is AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesByCustomerModel ? "btnRates" : "btnCustomers")").removeClass('text-white').addClass('text-secondary');
+                $("#@(Model is AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesByCustomerModel ? "btnCustomers" : "btnRates")").addClass('text-white');
         }, 'myGridFees');
+    });
+
+    $(document).ready(function () {
+        //AutoCompleteUI.initCombo("State", 100);
+        AutoCompleteUI.initCombo("Customers", 150);
+        $("#showCustomersSwitch").prop('checked', @((TempData["ShowCustomer"] == null ? false : (bool)TempData["ShowCustomer"]).ToString().ToLowerInvariant()));
+        @*alert('@((TempData["ShowCustomer"] == null ? false : (bool)TempData["ShowCustomer"]).ToString().ToLowerInvariant())');*@
     });
 </script>
