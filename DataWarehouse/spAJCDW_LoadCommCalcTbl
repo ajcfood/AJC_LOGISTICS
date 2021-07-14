@@ -1446,8 +1446,14 @@ where InvLOB IN ('9')
 --Aiken Davis 2021 and on: 2.75% of own GP where he is the CSR Rep & 1% GP where LOB = 9 and dispatcher is not Matt.
 
 update tblCommCalc
-set ADComm = GP*.0375
+set ADComm = GP*.0425
 where InvLOB IN ('9')
+	AND Dispatcher IN ('adavis','adavisadmin')
+	AND ACCTYR >= 2021
+
+update tblCommCalc
+set ADComm = GP*.0275
+where InvLOB NOT IN ('9')
 	AND Dispatcher IN ('adavis','adavisadmin')
 	AND ACCTYR >= 2021
 
@@ -1486,6 +1492,12 @@ where InvLOB IN ('10')
 	AND ACCTYR >= 2021
 
 update tblCommCalc
+set DTComm = GP*.0275
+where InvLOB NOT IN ('10')
+	AND Dispatcher IN ('daltont','daltonadmin')
+	AND ACCTYR >= 2021
+
+update tblCommCalc
 set DTComm = GP*.01
 where InvLOB IN ('10')
 	AND Dispatcher NOT IN ('matth','daltont','daltonadmin','mattadmin')
@@ -1499,6 +1511,12 @@ where InvLOB IN ('10')
 	AND ACCTYR >= 2021
 
 update tblCommCalc
+set RRComm = GP*.0275
+where InvLOB NOT IN ('10')
+	AND Dispatcher IN ('rraif','ronadmin')
+	AND ACCTYR >= 2021
+
+update tblCommCalc
 set RRComm = GP*.01
 where InvLOB IN ('10')
 	AND Dispatcher NOT IN ('matth','rraif','ronadmin','mattadmin')
@@ -1507,7 +1525,13 @@ where InvLOB IN ('10')
 --Winston Crosse 2021 and on: 2.75% of own GP where he is the CSR Rep & 1% GP where LOB = 9 and dispatcher is not Matt.
 update tblCommCalc
 set WCComm = GP*.0375
-where InvLOB IN ('9','10')
+where InvLOB IN ('9')
+	AND Dispatcher IN ('wcrosse','winstonjax','winstonadmin')
+	AND ACCTYR >= 2021
+
+update tblCommCalc
+set WCComm = GP*.0275
+where InvLOB NOT IN ('9')
 	AND Dispatcher IN ('wcrosse','winstonjax','winstonadmin')
 	AND ACCTYR >= 2021
 
@@ -1521,6 +1545,12 @@ where InvLOB IN ('9')
 update tblCommCalc
 set IOComm = GP*.0375
 where InvLOB IN ('10')
+	AND Dispatcher IN ('iokolnichyisat','ioannadmin')
+	AND ACCTYR >= 2021
+
+update tblCommCalc
+set IOComm = GP*.0275
+where InvLOB NOT IN ('10')
 	AND Dispatcher IN ('iokolnichyisat','ioannadmin')
 	AND ACCTYR >= 2021
 
