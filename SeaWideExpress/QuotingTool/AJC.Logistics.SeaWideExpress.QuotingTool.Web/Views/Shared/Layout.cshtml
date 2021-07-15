@@ -7,7 +7,10 @@
     <title>SeaWideExpress backoffice QT</title>
 
     <link rel="canonical" href="">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js" integrity="sha256-T0Vest3yCU7pafRw9r+settMBX6JkKN06dqBnpQ8d30=" crossorigin="anonymous"></script>
     <!-- Bootstrap core CSS -->
+    <link href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet" />
     <link href="@Url.Content("~/assets/bootstrap/css/bootstrap.min.css")" rel="stylesheet">
     <link href="@Url.Content("~/assets/bootstrap/headers.css")" rel="stylesheet">
     <!-- Styles for ag-grid -->
@@ -73,7 +76,7 @@
 
                 <ul class="nav col-12 col-lg-auto my-2 justify-content-center my-md-0 text-small">
                     <li>
-                        <a href="#" class="nav-link text-white">
+                        <a href="@Url.Action("Index", "FeesByType")" id="btnRates"  class="nav-link text-white">
                             <svg class="bi d-block mx-auto mb-1" width="24" height="24"><use xlink:href="#home"></use></svg>
                             Rates
                         </a>
@@ -97,7 +100,7 @@
                         </a>
                     </li>*@
                     <li>
-                        <a href="#" class="nav-link text-secondary">
+                        <a href="@Url.Action("Index", "FeesByCustomer")" id="btnCustomers" class="nav-link text-secondary">
                             <svg class="bi d-block mx-auto mb-1" width="24" height="24"><use xlink:href="#people-circle"></use></svg>
                             Customers
                         </a>

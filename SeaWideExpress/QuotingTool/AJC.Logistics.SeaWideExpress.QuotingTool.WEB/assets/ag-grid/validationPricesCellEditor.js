@@ -27,7 +27,7 @@ ValidationPricesCellEditor.prototype.afterGuiAttached= function(){
     if (this.params.charPress) {
         this.eInput.value = this.params.charPress;
     } else {
-        this.eInput.value = this.params.value;
+        this.eInput.value = this.params.value == undefined ? "" : this.params.value;
     }
 
     this.eInput.addEventListener('input', this.inputChanged.bind(this));

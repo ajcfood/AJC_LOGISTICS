@@ -26,5 +26,7 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Business
 		public decimal? RangeFrom { get; set; }
 		public decimal? RangeTo { get; set; }
 		public short? ActionID { get; set; }
+		public int? CustomerID { get; set; }
+		public string Notes { get; set; }
 	}
 }

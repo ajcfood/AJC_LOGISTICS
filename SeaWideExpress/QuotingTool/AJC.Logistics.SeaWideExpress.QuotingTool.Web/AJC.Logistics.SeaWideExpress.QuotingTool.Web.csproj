@@ -159,6 +159,7 @@
     <Content Include="assets\ag-grid\validationPricesCellEditor.js" />
     <Content Include="assets\images\SeaWide-Logo.png" />
     <Content Include="assets\scripts\index.js" />
+    <Content Include="assets\combo-autocomplete\combo-autocomplete.js" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>

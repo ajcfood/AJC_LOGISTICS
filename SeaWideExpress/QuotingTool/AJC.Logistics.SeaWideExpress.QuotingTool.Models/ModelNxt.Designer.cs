@@ -279,6 +279,38 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
             }
         }
         private ObjectSet<Zone> _Zones;
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        public ObjectSet<QuotingV2_Prospects> QuotingV2_Prospects
+        {
+            get
+            {
+                if ((_QuotingV2_Prospects == null))
+                {
+                    _QuotingV2_Prospects = base.CreateObjectSet<QuotingV2_Prospects>("QuotingV2_Prospects");
+                }
+                return _QuotingV2_Prospects;
+            }
+        }
+        private ObjectSet<QuotingV2_Prospects> _QuotingV2_Prospects;
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        public ObjectSet<vw_Customers> vw_Customers
+        {
+            get
+            {
+                if ((_vw_Customers == null))
+                {
+                    _vw_Customers = base.CreateObjectSet<vw_Customers>("vw_Customers");
+                }
+                return _vw_Customers;
+            }
+        }
+        private ObjectSet<vw_Customers> _vw_Customers;
 
         #endregion
 
@@ -378,6 +410,22 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
         public void AddToZones(Zone zone)
         {
             base.AddObject("Zones", zone);
+        }
+    
+        /// <summary>
+        /// Deprecated Method for adding a new object to the QuotingV2_Prospects EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
+        /// </summary>
+        public void AddToQuotingV2_Prospects(QuotingV2_Prospects quotingV2_Prospects)
+        {
+            base.AddObject("QuotingV2_Prospects", quotingV2_Prospects);
+        }
+    
+        /// <summary>
+        /// Deprecated Method for adding a new object to the vw_Customers EntitySet. Consider using the .Add method of the associated ObjectSet&lt;T&gt; property instead.
+        /// </summary>
+        public void AddTovw_Customers(vw_Customers vw_Customers)
+        {
+            base.AddObject("vw_Customers", vw_Customers);
         }
 
         #endregion
@@ -2721,6 +2769,189 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
     /// <summary>
     /// No Metadata Documentation available.
     /// </summary>
+    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="QuotingV2_Prospects")]
+    [Serializable()]
+    [DataContractAttribute(IsReference=true)]
+    public partial class QuotingV2_Prospects : EntityObject
+    {
+        #region Factory Method
+    
+        /// <summary>
+        /// Create a new QuotingV2_Prospects object.
+        /// </summary>
+        /// <param name="prospectID">Initial value of the ProspectID property.</param>
+        /// <param name="name">Initial value of the Name property.</param>
+        /// <param name="dateAdded">Initial value of the DateAdded property.</param>
+        /// <param name="addedBy">Initial value of the AddedBy property.</param>
+        public static QuotingV2_Prospects CreateQuotingV2_Prospects(global::System.Int32 prospectID, global::System.String name, global::System.DateTime dateAdded, global::System.String addedBy)
+        {
+            QuotingV2_Prospects quotingV2_Prospects = new QuotingV2_Prospects();
+            quotingV2_Prospects.ProspectID = prospectID;
+            quotingV2_Prospects.Name = name;
+            quotingV2_Prospects.DateAdded = dateAdded;
+            quotingV2_Prospects.AddedBy = addedBy;
+            return quotingV2_Prospects;
+        }
+
+        #endregion
+
+        #region Primitive Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=true, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.Int32 ProspectID
+        {
+            get
+            {
+                return _ProspectID;
+            }
+            set
+            {
+                if (_ProspectID != value)
+                {
+                    OnProspectIDChanging(value);
+                    ReportPropertyChanging("ProspectID");
+                    _ProspectID = StructuralObject.SetValidValue(value);
+                    ReportPropertyChanged("ProspectID");
+                    OnProspectIDChanged();
+                }
+            }
+        }
+        private global::System.Int32 _ProspectID;
+        partial void OnProspectIDChanging(global::System.Int32 value);
+        partial void OnProspectIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String Name
+        {
+            get
+            {
+                return _Name;
+            }
+            set
+            {
+                OnNameChanging(value);
+                ReportPropertyChanging("Name");
+                _Name = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("Name");
+                OnNameChanged();
+            }
+        }
+        private global::System.String _Name;
+        partial void OnNameChanging(global::System.String value);
+        partial void OnNameChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.DateTime DateAdded
+        {
+            get
+            {
+                return _DateAdded;
+            }
+            set
+            {
+                OnDateAddedChanging(value);
+                ReportPropertyChanging("DateAdded");
+                _DateAdded = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("DateAdded");
+                OnDateAddedChanged();
+            }
+        }
+        private global::System.DateTime _DateAdded;
+        partial void OnDateAddedChanging(global::System.DateTime value);
+        partial void OnDateAddedChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.String AddedBy
+        {
+            get
+            {
+                return _AddedBy;
+            }
+            set
+            {
+                OnAddedByChanging(value);
+                ReportPropertyChanging("AddedBy");
+                _AddedBy = StructuralObject.SetValidValue(value, false);
+                ReportPropertyChanged("AddedBy");
+                OnAddedByChanged();
+            }
+        }
+        private global::System.String _AddedBy;
+        partial void OnAddedByChanging(global::System.String value);
+        partial void OnAddedByChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public Nullable<global::System.DateTime> DateUpdated
+        {
+            get
+            {
+                return _DateUpdated;
+            }
+            set
+            {
+                OnDateUpdatedChanging(value);
+                ReportPropertyChanging("DateUpdated");
+                _DateUpdated = StructuralObject.SetValidValue(value);
+                ReportPropertyChanged("DateUpdated");
+                OnDateUpdatedChanged();
+            }
+        }
+        private Nullable<global::System.DateTime> _DateUpdated;
+        partial void OnDateUpdatedChanging(Nullable<global::System.DateTime> value);
+        partial void OnDateUpdatedChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public global::System.String UpdatedBy
+        {
+            get
+            {
+                return _UpdatedBy;
+            }
+            set
+            {
+                OnUpdatedByChanging(value);
+                ReportPropertyChanging("UpdatedBy");
+                _UpdatedBy = StructuralObject.SetValidValue(value, true);
+                ReportPropertyChanged("UpdatedBy");
+                OnUpdatedByChanged();
+            }
+        }
+        private global::System.String _UpdatedBy;
+        partial void OnUpdatedByChanging(global::System.String value);
+        partial void OnUpdatedByChanged();
+
+        #endregion
+
+    
+    }
+    
+    /// <summary>
+    /// No Metadata Documentation available.
+    /// </summary>
     [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="ServiceType")]
     [Serializable()]
     [DataContractAttribute(IsReference=true)]
@@ -3784,6 +4015,87 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Models
 
         #endregion
 
+    }
+    
+    /// <summary>
+    /// No Metadata Documentation available.
+    /// </summary>
+    [EdmEntityTypeAttribute(NamespaceName="QuotingToolModel", Name="vw_Customers")]
+    [Serializable()]
+    [DataContractAttribute(IsReference=true)]
+    public partial class vw_Customers : EntityObject
+    {
+        #region Factory Method
+    
+        /// <summary>
+        /// Create a new vw_Customers object.
+        /// </summary>
+        /// <param name="customerID">Initial value of the CustomerID property.</param>
+        public static vw_Customers Createvw_Customers(global::System.Int32 customerID)
+        {
+            vw_Customers vw_Customers = new vw_Customers();
+            vw_Customers.CustomerID = customerID;
+            return vw_Customers;
+        }
+
+        #endregion
+
+        #region Primitive Properties
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=true, IsNullable=false)]
+        [DataMemberAttribute()]
+        public global::System.Int32 CustomerID
+        {
+            get
+            {
+                return _CustomerID;
+            }
+            set
+            {
+                if (_CustomerID != value)
+                {
+                    OnCustomerIDChanging(value);
+                    ReportPropertyChanging("CustomerID");
+                    _CustomerID = StructuralObject.SetValidValue(value);
+                    ReportPropertyChanged("CustomerID");
+                    OnCustomerIDChanged();
+                }
+            }
+        }
+        private global::System.Int32 _CustomerID;
+        partial void OnCustomerIDChanging(global::System.Int32 value);
+        partial void OnCustomerIDChanged();
+    
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [EdmScalarPropertyAttribute(EntityKeyProperty=false, IsNullable=true)]
+        [DataMemberAttribute()]
+        public global::System.String Name
+        {
+            get
+            {
+                return _Name;
+            }
+            set
+            {
+                OnNameChanging(value);
+                ReportPropertyChanging("Name");
+                _Name = StructuralObject.SetValidValue(value, true);
+                ReportPropertyChanged("Name");
+                OnNameChanged();
+            }
+        }
+        private global::System.String _Name;
+        partial void OnNameChanging(global::System.String value);
+        partial void OnNameChanged();
+
+        #endregion
+
+    
     }
     
     /// <summary>
