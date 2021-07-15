@@ -137,7 +137,7 @@
             url: endpoint,
             dataType: "json",
             type: "POST",
-            async: false,
+            async: true,
             cache: false,
             data: JSON.stringify(entity),
             contentType: "application/json; charset=utf-8",

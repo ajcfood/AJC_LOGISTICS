@@ -10,23 +10,32 @@
 <nav class="navbar navbar-light" style="background-color: rgb(245, 247, 247); padding: 6px 10px; border: 1px solid rgb(189, 195, 199); border-bottom: none; ">
     <div>
         <span><b>State</b></span>&nbsp;
-        @Html.DropDownListFor(m => m.State, new SelectList(Model.States, "StateID", "Name"), "--All--", 
-            new {style = "width: 100px"@*, @class = "form-select" *@})
+        @Html.DropDownListFor(m => m.State, new SelectList(Model.States, "StateID", "Name"), "--All--",
+            new
+                 {
+                     style = "width: 100px"@*, @class = "form-select" *@})
         &nbsp;&nbsp;
         <span><b>Fee Type</b></span>&nbsp;
-        @Html.DropDownListFor(m => m.FeeType, new SelectList(Model.FeeTypes, "FeeTypeID", "Name"), "--All--", 
-            new { style = "width: 100px"@*, @class = "form-select" *@})
+        @Html.DropDownListFor(m => m.FeeType, new SelectList(Model.FeeTypes, "FeeTypeID", "Name"), "--All--",
+            new
+                 {
+                     style = "width: 100px"@*, @class = "form-select" *@})
         &nbsp;
         @Html.DropDownListFor(m => m.FeeSubType, new SelectList(Model.FeeSubTypes, "FeeTypeID", "Name"), "--All--",
-            new {style = "width: 150px", data_url = Url.Action("GetFeeSubTypes")@*, @class = "form-select"*@})
+            new
+                 {
+                     style = "width: 150px",
+                     data_url = Url.Action("GetFeeSubTypes")@*, @class = "form-select"*@})
         &nbsp;&nbsp;
+        <!--
         <span><b>Show Customers</b></span>&nbsp;
         <label class="switch">
             <input type="checkbox">
             <span class="slider round"></span>
         </label>
         &nbsp;&nbsp;
-        <span><b>Period</b></span>&nbsp;<select id="Period"><option>2020</option><option>2021</option></select>
+        <span><b>Period</b></span>&nbsp;<select id="Period" disabled><option>2020</option><option selected>2021</option></select>
+        -->
     </div>   
     <div class="form-inline">
         <button class="btn btn-outline-danger my-2 my-sm-0" id="btnRemoveFee">Remove</button>
@@ -142,7 +151,7 @@
         function handleRemoveFees(id) {
             return function () {
                 const grid = agGridManager.getGrid(id);
-                if (!grid) alert('matanga!!!');
+                if (!grid) alert('please reload the page');
                 const selectedRows = grid.api.getSelectedRows();
                 let selectedIds = selectedRows.map((item) => (item.FeeID)).filter((id) => (id >= 0));
                 if (selectedIds.length) agGridManager.updateEntity(selectedIds, '@Url.Action("removeFeeData", "FeesGrid")');
@@ -152,7 +161,7 @@
 
         $("#btnAddFee").click(function () {
             const grid = agGridManager.getGrid('myGridFees');
-            if (!grid) alert('matanga!!!');
+            if (!grid) alert('please reload the page');
             grid.api.applyServerSideTransaction({
                 add: [{ FeeID: lastId--, FeeTypeID: filters.FeeTypeID, StateID: filters.StateID }]
             });
@@ -162,7 +171,7 @@
 
         $("#btnAddRange").click(function () {
             const grid = agGridManager.getGrid('myGridRanges');
-            if (!grid) alert('matanga!!!');
+            if (!grid) alert('please reload the page');
             const newRow = {};
             Object.assign(newRow, focusedRow);
             newRow.FeeID = lastId--;
@@ -182,7 +191,7 @@
             focusedRow = node ? node.data : null;
 
             const grid = agGridManager.getGrid('myGridRanges');
-            if (!grid) alert('matanga!!!');
+            if (!grid) alert('please reload the page');
 
             $("#RangeByUomID").val(focusedRow.RangeByUomID || "--No Ranges--");
 

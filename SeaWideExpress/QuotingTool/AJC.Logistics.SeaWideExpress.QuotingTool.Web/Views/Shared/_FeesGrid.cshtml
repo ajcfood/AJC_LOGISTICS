@@ -134,7 +134,7 @@
             {
                 headerName: "Fee",
                 field: "Value",
-                cellEditor: ValidationPricesCellEditor
+                // cellEditor: ValidationPricesCellEditor
             },
             {
                 headerName: "Per", field: "ByUomID",
@@ -158,7 +158,7 @@
             {
                 headerName: "Min",
                 field: "FeeMin",
-                cellEditor: ValidationPricesCellEditor
+                // cellEditor: ValidationPricesCellEditor
             },
             {
                 headerName: "Max",
@@ -241,7 +241,7 @@
 
                 function ModifyModel(model) {
                     if (model && model.idEntityRequest && model.idEntityRequest < 0) {
-                        alert("Congrats! A new Entity has been created");
+                        // alert("Congrats! A new Entity has been created");
                         setNewId(model.idEntityRequest, model.idEntityAffected);
                     }
                 }
