@@ -112,7 +112,10 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
 
                             case "CustomerID":
                                 if (Int32.TryParse(predicate.Value, out intTemp)) intValue = intTemp;
-                                if (intValue != null) query = query.Where(fee => fee.CustomerID == intValue);
+                                if (intValue == null)
+                                    query = query.Where(fee => fee.CustomerID == null);
+                                else
+                                    query = query.Where(fee => fee.CustomerID == intValue);
                                 break;
                         } 
                     }

@@ -23,8 +23,9 @@
 
         agGrid.Grid(container, options);
 
-        grid.api     = options.api;
-        grid.options = options;
+        grid.api       = options.api;
+        grid.columnApi = options.columnApi;
+        grid.options   = options;
 
         if (options.endpoint) {
 

@@ -89,7 +89,6 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
             }
         }
 
-
         /// <summary>
         /// Get UOM entities for a FeeID
         /// </summary>
@@ -106,12 +105,13 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                     if(fee.ByUomID.HasValue && !uoms.Any(uom => uom.UomID == fee.ByUomID))
                         uoms.Add(db.UOMs.Where(i => fee.ByUomID == i.UomID).Single());
                 }
+
                 return Json(uoms.Select(i => new { value= i.UomID, label = i.Name}), JsonRequestBehavior.AllowGet);
             }
         }
 
         /// <summary>
-        /// Get Actions_Fee entities for List of Values
+        ///     Get Actions_Fee entities for List of Values
         /// </summary>
         /// <returns></returns>
         [System.Web.Mvc.HttpGet]
@@ -124,7 +124,7 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                 fakeRepository.Add(new ActionMock { ActionID = 1, Description = "Fee" });
                 fakeRepository.Add(new ActionMock { ActionID = 2, Description = "Surcharge" });
                 fakeRepository.Add(new ActionMock { ActionID = 3, Description = "Discount" });
-                fakeRepository.Add(new ActionMock { ActionID = 4, Description = "Waiver" });
+                fakeRepository.Add(new ActionMock { ActionID = 4, Description = "Waive" });
 
                 var dataSet = fakeRepository.Select(action => new { value = action.ActionID, label = action.Description.Trim().ToUpper()}).ToList();
                 return Json(dataSet, JsonRequestBehavior.AllowGet);

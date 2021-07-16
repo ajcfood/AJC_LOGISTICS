@@ -58,9 +58,7 @@
 
         @if (Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesGridModel.Mode.Fees)
         {
-
-
-<text>
+            <text>
             columnDefs.push(
                 {
                     headerName: "State", field: "StateID",
@@ -71,21 +69,18 @@
                     },
                     valueFormatter: TypeaheadEditor.getFormatter(statesStore)
                 },
-                @if ((TempData["ShowCustomer"] == null ? false : (bool)TempData["ShowCustomer"]) == true) {
-                    <text>
-                                {
-                                headerName: "Customer", field: "CustomerID",
-                        cellEditor: TypeaheadEditor,
-                        cellEditorParams: {
-                                    placeholder: 'Customer',
-                            store: customersStore
-                        },
-                        valueFormatter: TypeaheadEditor.getFormatter(customersStore),
-                        cellRenderer: placeholderRenderer,
-                        cellRendererParams: { class: "allValue", placeholder: "ANY" }
+                {
+                    colId: "customer",
+                    headerName: "Customer", field: "CustomerID",
+                    cellEditor: TypeaheadEditor,
+                    cellEditorParams: {
+                                placeholder: 'Customer',
+                        store: customersStore
+                    },
+                    valueFormatter: TypeaheadEditor.getFormatter(customersStore),
+                    cellRenderer: placeholderRenderer,
+                    cellRendererParams: { class: "allValue", placeholder: "ANY" }
                 },
-                    </text>
-                }
                 {
                 headerName: "Island", field: "IslandID",
                     cellEditor: TypeaheadEditor,
@@ -140,7 +135,8 @@
         }
 
         columnDefs.push(
-            @if (Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesGridModel.Mode.Fees) {
+            @if (Model.GridMode == AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesGridModel.Mode.Fees) 
+            {
                 <text>
                 {
                     headerName: "Action", field: "ActionID",
@@ -157,7 +153,7 @@
             }
             {
                 headerName: "Fee",
-                maxWidth: "60",
+                maxWidth: 60,
                 field: "Value",
                 // cellEditor: ValidationPricesCellEditor
             },
@@ -183,39 +179,39 @@
             },
             {
                 headerName: "Min",
-                maxWidth : "70",
+                maxWidth : 70,
                 field: "FeeMin",
                 // cellEditor: ValidationPricesCellEditor
             },
             {
                 headerName: "Max",
-                maxWidth: "70",
+                maxWidth: 70,
                 field: "FeeMax",
                 cellEditor: ValidationPricesCellEditor
             }
-            @if (Model.FilterBy.Contains("CustomerID")){
-                <text>
-            ,{
-                headerName: "Over",
-                cellRenderer: placeholderRenderer,
-                cellRendererParams: { class: "allValue", placeholder: "OVER" },
-                maxWidth: "70",
-                editable: false,
-                showHeader: false
-            },
+            @if (Model.FilterBy.Contains("CustomerID"))
             {
-                headerName: "Rate Type",
-                field: "FeeTypeID",
-                cellEditor: TypeaheadEditor,
-                cellEditorParams: {
-                    placeholder: 'Action',
-                    minLength: 0,
-                    highlight: true,
-                    store: ratesTypeSubTypeStore
+                <text>
+                ,{
+                    headerName: "",
+                    cellRenderer: placeholderRenderer,
+                    cellRendererParams: { class: "allValue", placeholder: "OVER" },
+                    maxWidth: 70,
+                    editable: false,
+                    showHeader: false
                 },
-                valueFormatter: TypeaheadEditor.getFormatter(ratesTypeSubTypeStore)
-            }
-
+                {
+                    headerName: "Rate Type",
+                    field: "FeeTypeID",
+                    cellEditor: TypeaheadEditor,
+                    cellEditorParams: {
+                        placeholder: 'Action',
+                        minLength: 0,
+                        highlight: true,
+                        store: ratesTypeSubTypeStore
+                    },
+                    valueFormatter: TypeaheadEditor.getFormatter(ratesTypeSubTypeStore)
+                }
                 </text>
             }
         );

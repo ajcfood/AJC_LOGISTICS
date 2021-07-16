@@ -35,7 +35,7 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                 theModel.State = theModel.States.First().StateID.ToString();
                 theModel.FeeTypes = db.FeeTypes.Where(feeType => feeType.ParentFeeTypeID == null).ToList();
             }
-            theModel.FeesModel = new Business.FeesGridModel(Business.FeesGridModel.Mode.Fees, new List<string> { "ParentFeeID", "StateID", "FeeTypeID"});
+            theModel.FeesModel   = new Business.FeesGridModel(Business.FeesGridModel.Mode.Fees  , new List<string> { "ParentFeeID", "StateID", "FeeTypeID", "CustomerID" });
             theModel.RangesModel = new Business.FeesGridModel(Business.FeesGridModel.Mode.Ranges, new List<string> { "ParentFeeID" });
             theModel.Title = "Master Tariff Rates";
             return theModel; 
