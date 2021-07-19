@@ -24,8 +24,17 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Business
             this.FilterBy = FilterBy;
         }
 
+        public FeesGridModel(Mode GridMode, IList<string> FilterBy, Type theType)
+        {
+            this.GridMode = GridMode;
+            this.FilterBy = FilterBy;
+            this.TheType = theType;
+        }
+
         public Mode GridMode { get; set; }
 
         public IList<string> FilterBy { get; set; }
+
+        public Type TheType { get; }
     }
 }

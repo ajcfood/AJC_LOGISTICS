@@ -90,7 +90,9 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                             case "ParentFeeID":
                                 if (Int32.TryParse(predicate.Value, out intTemp)) intValue = intTemp;
                                 if (intValue == null)
+                                {
                                     query = query.Where(fee => fee.ParentFeeID == null);
+                                }
                                 else
                                     query = query.Where(fee => fee.ParentFeeID == intValue);
                                 break;
@@ -261,6 +263,7 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                 {
                     foreach (int id in ids)
                     {
+                        db.Fees.Where(i => i.ParentFeeID == id).ToList().ForEach(db.Fees.DeleteObject);
                         db.Fees.DeleteObject(db.Fees.Where(i => i.FeeID == id).Single());
                     }
                     db.SaveChanges();

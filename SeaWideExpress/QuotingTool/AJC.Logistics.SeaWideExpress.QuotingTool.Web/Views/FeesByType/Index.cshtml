@@ -117,7 +117,7 @@
         const filters = { ParentFeeID: null, StateID: @(Model.State), CustomerID : null};
 
         function handleFilterChanged(field, value) {
-            if (value === undefined || value === "--All--")
+            if (value === undefined || value === "--All--" || (field == "CustomerID" && value == 0))
                 delete filters[field];
             else
                 filters[field] = value;
@@ -209,14 +209,6 @@
             if (!grid) alert('please reload the page');
             grid.columnApi.setColumnVisible("customer", showCustomers);
             grid.api.refreshHeader();
-            //let columnDefs = agGridManager.getGrid('myGridFees').options.columnDefs;
-            //ColumnVisibility(columnDefs, "CustomerID", columnVisible);
-            @*
-            if (columnVisible)
-                window.location.href = "@Url.Action("IndexShowCustomer")";
-            else
-                window.location.href = "@Url.Action("IndexHiddenCustomer")";
-            *@
         }
 
         function ColumnVisibility(defs, name, isVisible) {
@@ -234,14 +226,12 @@
 
         let lastId = -1;
         function handleRemoveFees(id) {
-            return function () {
-                const grid = agGridManager.getGrid(id);
-                if (!grid) alert('please reload the page');
-                const selectedRows = grid.api.getSelectedRows();
-                let selectedIds = selectedRows.map((item) => (item.FeeID)).filter((id) => (id >= 0));
-                if (selectedIds.length) agGridManager.updateEntity(selectedIds, '@Url.Action("removeFeeData", "FeesGrid")');
-                grid.api.applyServerSideTransaction({ remove: selectedRows });
-            }
+            const grid = agGridManager.getGrid(id);
+            if (!grid) alert('please reload the page');
+            const selectedRows = grid.api.getSelectedRows();
+            let selectedIds = selectedRows.map((item) => (item.FeeID)).filter((id) => (id >= 0));
+            if (selectedIds.length) agGridManager.updateEntity(selectedIds, '@Url.Action("removeFeeData", "FeesGrid")');
+            grid.api.applyServerSideTransaction({ remove: selectedRows });
         }
 
         $("#btnAddFee").click(function () {
@@ -257,7 +247,15 @@
             });
         });
 
-        $("#btnRemoveFee").click(handleRemoveFees('myGridFees'));
+        $("#btnRemoveFee").click(function(){
+            if (confirm('Are you sure you want to remove this from the database?')) {
+                // Save it!
+                handleRemoveFees('myGridFees');
+            } else {
+                alert("Nothing was changed");
+                window.location.reload(true);
+            }
+        });
 
         $("#btnAddRange").click(function () {
             const grid = agGridManager.getGrid('myGridRanges');
@@ -269,7 +267,15 @@
             grid.api.applyServerSideTransaction({ add: [newRow] });
         });
 
-        $("#btnRemoveRange").click(handleRemoveFees('myGridRanges'));
+        $("#btnRemoveRange").click(function () {
+            if (confirm('Are you sure you want to remove this from the database?')) {
+                // Save it!
+                handleRemoveFees('myGridRanges');
+            } else {
+                alert("Nothing was changed");
+                window.location.reload(true);
+            }
+        });
 
         let focusedRowIndex = undefined;
         let focusedRow      = undefined;
@@ -315,6 +321,5 @@
         //AutoCompleteUI.initCombo("State", 100);
         AutoCompleteUI.initCombo("Customers", 150);
         $("#showCustomersSwitch").prop('checked', @((TempData["ShowCustomer"] == null ? false : (bool)TempData["ShowCustomer"]).ToString().ToLowerInvariant()));
-        @*alert('@((TempData["ShowCustomer"] == null ? false : (bool)TempData["ShowCustomer"]).ToString().ToLowerInvariant())');*@
     });
 </script>

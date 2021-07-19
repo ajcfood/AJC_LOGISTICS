@@ -25,14 +25,12 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Business
         public FilterModel filterModel { get; set; }
         public string[] sortModel { get; set; }
         public WherePredicate[] whereClause { get; set; }
-
         public class WherePredicate
         {
             public String Field { set; get; }
             public String Value { set; get; }
             public String[] Values { set; get; }
         }
-
         public class FilterModel
         {
         }

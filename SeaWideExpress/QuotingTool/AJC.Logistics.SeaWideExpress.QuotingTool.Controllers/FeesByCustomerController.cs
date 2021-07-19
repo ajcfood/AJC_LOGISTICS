@@ -13,10 +13,12 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
 
             using (QuotingToolRepository db = new QuotingToolRepository())
             {
+                var customers = db.vw_Customers.ToList();
+                customers.Add(new vw_Customers { Name = "--All--"});
                 theModel.States    = db.States.ToList();
                 theModel.State     = theModel.States.First().StateID.ToString();
                 theModel.FeeTypes  = db.FeeTypes.Where(feeType => feeType.ParentFeeTypeID == null).ToList();
-                theModel.Customers = db.vw_Customers.ToList();
+                theModel.Customers = customers.ToList();
             }
 
             theModel.FeesModel   = new Business.FeesGridModel(Business.FeesGridModel.Mode.Fees  , new List<string> { "ParentFeeID", "StateID", "CustomerID" });

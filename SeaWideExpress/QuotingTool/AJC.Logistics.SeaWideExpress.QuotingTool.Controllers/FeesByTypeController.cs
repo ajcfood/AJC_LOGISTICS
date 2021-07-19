@@ -14,18 +14,6 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
             Business.FeesMasterModel theModel = TempData["Model"] == null ? BuildModel() : (Business.FeesMasterModel)TempData["Model"];
             return View(theModel);
         }
-
-        public ActionResult IndexShowCustomer()
-        {
-            TempData["ShowCustomer"] = true;
-            return RedirectToAction("Index");
-        }
-
-        public ActionResult IndexHiddenCustomer() {
-            TempData["ShowCustomer"] = false;
-            return RedirectToAction("Index");
-        }
-
         private FeesMasterModel BuildModel()
         {
             Business.FeesByTypeModel theModel = new FeesByTypeModel();
@@ -35,7 +23,7 @@ namespace AJC.Logistics.SeaWideExpress.QuotingTool.Controllers
                 theModel.State = theModel.States.First().StateID.ToString();
                 theModel.FeeTypes = db.FeeTypes.Where(feeType => feeType.ParentFeeTypeID == null).ToList();
             }
-            theModel.FeesModel   = new Business.FeesGridModel(Business.FeesGridModel.Mode.Fees  , new List<string> { "ParentFeeID", "StateID", "FeeTypeID", "CustomerID" });
+            theModel.FeesModel   = new Business.FeesGridModel(Business.FeesGridModel.Mode.Fees  , new List<string> { "ParentFeeID", "StateID", "FeeTypeID", "CustomerID" }, theModel.GetType());
             theModel.RangesModel = new Business.FeesGridModel(Business.FeesGridModel.Mode.Ranges, new List<string> { "ParentFeeID" });
             theModel.Title = "Master Tariff Rates";
             return theModel; 

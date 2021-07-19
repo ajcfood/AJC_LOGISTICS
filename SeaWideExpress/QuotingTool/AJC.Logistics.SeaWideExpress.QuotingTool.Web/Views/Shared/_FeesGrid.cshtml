@@ -189,11 +189,12 @@
                 field: "FeeMax",
                 cellEditor: ValidationPricesCellEditor
             }
-            @if (Model.FilterBy.Contains("CustomerID"))
+            @if (Model.TheType != typeof(AJC.Logistics.SeaWideExpress.QuotingTool.Business.FeesByTypeModel))
             {
                 <text>
                 ,{
                     headerName: "",
+                    colId: "OVER",
                     cellRenderer: placeholderRenderer,
                     cellRendererParams: { class: "allValue", placeholder: "OVER" },
                     maxWidth: 70,
@@ -280,7 +281,7 @@
                 </text>
             } else {
                 <text>
-                where: { "ParentFeeID": null }
+                where: { "ParentFeeID": null , "CustomerID" : null}
                 </text>
             }
             };
